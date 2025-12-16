@@ -26,6 +26,9 @@ import VehicleDetailScreen from '@/screens/shared/VehicleDetailScreen';
 import CreateCustomerScreen from '@/screens/shared/CreateCustomerScreen';
 import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
+import BranchDetailsScreen from '@/screens/company-admin/BranchDetailsScreen';
+import BranchExtendedInfoScreen from '@/screens/company-admin/BranchExtendedInfoScreen';
+import BranchFileUploadScreen from '@/screens/company-admin/BranchFileUploadScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -84,9 +87,9 @@ function CustomHeader({
       >
         <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
       </TouchableOpacity>
-      
+
       <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
-      
+
       <View style={styles.headerRight}>
         <TouchableOpacity
           onPress={onToggleTheme}
@@ -178,7 +181,9 @@ function TabIcon({ type, focused, theme }: TabIconProps) {
 }
 
 // Bottom Tab Navigator
-function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
+function CompanyAdminTabs() {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -270,48 +275,47 @@ function CompanyAdminDrawer({
     >
       <Drawer.Screen
         name="MainTabs"
+        component={CompanyAdminTabs}
         options={{
           title: 'Dashboard',
         }}
-      >
-        {() => <CompanyAdminTabs theme={theme} />}
-      </Drawer.Screen>
-      <Drawer.Screen 
-        name="Vehicles" 
+      />
+      <Drawer.Screen
+        name="Vehicles"
         component={VehiclesScreen}
-        options={{ 
+        options={{
           title: 'Vehicles',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Customers" 
+      <Drawer.Screen
+        name="Customers"
         component={CustomersScreen}
-        options={{ 
+        options={{
           title: 'Customers',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="JobCards" 
+      <Drawer.Screen
+        name="JobCards"
         component={JobCardsScreen}
-        options={{ 
+        options={{
           title: 'Job Cards',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Reports" 
+      <Drawer.Screen
+        name="Reports"
         component={ReportsScreen}
-        options={{ 
+        options={{
           title: 'Reports',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Settings" 
+      <Drawer.Screen
+        name="Settings"
         component={SettingsScreen}
-        options={{ 
+        options={{
           title: 'Settings',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
@@ -334,68 +338,95 @@ export default function CompanyAdminNavigator() {
           />
         )}
       </Stack.Screen>
-      <Stack.Screen 
-        name="ActiveJobs" 
+      <Stack.Screen
+        name="ActiveJobs"
         component={ActiveJobsScreen}
-        options={{ 
+        options={{
           headerShown: false, // Using custom header in screen
         }}
       />
-      <Stack.Screen 
-        name="JobCardDetail" 
+      <Stack.Screen
+        name="JobCardDetail"
         component={JobCardDetailScreen}
-        options={{ 
+        options={{
           headerShown: false, // Using custom header in screen
         }}
       />
-      <Stack.Screen 
-        name="CustomerDetail" 
+      <Stack.Screen
+        name="CustomerDetail"
         component={CustomerDetailScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Customer Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="VehicleDetail" 
+      <Stack.Screen
+        name="VehicleDetail"
         component={VehicleDetailScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Vehicle Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateCustomer" 
+      <Stack.Screen
+        name="CreateCustomer"
         component={CreateCustomerScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Add Customer',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateVehicle" 
+      <Stack.Screen
+        name="CreateVehicle"
         component={CreateVehicleScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Add Vehicle',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateJobCard" 
+      <Stack.Screen
+        name="CreateJobCard"
         component={CreateJobCardScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Create Job Card',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
+        }}
+      />
+      <Stack.Screen
+        name="BranchDetails"
+        component={BranchDetailsScreen}
+        options={{
+          headerShown: true,
+          title: 'Branch Management',
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTintColor: '#000000',
+        }}
+      />
+      <Stack.Screen
+        name="BranchExtendedInfo"
+        component={BranchExtendedInfoScreen}
+        options={{
+          headerShown: true,
+          title: 'Branch Information',
+          headerStyle: { backgroundColor: '#ffffff' },
+          headerTintColor: '#000000',
+        }}
+      />
+      <Stack.Screen
+        name="BranchFileUpload"
+        component={BranchFileUploadScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>
