@@ -49,7 +49,7 @@ export default function CompanyAdminDashboard() {
       if (usersJson) {
         const users: Array<{ email: string; password: string; userData: any }> = JSON.parse(usersJson);
         const adminUser = users.find(u => u.userData?.profile?.role?.name === 'company_admin');
-        
+
         if (adminUser) {
           console.log('\n=== COMPANY ADMIN LOGIN CREDENTIALS ===');
           console.log(`Email: ${adminUser.email}`);
@@ -88,7 +88,7 @@ export default function CompanyAdminDashboard() {
   // Bar Chart Component
   const BarChart = () => {
     const maxValue = 15;
-    
+
     return (
       <View style={styles.chartContainer}>
         <View style={styles.chartLegend}>
@@ -101,7 +101,7 @@ export default function CompanyAdminDashboard() {
             <Text style={styles.legendText}>branch 2</Text>
           </View>
         </View>
-        
+
         <View style={styles.chartContent}>
           {/* Y-axis labels */}
           <View style={styles.yAxis}>
@@ -111,7 +111,7 @@ export default function CompanyAdminDashboard() {
               </Text>
             ))}
           </View>
-          
+
           {/* Chart bars */}
           <View style={styles.barsContainer}>
             {chartData.map((item, index) => (
@@ -146,7 +146,7 @@ export default function CompanyAdminDashboard() {
           {/* Top Row Cards */}
           <View style={styles.cardRow}>
             {/* Active Jobs Card */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.largeCard, styles.activeJobsCard]}
               onPress={() => navigation.navigate('ActiveJobs' as never)}
               activeOpacity={0.8}
@@ -181,7 +181,11 @@ export default function CompanyAdminDashboard() {
           {/* Second Row Cards */}
           <View style={styles.cardRow}>
             {/* Vehicle Card */}
-            <View style={[styles.largeCard, styles.whiteCard]}>
+            <TouchableOpacity
+              style={[styles.largeCard, styles.whiteCard]}
+              onPress={() => navigation.navigate('Vehicles' as never)}
+              activeOpacity={0.8}
+            >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={styles.cardTitle}>Vehicle</Text>
@@ -192,7 +196,7 @@ export default function CompanyAdminDashboard() {
                   <Text style={styles.iconEmoji}>🚗</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Revenue Card */}
             <View style={[styles.largeCard, styles.revenueCard]}>

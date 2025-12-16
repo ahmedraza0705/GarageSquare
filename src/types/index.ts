@@ -2,7 +2,7 @@
 // TYPE DEFINITIONS
 // ============================================
 
-export type RoleName = 
+export type RoleName =
   | 'company_admin'
   | 'manager'
   | 'supervisor'
@@ -10,14 +10,14 @@ export type RoleName =
   | 'technician'
   | 'customer';
 
-export type JobCardStatus = 
+export type JobCardStatus =
   | 'pending'
   | 'in_progress'
   | 'on_hold'
   | 'completed'
   | 'cancelled';
 
-export type TaskStatus = 
+export type TaskStatus =
   | 'pending'
   | 'in_progress'
   | 'completed'
@@ -108,6 +108,18 @@ export interface Vehicle {
   created_at: string;
   updated_at: string;
   customer?: Customer;
+  services?: VehicleServiceItem[];
+}
+
+export type VehicleServiceStatus = 'pending' | 'completed' | 'need_approval' | 'rejected';
+
+export interface VehicleServiceItem {
+  id: string;
+  name: string;
+  status: VehicleServiceStatus;
+  assigned_to?: string;
+  estimate?: string; // e.g., "20 min", "1 hour"
+  created_at: string;
 }
 
 export interface JobCard {
