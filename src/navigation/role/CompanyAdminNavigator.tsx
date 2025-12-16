@@ -3,7 +3,7 @@
 // ============================================
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,6 +11,18 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeColors, ThemeName } from '@/context/ThemeContext';
 import CustomDrawerContent from '@/components/navigation/CustomDrawerContent';
+// Icons
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  FileBarChart,
+  Menu,
+  Moon,
+  Sun
+} from 'lucide-react-native';
+
+// Screens
 import CompanyAdminDashboard from '@/screens/company-admin/DashboardScreen';
 import BranchesScreen from '@/screens/company-admin/BranchesScreen';
 import UsersScreen from '@/screens/company-admin/UsersScreen';
@@ -77,22 +89,25 @@ function CustomHeader({
     >
       <TouchableOpacity
         onPress={() => {
-          // Open drawer or menu
           navigation.dispatch(DrawerActions.openDrawer());
         }}
         style={styles.headerButton}
       >
-        <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
+        <Menu size={24} color={theme.headerIcon} />
       </TouchableOpacity>
-      
+
       <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
-      
+
       <View style={styles.headerRight}>
         <TouchableOpacity
           onPress={onToggleTheme}
           style={styles.headerButton}
         >
-          <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
+          {themeName === 'dark' ? (
+            <Sun size={24} color={theme.headerIcon} />
+          ) : (
+            <Moon size={24} color={theme.headerIcon} />
+          )}
         </TouchableOpacity>
         <TouchableOpacity style={styles.avatarButton}>
           <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
@@ -106,137 +121,90 @@ function CustomHeader({
   );
 }
 
-type TabIconProps = {
-  type: 'grid' | 'building' | 'user' | 'bars';
-  focused: boolean;
-  theme: ThemeColors;
-};
-
-function TabIcon({ type, focused, theme }: TabIconProps) {
-  const containerStyle = [
-    styles.tabIconWrapper,
-    {
-      opacity: focused ? 1 : theme.tabIconInactiveOpacity,
-      backgroundColor: theme.tabIconBg,
-    },
-  ];
-  const squareStyle = [styles.tabGridSquare, { backgroundColor: theme.tabIconColor }];
-  const buildingLeftStyle = [styles.tabBuildingLeft, { backgroundColor: theme.tabIconColor }];
-  const buildingRightStyle = [styles.tabBuildingRight, { backgroundColor: theme.tabIconColor }];
-  const userHeadStyle = [styles.tabUserHead, { backgroundColor: theme.tabIconColor }];
-  const userBodyStyle = [styles.tabUserBody, { backgroundColor: theme.tabIconColor }];
-  const barBlockStyle = [styles.tabBarBlock, { backgroundColor: theme.tabIconColor }];
-  const fallbackStyle = [styles.tabIconFallback, { color: theme.tabIconColor }];
-
-  switch (type) {
-    case 'grid':
-      return (
-        <View style={containerStyle}>
-          <View style={styles.tabGrid}>
-            <View style={squareStyle} />
-            <View style={squareStyle} />
-            <View style={squareStyle} />
-            <View style={squareStyle} />
-          </View>
-        </View>
-      );
-    case 'building':
-      return (
-        <View style={containerStyle}>
-          <View style={styles.tabBuilding}>
-            <View style={buildingLeftStyle} />
-            <View style={buildingRightStyle} />
-          </View>
-        </View>
-      );
-    case 'user':
-      return (
-        <View style={containerStyle}>
-          <View style={styles.tabUser}>
-            <View style={userHeadStyle} />
-            <View style={userBodyStyle} />
-          </View>
-        </View>
-      );
-    case 'bars':
-      return (
-        <View style={containerStyle}>
-          <View style={styles.tabBars}>
-            <View style={[barBlockStyle, styles.tabBarShort]} />
-            <View style={[barBlockStyle, styles.tabBarMedium]} />
-            <View style={[barBlockStyle, styles.tabBarTall]} />
-          </View>
-        </View>
-      );
-    default:
-      return (
-        <View style={containerStyle}>
-          <Text style={fallbackStyle}>•</Text>
-        </View>
-      );
-  }
-}
-
 // Bottom Tab Navigator
 function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
+  // We want a blue bar with white icons, matching the user's image request
+  const BAR_COLOR = '#2563EB'; // Blue-600
+  const ACTIVE_COLOR = '#FFFFFF';
+  const INACTIVE_COLOR = 'rgba(255, 255, 255, 0.6)';
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.tabBarBg,
-          borderTopWidth: 1,
-          borderTopColor: theme.tabBarBorder,
+          backgroundColor: BAR_COLOR,
+          borderTopWidth: 0,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+          paddingTop: 10,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          elevation: 8, // Increased elevation for Android
+          zIndex: 50, // Added zIndex for iOS
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
         },
-        tabBarActiveTintColor: theme.tabIconColor,
-        tabBarInactiveTintColor: theme.tabIconColor,
-        tabBarActiveBackgroundColor: theme.tabIconBg,
-        tabBarIconStyle: {
-          marginTop: 4,
-        },
+        tabBarActiveTintColor: ACTIVE_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarShowLabel: false, // Hide labels for a cleaner look like the image
       }}
     >
       <Tab.Screen
         name="DashboardTab"
         component={CompanyAdminDashboard}
         options={{
-          tabBarLabel: '',
-          tabBarIcon: ({ focused }) => <TabIcon type="grid" focused={focused} theme={theme} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={focused ? styles.activeTabIcon : null}>
+              <LayoutDashboard color={color} size={24} />
+            </View>
+          ),
         }}
       />
       <Tab.Screen
         name="BranchesTab"
         component={BranchesScreen}
         options={{
-          tabBarLabel: '',
-          tabBarIcon: ({ focused }) => <TabIcon type="building" focused={focused} theme={theme} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={focused ? styles.activeTabIcon : null}>
+              <Building2 color={color} size={24} />
+            </View>
+          ),
         }}
       />
       <Tab.Screen
         name="UsersTab"
         component={UsersScreen}
         options={{
-          tabBarLabel: '',
-          tabBarIcon: ({ focused }) => <TabIcon type="user" focused={focused} theme={theme} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={focused ? styles.activeTabIcon : null}>
+              <Users color={color} size={24} />
+            </View>
+          ),
         }}
       />
       <Tab.Screen
         name="ReportsTab"
         component={ReportsScreen}
         options={{
-          tabBarLabel: '',
-          tabBarIcon: ({ focused }) => <TabIcon type="bars" focused={focused} theme={theme} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <View style={focused ? styles.activeTabIcon : null}>
+              <FileBarChart color={color} size={24} />
+            </View>
+          ),
         }}
       />
     </Tab.Navigator>
   );
 }
 
+// Drawer Navigator (Wraps Tabs)
 function CompanyAdminDrawer({
   theme,
   themeName,
@@ -259,7 +227,7 @@ function CompanyAdminDrawer({
           />
         ),
         drawerStyle: {
-          width: 320,
+          width: 300,
           backgroundColor: theme.drawerBackground,
         },
         drawerType: 'front',
@@ -276,50 +244,38 @@ function CompanyAdminDrawer({
       >
         {() => <CompanyAdminTabs theme={theme} />}
       </Drawer.Screen>
-      <Drawer.Screen 
-        name="Vehicles" 
+
+      {/* Hidden items accessible via Menu but part of Drawer logic if needed */}
+      <Drawer.Screen
+        name="Vehicles"
         component={VehiclesScreen}
-        options={{ 
-          title: 'Vehicles',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
+        options={{ title: 'Vehicles', drawerItemStyle: { display: 'none' } }}
       />
-      <Drawer.Screen 
-        name="Customers" 
+      <Drawer.Screen
+        name="Customers"
         component={CustomersScreen}
-        options={{ 
-          title: 'Customers',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
+        options={{ title: 'Customers', drawerItemStyle: { display: 'none' } }}
       />
-      <Drawer.Screen 
-        name="JobCards" 
+      <Drawer.Screen
+        name="JobCards"
         component={JobCardsScreen}
-        options={{ 
-          title: 'Job Cards',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
+        options={{ title: 'Job Cards', drawerItemStyle: { display: 'none' } }}
       />
-      <Drawer.Screen 
-        name="Reports" 
+      <Drawer.Screen
+        name="Reports"
         component={ReportsScreen}
-        options={{ 
-          title: 'Reports',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
+        options={{ title: 'Reports', drawerItemStyle: { display: 'none' } }}
       />
-      <Drawer.Screen 
-        name="Settings" 
+      <Drawer.Screen
+        name="Settings"
         component={SettingsScreen}
-        options={{ 
-          title: 'Settings',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
+        options={{ title: 'Settings', drawerItemStyle: { display: 'none' } }}
       />
     </Drawer.Navigator>
   );
 }
 
+// Root Stack for Company Admin
 export default function CompanyAdminNavigator() {
   const { themeName, theme, toggleTheme } = useTheme();
 
@@ -334,70 +290,17 @@ export default function CompanyAdminNavigator() {
           />
         )}
       </Stack.Screen>
-      <Stack.Screen 
-        name="ActiveJobs" 
-        component={ActiveJobsScreen}
-        options={{ 
-          headerShown: false, // Using custom header in screen
-        }}
-      />
-      <Stack.Screen 
-        name="JobCardDetail" 
+      <Stack.Screen name="ActiveJobs" component={ActiveJobsScreen} />
+      <Stack.Screen
+        name="JobCardDetail"
         component={JobCardDetailScreen}
-        options={{ 
-          headerShown: false, // Using custom header in screen
-        }}
+        options={{ headerShown: true, title: 'Job Detail' }}
       />
-      <Stack.Screen 
-        name="CustomerDetail" 
-        component={CustomerDetailScreen}
-        options={{ 
-          headerShown: true,
-          title: 'Customer Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
-        }}
-      />
-      <Stack.Screen 
-        name="VehicleDetail" 
-        component={VehicleDetailScreen}
-        options={{ 
-          headerShown: true,
-          title: 'Vehicle Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
-        }}
-      />
-      <Stack.Screen 
-        name="CreateCustomer" 
-        component={CreateCustomerScreen}
-        options={{ 
-          headerShown: true,
-          title: 'Add Customer',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
-        }}
-      />
-      <Stack.Screen 
-        name="CreateVehicle" 
-        component={CreateVehicleScreen}
-        options={{ 
-          headerShown: true,
-          title: 'Add Vehicle',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
-        }}
-      />
-      <Stack.Screen 
-        name="CreateJobCard" 
-        component={CreateJobCardScreen}
-        options={{ 
-          headerShown: true,
-          title: 'Create Job Card',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
-        }}
-      />
+      <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} options={{ headerShown: true, title: 'Customer Details' }} />
+      <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} options={{ headerShown: true, title: 'Vehicle Details' }} />
+      <Stack.Screen name="CreateCustomer" component={CreateCustomerScreen} options={{ headerShown: true, title: 'Add Customer' }} />
+      <Stack.Screen name="CreateVehicle" component={CreateVehicleScreen} options={{ headerShown: true, title: 'Add Vehicle' }} />
+      <Stack.Screen name="CreateJobCard" component={CreateJobCardScreen} options={{ headerShown: true, title: 'New Job Card' }} />
     </Stack.Navigator>
   );
 }
@@ -409,15 +312,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#ffffff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   headerButton: {
     padding: 8,
-  },
-  menuIcon: {
-    fontSize: 24,
   },
   headerTitle: {
     fontSize: 18,
@@ -426,10 +329,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-  },
-  darkModeIcon: {
-    fontSize: 20,
+    gap: 8,
   },
   avatarButton: {
     padding: 4,
@@ -438,102 +338,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#2563eb',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  tabIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+  activeTabIcon: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabGrid: {
-    width: 24,
-    height: 24,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  tabGridSquare: {
-    width: 10,
-    height: 10,
-    borderRadius: 3,
-    backgroundColor: '#ffffff',
-    marginBottom: 3,
-  },
-  tabBuilding: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    width: 26,
-    height: 24,
-    gap: 3,
-  },
-  tabBuildingLeft: {
-    width: 10,
-    height: 16,
-    borderRadius: 3,
-    backgroundColor: '#ffffff',
-  },
-  tabBuildingRight: {
-    width: 12,
-    height: 20,
-    borderRadius: 3,
-    backgroundColor: '#ffffff',
-  },
-  tabUser: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 26,
-    height: 24,
-  },
-  tabUserHead: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#ffffff',
-    marginBottom: 3,
-  },
-  tabUserBody: {
-    width: 18,
-    height: 8,
-    borderRadius: 6,
-    backgroundColor: '#ffffff',
-  },
-  tabBars: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    width: 26,
-    height: 24,
-    gap: 3,
-  },
-  tabBarBlock: {
-    width: 6,
-    borderRadius: 3,
-    backgroundColor: '#ffffff',
-  },
-  tabBarShort: {
-    height: 8,
-  },
-  tabBarMedium: {
-    height: 13,
-  },
-  tabBarTall: {
-    height: 18,
-  },
-  tabIconFallback: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    padding: 8,
+    borderRadius: 12,
+  }
 });
-
