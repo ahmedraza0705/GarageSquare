@@ -2,7 +2,7 @@
 // TYPE DEFINITIONS
 // ============================================
 
-export type RoleName = 
+export type RoleName =
   | 'company_admin'
   | 'manager'
   | 'supervisor'
@@ -10,14 +10,14 @@ export type RoleName =
   | 'technician'
   | 'customer';
 
-export type JobCardStatus = 
+export type JobCardStatus =
   | 'pending'
   | 'in_progress'
   | 'on_hold'
   | 'completed'
   | 'cancelled';
 
-export type TaskStatus = 
+export type TaskStatus =
   | 'pending'
   | 'in_progress'
   | 'completed'
@@ -72,6 +72,11 @@ export interface UserProfile {
   role_id: string | null;
   branch_id?: string;
   avatar_url?: string;
+  username?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

@@ -1,8 +1,9 @@
+
 // ============================================
 // COMPANY ADMIN NAVIGATOR
 // ============================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -26,6 +27,12 @@ import VehicleDetailScreen from '@/screens/shared/VehicleDetailScreen';
 import CreateCustomerScreen from '@/screens/shared/CreateCustomerScreen';
 import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
+// New Imports
+import ChangePasswordScreen from '@/screens/shared/ChangePasswordScreen';
+import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
+import NotificationsScreen from '@/screens/shared/NotificationsScreen';
+import AboutScreen from '@/screens/shared/AboutScreen';
+import ProfilePopup from '@/components/navigation/ProfilePopup';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -37,14 +44,17 @@ function CustomHeader({
   theme,
   themeName,
   onToggleTheme,
+  showBack,
 }: {
   route: any;
   theme: ThemeColors;
   themeName: ThemeName;
   onToggleTheme: () => void;
+  showBack?: boolean;
 }) {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
   const getScreenTitle = () => {
@@ -64,45 +74,70 @@ function CustomHeader({
       Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
+      // New titles
+      ChangePassword: 'Change Password',
+      AccountDetails: 'Account Details',
+      Notifications: 'Notifications',
+      About: 'About GarageSquares',
     };
     return titleMap[routeName] || 'Dashboard';
   };
 
   return (
-    <View
-      style={[
-        styles.header,
-        { backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder },
-      ]}
-    >
-      <TouchableOpacity
-        onPress={() => {
-          // Open drawer or menu
-          navigation.dispatch(DrawerActions.openDrawer());
-        }}
-        style={styles.headerButton}
+    <>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder },
+        ]}
       >
-        <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
-      </TouchableOpacity>
-      
-      <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
-      
-      <View style={styles.headerRight}>
-        <TouchableOpacity
-          onPress={onToggleTheme}
-          style={styles.headerButton}
-        >
-          <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.avatarButton}>
-          <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
-            <Text style={[styles.avatarText, { color: theme.avatarText }]}>
-              {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-            </Text>
-          </View>
-        </TouchableOpacity>
+        {showBack ? (
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.headerButton}
+          >
+            <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>←</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={() => {
+              // Open drawer or menu
+              navigation.dispatch(DrawerActions.openDrawer());
+            }}
+            style={styles.headerButton}
+          >
+            <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
+          </TouchableOpacity>
+        )}
+
+        <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
+
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            onPress={onToggleTheme}
+            style={styles.headerButton}
+          >
+            <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.avatarButton}
+            onPress={() => setProfilePopupVisible(true)}
+          >
+            <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
+              <Text style={[styles.avatarText, { color: theme.avatarText }]}>
+                {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+
+      <ProfilePopup
+        visible={profilePopupVisible}
+        onClose={() => setProfilePopupVisible(false)}
+      />
+    </>
   );
 }
 
@@ -276,44 +311,53 @@ function CompanyAdminDrawer({
       >
         {() => <CompanyAdminTabs theme={theme} />}
       </Drawer.Screen>
-      <Drawer.Screen 
-        name="Vehicles" 
+      <Drawer.Screen
+        name="Vehicles"
         component={VehiclesScreen}
-        options={{ 
+        options={{
           title: 'Vehicles',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Customers" 
+      <Drawer.Screen
+        name="Customers"
         component={CustomersScreen}
-        options={{ 
+        options={{
           title: 'Customers',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="JobCards" 
+      <Drawer.Screen
+        name="JobCards"
         component={JobCardsScreen}
-        options={{ 
+        options={{
           title: 'Job Cards',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Reports" 
+      <Drawer.Screen
+        name="Reports"
         component={ReportsScreen}
-        options={{ 
+        options={{
           title: 'Reports',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Settings" 
+      <Drawer.Screen
+        name="Settings"
         component={SettingsScreen}
-        options={{ 
+        options={{
           title: 'Settings',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          drawerItemStyle: { display: 'none' },
+        }}
+      />
+
+      <Drawer.Screen
+        name="AccountDetails"
+        component={AccountDetailsScreen}
+        options={{
+          title: 'Account Details',
+          drawerItemStyle: { display: 'none' },
         }}
       />
     </Drawer.Navigator>
@@ -334,68 +378,132 @@ export default function CompanyAdminNavigator() {
           />
         )}
       </Stack.Screen>
-      <Stack.Screen 
-        name="ActiveJobs" 
+      <Stack.Screen
+        name="ActiveJobs"
         component={ActiveJobsScreen}
-        options={{ 
+        options={{
           headerShown: false, // Using custom header in screen
         }}
       />
-      <Stack.Screen 
-        name="JobCardDetail" 
+      <Stack.Screen
+        name="JobCardDetail"
         component={JobCardDetailScreen}
-        options={{ 
+        options={{
           headerShown: false, // Using custom header in screen
         }}
       />
-      <Stack.Screen 
-        name="CustomerDetail" 
+      <Stack.Screen
+        name="CustomerDetail"
         component={CustomerDetailScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Customer Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="VehicleDetail" 
+      <Stack.Screen
+        name="VehicleDetail"
         component={VehicleDetailScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Vehicle Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateCustomer" 
+      <Stack.Screen
+        name="CreateCustomer"
         component={CreateCustomerScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Add Customer',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateVehicle" 
+      <Stack.Screen
+        name="CreateVehicle"
         component={CreateVehicleScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Add Vehicle',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateJobCard" 
+      <Stack.Screen
+        name="CreateJobCard"
         component={CreateJobCardScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Create Job Card',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
+        }}
+      />
+      <Stack.Screen
+        name="AccountDetails"
+        component={AccountDetailsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
         }}
       />
     </Stack.Navigator>
@@ -412,6 +520,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
+    zIndex: 10,
   },
   headerButton: {
     padding: 8,
@@ -536,4 +645,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
