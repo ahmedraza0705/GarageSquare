@@ -9,15 +9,11 @@ import { supabase } from '@/lib/supabase';
 import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
+import { branchService } from '@/services/branchService';
 
 export default function BranchesScreen() {
-  // Initialize with Mock Data for Demo
-  const [branches, setBranches] = useState<Branch[]>([
-    { id: '1', name: 'Surat Branch', address: '1234, Main St. Vesu, Surat, Gujarat', manager_id: 'Ahmed Raza', is_active: true, created_at: '', updated_at: '', phone: '+91 96622 80843', email: 'ahmed.raza@gmail.com' },
-    { id: '2', name: 'Surat Branch', address: 'Mustafa Noorani, Adajan', manager_id: 'Mustafa Noorani', is_active: true, created_at: '', updated_at: '', phone: '', email: '' },
-    { id: '3', name: 'Mumbai Branch', address: 'Saafir Bhimani, Jogeshwari West', manager_id: 'Saafir Bhimani', is_active: true, created_at: '', updated_at: '', phone: '', email: '' },
-    { id: '4', name: 'Mumbai Branch', address: 'Varun Makwana, Jogeshwari East', manager_id: 'Varun Makwana', is_active: true, created_at: '', updated_at: '', phone: '', email: '' },
-  ]);
+  // State - now fetched from Supabase
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -28,47 +24,69 @@ export default function BranchesScreen() {
   const [newManagerName, setNewManagerName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+
+  // Validation State
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
   const navigation = useNavigation();
   const { theme, toggleTheme, themeName } = useTheme();
 
-  useEffect(() => {
-    // Check for returning new branch data
-    // @ts-ignore
-    const unsubscribe = navigation.addListener('focus', () => {
-      // We can't easily access route params here unless we use useRoute, 
-      // but simpler is to use a global store or just check if we have a way to pass data back.
-      // Actually, standard params passing: 
-      // We need to use useRoute().params, but this is a top level screen. 
-      // Let's assume we can get it via standard navigation prop access if typed, strictly speaking we need useRoute.
-    });
-    return unsubscribe;
-  }, [navigation]);
+  // Fetch branches from Supabase
+  const fetchBranches = async () => {
+    try {
+      setLoading(true);
+      const data = await branchService.getAllBranches();
+      setBranches(data);
+    } catch (error) {
+      console.error('Error loading branches:', error);
+      Alert.alert('Error', 'Failed to load branches. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Better way: useRoute()
-  // But wait, we are in a tab navigator usually. 
-  // Let's try to grab params from route 
+  // Load branches on mount
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  // Handle new branch from navigation params
   const route = useRoute();
   useEffect(() => {
     // @ts-ignore
     if (route.params?.newBranch) {
-      // @ts-ignore
-      setBranches(prev => [route.params.newBranch, ...prev]);
-      // Clear param so we don't add it again on re-render?
+      // Refresh the entire list to get latest data from Supabase
+      fetchBranches();
       navigation.setParams({ newBranch: undefined } as any);
       Alert.alert('Success', 'New branch added successfully!');
     }
   }, [route.params]);
 
-  const handleDeleteBranch = (id: string) => {
-    const updatedBranches = branches.filter(b => b.id !== id);
-    setBranches(updatedBranches);
+  const handleDeleteBranch = async (id: string) => {
+    try {
+      await branchService.deleteBranch(id);
+      setBranches(prev => prev.filter(b => b.id !== id));
+      Alert.alert('Success', 'Branch deleted successfully');
+    } catch (error) {
+      console.error('Error deleting branch:', error);
+      Alert.alert('Error', 'Failed to delete branch. Please try again.');
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: { [key: string]: boolean } = {};
+    if (!newBranchName) newErrors.name = true;
+    if (!newBranchAddress) newErrors.address = true;
+    if (!newManagerName) newErrors.manager = true;
+    if (!newPhone) newErrors.phone = true;
+    if (!newEmail) newErrors.email = true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleGoToUpload = () => {
-    if (!newBranchName || !newBranchAddress || !newManagerName || !newPhone) {
-      Alert.alert('Error', 'Please fill in all required fields');
+    if (!validateForm()) {
       return;
     }
 
@@ -82,17 +100,54 @@ export default function BranchesScreen() {
     };
 
     setModalVisible(false);
+    resetForm();
 
-    // Reset form
+    // @ts-ignore
+    navigation.navigate('BranchFileUpload', { branchData: tempBranchData });
+  };
+
+
+  const handleFinish = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('Creating branch with data:', { newBranchName, newBranchAddress, newPhone, newEmail });
+
+      const newBranchData = {
+        name: newBranchName,
+        address: newBranchAddress,
+        phone: newPhone,
+        email: newEmail,
+        is_active: true,
+        manager_id: undefined // Explicitly undefined to avoid FK constraint issues
+      };
+
+      await branchService.createBranch(newBranchData);
+
+      setModalVisible(false);
+      resetForm();
+
+      // Refresh list
+      await fetchBranches();
+      Alert.alert('Success', 'Branch created successfully');
+    } catch (error: any) {
+      console.error('Error creating branch:', error);
+      Alert.alert('Error', 'Failed to create branch: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetForm = () => {
     setNewBranchName('');
     setNewBranchAddress('');
     setNewManagerName('');
     setNewPhone('');
     setNewEmail('');
-    setNewPassword('');
-
-    // @ts-ignore
-    navigation.navigate('BranchFileUpload', { branchData: tempBranchData });
+    setErrors({});
   };
 
   const getInitials = (name: string) => {
@@ -107,6 +162,63 @@ export default function BranchesScreen() {
   const filteredBranches = branches.filter(branch =>
     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (branch.address && branch.address.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const renderInput = (
+    label: string,
+    value: string,
+    onChange: (text: string) => void,
+    placeholder: string,
+    errorKey: string,
+    keyboardType: any = 'default',
+    secureTextEntry: boolean = false
+  ) => (
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <Text style={{
+          color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+          fontWeight: 'bold',
+          fontSize: 14,
+        }}>{label}*</Text>
+        {errors[errorKey] && (
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="information-circle" size={16} color="#EF4444" style={{ marginRight: 4 }} />
+            <Text style={{ color: '#EF4444', fontSize: 12 }}>Mandatory field</Text>
+          </View>
+        )}
+      </View>
+      <View style={{
+        borderWidth: 1,
+        borderColor: errors[errorKey] ? '#EF4444' : (themeName === 'dark' ? '#444444' : '#D1D5DB'),
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
+      }}>
+        <TextInput
+          placeholder={placeholder}
+          style={{
+            flex: 1,
+            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+            padding: 0,
+          }}
+          placeholderTextColor='#9CA3AF'
+          value={value}
+          onChangeText={(text) => {
+            onChange(text);
+            if (errors[errorKey]) {
+              setErrors(prev => ({ ...prev, [errorKey]: false }));
+            }
+          }}
+          keyboardType={keyboardType}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
+        />
+        {errors[errorKey] && <Ionicons name="alert-circle-outline" size={20} color="#EF4444" />}
+      </View>
+    </View>
   );
 
   return (
@@ -176,7 +288,7 @@ export default function BranchesScreen() {
       <ScrollView
         style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727' : '#F3F4F6' }}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={() => { }} />
+          <RefreshControl refreshing={loading} onRefresh={fetchBranches} />
         }
       >
         <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
@@ -307,220 +419,54 @@ export default function BranchesScreen() {
                 }}>Add New Branch</Text>
 
                 <View className="space-y-4">
-                  <View>
-                    <Text style={{
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      fontWeight: 'bold',
-                      marginBottom: 6,
-                      fontSize: 14,
-                    }}>Branch Name*</Text>
-                    <TextInput
-                      placeholder="Enter Branch Name"
-                      style={{
-                        borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                        borderRadius: 12,
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                      }}
-                      placeholderTextColor='#9CA3AF'
-                      value={newBranchName}
-                      onChangeText={setNewBranchName}
-                    />
-                  </View>
-
-                  <View>
-                    <Text style={{
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      fontWeight: 'bold',
-                      marginBottom: 6,
-                      fontSize: 14,
-                    }}>Branch Address*</Text>
-                    <TextInput
-                      placeholder="Enter Branch Address"
-                      style={{
-                        borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                        borderRadius: 12,
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                      }}
-                      placeholderTextColor='#9CA3AF'
-                      value={newBranchAddress}
-                      onChangeText={setNewBranchAddress}
-                    />
-                  </View>
-
-                  <View>
-                    <Text style={{
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      fontWeight: 'bold',
-                      marginBottom: 6,
-                      fontSize: 14,
-                    }}>Branch Manager Name*</Text>
-                    <TextInput
-                      placeholder="Enter Manager Name"
-                      style={{
-                        borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                        borderRadius: 12,
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                      }}
-                      placeholderTextColor='#9CA3AF'
-                      value={newManagerName}
-                      onChangeText={setNewManagerName}
-                    />
-                  </View>
-
-                  <View>
-                    <Text style={{
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      fontWeight: 'bold',
-                      marginBottom: 6,
-                      fontSize: 14,
-                    }}>Phone No.*</Text>
-                    <TextInput
-                      placeholder="Enter Phone Number"
-                      style={{
-                        borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                        borderRadius: 12,
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                      }}
-                      placeholderTextColor='#9CA3AF'
-                      keyboardType="phone-pad"
-                      value={newPhone}
-                      onChangeText={setNewPhone}
-                    />
-                  </View>
-
-                  <View>
-                    <Text style={{
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      fontWeight: 'bold',
-                      marginBottom: 6,
-                      fontSize: 14,
-                    }}>Gmail*</Text>
-                    <View style={{
-                      borderWidth: 1,
-                      borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                    }}>
-                      <TextInput
-                        placeholder="Enter Gmail"
-                        style={{
-                          flex: 1,
-                          color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                          padding: 0,
-                        }}
-                        placeholderTextColor='#9CA3AF'
-                        value={newEmail}
-                        onChangeText={setNewEmail}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                      />
-                    </View>
-                  </View>
-                  <View>
-                    <Text style={{
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      fontWeight: 'bold',
-                      marginBottom: 6,
-                      fontSize: 14,
-                    }}>Password*</Text>
-                    <View style={{
-                      borderWidth: 1,
-                      borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                      flexDirection: 'row',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                    }}>
-                      <TextInput
-                        placeholder="Enter Password"
-                        style={{
-                          flex: 1,
-                          color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                          padding: 0,
-                        }}
-                        placeholderTextColor='#9CA3AF'
-                        value={newPassword}
-                        onChangeText={setNewPassword}
-                        secureTextEntry={true}
-                        keyboardType="default"
-                        autoCapitalize="none"
-                      />
-                    </View>
-                  </View>
-
-                  {/* Action Buttons */}
-                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
-                    <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#272727' : '#35C56A',
-                        borderRadius: 12,
-                        paddingVertical: 12,
-                        alignItems: 'center',
-                        backgroundColor: themeName === 'dark' ? '#272727' : '#35c56a58',
-                      }}
-                      onPress={() => {
-                        setModalVisible(false);
-                        setNewBranchName('');
-                        setNewBranchAddress('');
-                        setNewManagerName('');
-                        setNewPhone('');
-                        setNewEmail('');
-                        setNewPassword('');
-                      }}
-                    >
-                      <Text style={{
-                        fontWeight: 'bold',
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      }}>Skip & Finish</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={{
-                        flex: 1,
-                        borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                        borderRadius: 12,
-                        paddingVertical: 12,
-                        alignItems: 'center',
-                        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                      }}
-                      onPress={handleGoToUpload}
-                    >
-                      <Text style={{
-                        fontWeight: 'bold',
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                      }}>Add File</Text>
-                    </TouchableOpacity>
-                  </View>
-
+                  {renderInput('Branch Name', newBranchName, setNewBranchName, 'Enter Branch Name', 'name')}
+                  {renderInput('Branch Address', newBranchAddress, setNewBranchAddress, 'Enter Branch Address', 'address')}
+                  {renderInput('Branch Manager Name', newManagerName, setNewManagerName, 'Enter Manager Name', 'manager')}
+                  {renderInput('Phone No.', newPhone, setNewPhone, 'Enter Phone Number', 'phone', 'phone-pad')}
+                  {renderInput('Gmail', newEmail, setNewEmail, 'Enter Gmail', 'email', 'email-address')}
                 </View>
+
+                {/* Action Buttons */}
+                <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      borderWidth: 1,
+                      borderColor: themeName === 'dark' ? '#272727' : '#35C56A',
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                      backgroundColor: themeName === 'dark' ? '#272727' : '#35c56a58',
+                    }}
+                    onPress={handleFinish}
+                    disabled={loading}>
+                    <Text style={{
+                      fontWeight: 'bold',
+                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                    }}>Skip & Finish</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{
+                      flex: 1,
+                      borderWidth: 1,
+                      borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
+                      borderRadius: 12,
+                      paddingVertical: 12,
+                      alignItems: 'center',
+                      backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
+                    }}
+                    onPress={handleGoToUpload}
+                  >
+                    <Text style={{
+                      fontWeight: 'bold',
+                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                    }}>Add File</Text>
+                  </TouchableOpacity>
+                </View>
+
               </View>
+
             </TouchableWithoutFeedback>
           </TouchableOpacity>
         </KeyboardAvoidingView>

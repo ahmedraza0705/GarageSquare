@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { branchService } from '@/services/branchService';
 import { Branch } from '@/types';
+import { ActivityIndicator } from 'react-native';
 
 export default function BranchFileUploadScreen() {
     const navigation = useNavigation();
     const route = useRoute();
     const { branchData } = route.params as { branchData: any };
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploads, setUploads] = useState({
         customers: false,
         users: false,
@@ -20,29 +23,47 @@ export default function BranchFileUploadScreen() {
         Alert.alert('Success', 'File uploaded successfully');
     };
 
-    const handleFinish = () => {
-        // Construct final branch object
-        const newBranch: Branch = {
-            id: Date.now().toString(),
-            name: branchData.name,
-            address: branchData.address,
-            manager_id: branchData.manager_id,
-            phone: branchData.phone,
-            is_active: true,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            email: branchData.email
-        };
+    const handleFinish = async () => {
+        try {
+            setIsSubmitting(true);
 
-        // Navigate back to Branches with new data
-        // @ts-ignore
-        navigation.navigate('Main', {
-            screen: 'MainTabs',
-            params: {
-                screen: 'BranchesTab',
-                params: { newBranch }
-            }
-        });
+            // Construct branch object for Supabase
+            // Note: DB generates id, created_at, updated_at
+            const newBranchData = {
+                name: branchData.name,
+                address: branchData.address,
+                // TODO: Manager ID should ideally refer to a valid user profile UUID
+                // For now, we are passing the name from the form, which might need adjustment 
+                // depending on your database constraints (if manager_id is UUID foreign key).
+                // If it fails, set to null or handle appropriately.
+                // manager_id: branchData.manager_id, 
+                // TEMPORARY FIX: If manager_id is just a name, don't send it if schema expects UUID
+                // or ensure your schema allows text or you have a valid UUID.
+                // Assuming for now we skip manager_id if it's just a name to avoid UUID error
+                manager_id: undefined,
+                phone: branchData.phone,
+                is_active: true,
+                email: branchData.email
+            };
+
+            // Save to Supabase
+            const createdBranch = await branchService.createBranch(newBranchData);
+
+            // Navigate back to Branches with new data
+            // @ts-ignore
+            navigation.navigate('Main', {
+                screen: 'MainTabs',
+                params: {
+                    screen: 'BranchesTab',
+                    params: { newBranch: createdBranch }
+                }
+            });
+        } catch (error) {
+            console.error('Error creating branch:', error);
+            Alert.alert('Error', 'Failed to create branch. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const UploadSection = ({ title, subtitle, type, isUploaded }: any) => (
@@ -115,8 +136,13 @@ export default function BranchFileUploadScreen() {
                         alignItems: 'center'
                     }}
                     onPress={handleFinish}
+                    disabled={isSubmitting}
                 >
-                    <Text className="text-black font-bold text-lg">Finish Setup</Text>
+                    {isSubmitting ? (
+                        <ActivityIndicator color="#000" />
+                    ) : (
+                        <Text className="text-black font-bold text-lg">Finish Setup</Text>
+                    )}
                 </TouchableOpacity>
             </View>
 
