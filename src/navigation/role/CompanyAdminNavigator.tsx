@@ -38,6 +38,8 @@ import VehicleDetailScreen from '@/screens/shared/VehicleDetailScreen';
 import CreateCustomerScreen from '@/screens/shared/CreateCustomerScreen';
 import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
+import TasksScreen from '@/screens/supervisor/TasksScreen';
+import TaskDetailScreen from '@/screens/shared/TaskDetailScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -301,6 +303,8 @@ export default function CompanyAdminNavigator() {
       <Stack.Screen name="CreateCustomer" component={CreateCustomerScreen} options={{ headerShown: true, title: 'Add Customer' }} />
       <Stack.Screen name="CreateVehicle" component={CreateVehicleScreen} options={{ headerShown: true, title: 'Add Vehicle' }} />
       <Stack.Screen name="CreateJobCard" component={CreateJobCardScreen} options={{ headerShown: true, title: 'New Job Card' }} />
+      <Stack.Screen name="Tasks" component={TasksScreen} options={{ headerShown: true, title: 'Tasks' }} />
+      <Stack.Screen name="TaskDetail" component={TaskDetailScreen} options={{ headerShown: true, title: 'Task Details' }} />
     </Stack.Navigator>
   );
 }
