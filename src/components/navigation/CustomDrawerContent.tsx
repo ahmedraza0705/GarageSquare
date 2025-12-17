@@ -4,7 +4,7 @@
 // ============================================
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
@@ -158,7 +158,10 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
           style={styles.logoutButton}
           onPress={handleLogout}
         >
-          <Text style={styles.logoutIcon}>↪</Text>
+          <Image
+            source={require('../../assets/logout_icon_v2.png')}
+            style={styles.logoutImage}
+          />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
@@ -243,11 +246,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
   },
-  logoutIcon: {
-    fontSize: 18,
-    color: '#ef4444',
-    marginRight: 8,
-    transform: [{ rotate: '180deg' }]
+  logoutImage: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+    resizeMode: 'contain',
   },
   logoutText: {
     fontSize: 16,

@@ -4,7 +4,7 @@
 // ============================================
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -91,26 +91,31 @@ function CustomHeader({
           { backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder },
         ]}
       >
-        {showBack ? (
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.headerButton}
-          >
-            <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>←</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={() => {
-              // Open drawer or menu
-              navigation.dispatch(DrawerActions.openDrawer());
-            }}
-            style={styles.headerButton}
-          >
-            <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerLeft}>
+          {showBack ? (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={styles.headerButton}
+            >
+              <Image
+                source={require('../../assets/back_icon_v2.png')}
+                style={{ width: 30, height: 30, resizeMode: 'contain' }}
+              />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => {
+                // Open drawer or menu
+                navigation.dispatch(DrawerActions.openDrawer());
+              }}
+              style={styles.headerButton}
+            >
+              <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
+            </TouchableOpacity>
+          )}
 
-        <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
+          <Text style={[styles.headerTitle, { color: theme.headerText, marginLeft: 8 }]}>{getScreenTitle()}</Text>
+        </View>
 
         <View style={styles.headerRight}>
           <TouchableOpacity
@@ -343,23 +348,7 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: 'Settings',
-          drawerItemStyle: { display: 'none' },
-        }}
-      />
 
-      <Drawer.Screen
-        name="AccountDetails"
-        component={AccountDetailsScreen}
-        options={{
-          title: 'Account Details',
-          drawerItemStyle: { display: 'none' },
-        }}
-      />
     </Drawer.Navigator>
   );
 }
@@ -506,6 +495,22 @@ export default function CompanyAdminNavigator() {
           ),
         }}
       />
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
     </Stack.Navigator>
   );
 }
@@ -521,6 +526,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
     zIndex: 10,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   headerButton: {
     padding: 8,

@@ -1,9 +1,9 @@
-
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
+import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 type ProfilePopupProps = {
     visible: boolean;
@@ -12,12 +12,21 @@ type ProfilePopupProps = {
 
 export default function ProfilePopup({ visible, onClose }: ProfilePopupProps) {
     const navigation = useNavigation();
-    const { theme, toggleTheme, themeName } = useTheme();
-    const { user } = useAuth();
+    const { themeName, toggleTheme } = useTheme();
+    const { user, signOut } = useAuth();
 
     const handleNavigate = (screen: string) => {
         onClose();
         navigation.navigate(screen as never);
+    };
+
+    const handleLogout = async () => {
+        try {
+            onClose();
+            await signOut();
+        } catch (error) {
+            console.error('Logout failed:', error);
+        }
     };
 
     if (!visible) return null;
@@ -31,63 +40,72 @@ export default function ProfilePopup({ visible, onClose }: ProfilePopupProps) {
         >
             <TouchableWithoutFeedback onPress={onClose}>
                 <View style={styles.overlay}>
-                    {/* Position the popup relative to where the profile icon usually is */}
                     <TouchableWithoutFeedback>
                         <View style={styles.popupContainer}>
                             {/* Header Section */}
                             <View style={styles.header}>
-                                <View style={styles.avatar}>
-                                    <Text style={styles.avatarText}>
-                                        {user?.profile?.full_name?.[0]?.toUpperCase() || 'A'}
-                                        {user?.profile?.full_name?.split(' ')?.[1]?.[0]?.toUpperCase() || 'R'}
-                                    </Text>
+                                <View style={styles.profileLeft}>
+                                    <View style={styles.avatar}>
+                                        <Text style={styles.avatarText}>
+                                            {user?.profile?.full_name?.[0]?.toUpperCase() || 'A'}
+                                            {user?.profile?.full_name?.split(' ')?.[1]?.[0]?.toUpperCase() || 'R'}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.userInfo}>
+                                        <Text style={styles.userName}>{user?.profile?.full_name || 'Ahmed Raza'}</Text>
+                                        <Text style={styles.userBranch}>Branch Name: Surat</Text>
+                                    </View>
                                 </View>
-                                <View style={styles.userInfo}>
-                                    <Text style={styles.userName}>{user?.profile?.full_name || 'Ahmed Raza'}</Text>
-                                    <Text style={styles.userBranch}>Branch Name: Surat</Text>
-                                </View>
+                                <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
+                                    <Image
+                                        source={require('../../assets/logout_icon_v2.png')}
+                                        style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                                    />
+                                </TouchableOpacity>
                             </View>
 
                             <View style={styles.divider} />
 
                             {/* Menu Options */}
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={() => handleNavigate('AccountDetails')}
-                            >
-                                <Text style={styles.menuIcon}>👤</Text>
-                                <Text style={styles.menuText}>Account Details</Text>
-                            </TouchableOpacity>
+                            <View style={styles.menuContainer}>
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={() => handleNavigate('AccountDetails')}
+                                >
+                                    <Feather name="user" size={20} color="#1f2937" style={styles.menuIcon} />
+                                    <Text style={styles.menuText}>Account Details</Text>
+                                </TouchableOpacity>
 
-                            <View style={styles.menuDivider} />
+                                <View style={styles.menuDivider} />
 
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={() => handleNavigate('ChangePassword')}
-                            >
-                                <Text style={styles.menuIcon}>🔒</Text>
-                                <Text style={styles.menuText}>Change Password</Text>
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={() => handleNavigate('ChangePassword')}
+                                >
+                                    <Ionicons name="key-outline" size={20} color="#1f2937" style={styles.menuIcon} />
+                                    <Text style={styles.menuText}>Change Password</Text>
+                                </TouchableOpacity>
 
-                            <View style={styles.menuDivider} />
+                                <View style={styles.menuDivider} />
 
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={toggleTheme}
-                            >
-                                <Text style={styles.menuIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
-                                <Text style={styles.menuText}>Mode</Text>
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={toggleTheme}
+                                >
+                                    <Feather name={themeName === 'dark' ? 'sun' : 'moon'} size={20} color="#1f2937" style={styles.menuIcon} />
+                                    <Text style={styles.menuText}>Mode</Text>
+                                </TouchableOpacity>
 
-                            <View style={styles.menuDivider} />
+                                <View style={styles.menuDivider} />
 
-                            <TouchableOpacity
-                                style={styles.menuItem}
-                                onPress={() => handleNavigate('Settings')}
-                            >
-                                <Text style={styles.menuIcon}>⚙️</Text>
-                                <Text style={styles.menuText}>Settings</Text>
-                            </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={() => handleNavigate('Settings')}
+                                >
+                                    <Feather name="settings" size={20} color="#1f2937" style={styles.menuIcon} />
+                                    <Text style={styles.menuText}>Settings</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </TouchableWithoutFeedback>
                 </View>
@@ -99,43 +117,52 @@ export default function ProfilePopup({ visible, onClose }: ProfilePopupProps) {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.2)', // Slight dim
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
     popupContainer: {
         position: 'absolute',
-        top: 60, // Adjust based on header height
+        top: 60,
         right: 16,
-        width: 280,
+        width: 300,
         backgroundColor: 'white',
-        borderRadius: 20,
+        borderRadius: 16,
         padding: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 8,
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: '#000000',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    profileLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 48,
+        height: 48,
+        borderRadius: 24,
         backgroundColor: '#fca5a5',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#ef4444',
     },
     avatarText: {
         color: '#7f1d1d',
         fontWeight: 'bold',
-        fontSize: 14,
+        fontSize: 16,
     },
     userInfo: {
-        flex: 1,
+        justifyContent: 'center',
     },
     userName: {
         fontSize: 16,
@@ -143,13 +170,19 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     userBranch: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#6b7280',
+    },
+    logoutIcon: {
+        padding: 4,
     },
     divider: {
         height: 1,
         backgroundColor: '#e5e7eb',
         marginBottom: 8,
+    },
+    menuContainer: {
+        paddingTop: 8,
     },
     menuItem: {
         flexDirection: 'row',
@@ -157,19 +190,18 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     menuIcon: {
-        fontSize: 18,
-        marginRight: 12,
+        marginRight: 16,
         width: 24,
         textAlign: 'center',
     },
     menuText: {
-        fontSize: 15,
-        color: '#1f2937',
-        fontWeight: '500',
+        fontSize: 16,
+        color: '#000',
+        fontWeight: '400',
     },
     menuDivider: {
         height: 1,
-        backgroundColor: '#f3f4f6',
-        marginLeft: 36, // Indent to align with text
+        backgroundColor: '#e5e7eb',
+        marginLeft: 40,
     }
 });

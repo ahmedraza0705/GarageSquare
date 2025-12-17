@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
@@ -19,27 +20,27 @@ export default function SettingsScreen() {
   const menuItems = [
     {
       title: 'Account Details',
-      icon: '👤',
+      icon: <Feather name="user" size={24} color="#000" />,
       screen: 'AccountDetails'
     },
     {
       title: 'Notifications',
-      icon: '🔔',
+      icon: <Feather name="bell" size={24} color="#000" />,
       screen: 'Notifications'
     },
     {
       title: 'Help and Support',
-      icon: '🎧',
-      screen: 'Support' // Not implemented yet
+      icon: <Feather name="headphones" size={24} color="#000" />,
+      screen: 'Support'
     },
     {
       title: 'Language',
-      icon: '文',
-      screen: 'Language' // Not implemented yet
+      icon: <Ionicons name="text" size={24} color="#000" />,
+      screen: 'Language'
     },
     {
       title: 'About GarageSquares',
-      icon: 'ℹ️',
+      icon: <Feather name="info" size={24} color="#000" />,
       screen: 'About'
     },
   ];
@@ -61,33 +62,35 @@ export default function SettingsScreen() {
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.menuItem}
+              style={styles.menuItemCard}
               onPress={() => handlePress(item)}
             >
               <View style={styles.menuLeft}>
                 <View style={styles.iconContainer}>
-                  <Text style={styles.icon}>{item.icon}</Text>
+                  {item.icon}
                 </View>
                 <Text style={styles.menuTitle}>{item.title}</Text>
               </View>
-              <Text style={styles.chevron}>›</Text>
+              <Feather name="chevron-right" size={20} color="#000" />
             </TouchableOpacity>
           ))}
         </View>
 
-        <View style={[styles.menuContainer, { marginTop: 24 }]}>
-          <TouchableOpacity
-            style={[styles.menuItem, { borderBottomWidth: 0 }]}
-            onPress={handleLogout}
-          >
-            <View style={styles.menuLeft}>
-              <View style={styles.iconContainer}>
-                <Text style={styles.icon}>🚪</Text>
-              </View>
-              <Text style={[styles.menuTitle, { color: '#ef4444' }]}>Log Out</Text>
+        <TouchableOpacity
+          style={styles.logoutCard}
+          onPress={handleLogout}
+        >
+          <View style={styles.menuLeft}>
+            <View style={styles.iconContainer}>
+              {/* Using Custom Logout Image */}
+              <Image
+                source={require('../../assets/logout_icon_v2.png')}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+              />
             </View>
-          </TouchableOpacity>
-        </View>
+            <Text style={[styles.menuTitle, { color: '#FF4242' }]}>Log Out</Text>
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -101,44 +104,48 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   menuContainer: {
+    gap: 12, // Gap between cards
+  },
+  menuItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: 'white',
     borderRadius: 16,
-    paddingVertical: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
   },
-  menuItem: {
+  logoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   menuLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   iconContainer: {
-    width: 30,
+    width: 32,
     alignItems: 'center',
     marginRight: 12,
   },
-  icon: {
-    fontSize: 18,
-  },
   menuTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-  },
-  chevron: {
-    fontSize: 20,
-    color: '#9ca3af',
-    fontWeight: 'bold',
+    fontWeight: '700', // Bold as in the image
+    color: '#000',
   },
 });
