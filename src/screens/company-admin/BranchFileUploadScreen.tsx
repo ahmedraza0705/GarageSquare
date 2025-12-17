@@ -106,12 +106,20 @@ export default function BranchFileUploadScreen() {
 
             <View className="p-5 border-t border-gray-100">
                 <TouchableOpacity
-                    className="rounded-xl py-4 items-center bg-[#10B981]"
+                    style={{
+                        backgroundColor: '#35c56a71',
+                        borderWidth: 1,
+                        borderColor: '#35C56A',
+                        borderRadius: 12,
+                        paddingVertical: 16,
+                        alignItems: 'center'
+                    }}
                     onPress={handleFinish}
                 >
-                    <Text className="text-white font-bold text-lg">Finish Setup</Text>
+                    <Text className="text-black font-bold text-lg">Finish Setup</Text>
                 </TouchableOpacity>
             </View>
+
         </SafeAreaView>
     );
 }

@@ -471,29 +471,53 @@ export default function BranchesScreen() {
                       />
                     </View>
                   </View>
-                  <TouchableOpacity
-                    style={{
-                      borderWidth: 1,
-                      borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-                      borderRadius: 12,
-                      paddingVertical: 12,
-                      alignItems: 'center',
-                      marginTop: 8,
-                      width: 128,
-                      backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
-                      shadowColor: '#000',
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                    onPress={handleGoToUpload}
-                  >
-                    <Text style={{
-                      fontWeight: 'bold',
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                    }}>Add File</Text>
-                  </TouchableOpacity>
+
+                  {/* Action Buttons */}
+                  <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: themeName === 'dark' ? '#272727' : '#35C56A',
+                        borderRadius: 12,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                        backgroundColor: themeName === 'dark' ? '#272727' : '#35c56a58',
+                      }}
+                      onPress={() => {
+                        setModalVisible(false);
+                        setNewBranchName('');
+                        setNewBranchAddress('');
+                        setNewManagerName('');
+                        setNewPhone('');
+                        setNewEmail('');
+                        setNewPassword('');
+                      }}
+                    >
+                      <Text style={{
+                        fontWeight: 'bold',
+                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                      }}>Skip & Finish</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
+                        borderRadius: 12,
+                        paddingVertical: 12,
+                        alignItems: 'center',
+                        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
+                      }}
+                      onPress={handleGoToUpload}
+                    >
+                      <Text style={{
+                        fontWeight: 'bold',
+                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                      }}>Add File</Text>
+                    </TouchableOpacity>
+                  </View>
 
                 </View>
               </View>
