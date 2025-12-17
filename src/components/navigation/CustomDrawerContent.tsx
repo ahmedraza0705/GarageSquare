@@ -88,6 +88,8 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   return (
     <View style={[styles.container, { backgroundColor: theme.drawerBackground }]}>
       <DrawerContentScrollView
+
+
         {...props}
         contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.drawerBackground }]}
       >
