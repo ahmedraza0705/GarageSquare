@@ -182,12 +182,13 @@ function TabIcon({ type, focused, theme }: TabIconProps) {
 
 // Bottom Tab Navigator
 function CompanyAdminTabs() {
-  const { theme } = useTheme();
+  const { theme, themeName, toggleTheme } = useTheme();
+  const navigation = useNavigation();
 
   return (
     <Tab.Navigator
       screenOptions={{
-        headerShown: false,
+        headerShown: true, // Enable headers for tabs
         tabBarStyle: {
           backgroundColor: theme.tabBarBg,
           borderTopWidth: 1,
@@ -209,10 +210,18 @@ function CompanyAdminTabs() {
       <Tab.Screen
         name="DashboardTab"
         component={CompanyAdminDashboard}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => <TabIcon type="grid" focused={focused} theme={theme} />,
-        }}
+          header: () => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+            />
+          ),
+        })}
       />
       <Tab.Screen
         name="BranchesTab"
@@ -220,23 +229,40 @@ function CompanyAdminTabs() {
         options={{
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => <TabIcon type="building" focused={focused} theme={theme} />,
+          headerShown: false, // Hide header for Branches tab - it has its own dark header
         }}
       />
       <Tab.Screen
         name="UsersTab"
         component={UsersScreen}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => <TabIcon type="user" focused={focused} theme={theme} />,
-        }}
+          header: () => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+            />
+          ),
+        })}
       />
       <Tab.Screen
         name="ReportsTab"
         component={ReportsScreen}
-        options={{
+        options={({ route }) => ({
           tabBarLabel: '',
           tabBarIcon: ({ focused }) => <TabIcon type="bars" focused={focused} theme={theme} />,
-        }}
+          header: () => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+            />
+          ),
+        })}
       />
     </Tab.Navigator>
   );
@@ -278,6 +304,7 @@ function CompanyAdminDrawer({
         component={CompanyAdminTabs}
         options={{
           title: 'Dashboard',
+          headerShown: false, // Hide drawer header for tabs since they have their own
         }}
       />
       <Drawer.Screen
@@ -406,20 +433,14 @@ export default function CompanyAdminNavigator() {
         name="BranchDetails"
         component={BranchDetailsScreen}
         options={{
-          headerShown: true,
-          title: 'Branch Management',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false, // Custom dark mode header in component
         }}
       />
       <Stack.Screen
         name="BranchExtendedInfo"
         component={BranchExtendedInfoScreen}
         options={{
-          headerShown: true,
-          title: 'Branch Information',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false, // Custom dark mode header in component
         }}
       />
       <Stack.Screen

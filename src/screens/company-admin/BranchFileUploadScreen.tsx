@@ -75,21 +75,11 @@ export default function BranchFileUploadScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-white">
-            <View className="flex-row items-center px-4 py-3 border-b border-gray-100">
-                <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-                    <Ionicons name="arrow-back" size={24} color="#000" />
-                </TouchableOpacity>
+            <View className="px-4 py-3 border-b border-gray-100">
                 <Text className="text-lg font-bold">Branch Setup</Text>
             </View>
 
             <ScrollView className="flex-1 px-5 pt-6">
-                {/* Progress Bar */}
-                <View className="flex-row mb-8 space-x-2">
-                    <View className="flex-1 h-1 bg-[#3B82F6] rounded-full" />
-                    <View className="flex-1 h-1 bg-[#3B82F6] rounded-full" />
-                    <View className="flex-1 h-1 bg-[#3B82F6] rounded-full" />
-                    <View className="flex-1 h-1 bg-[#3B82F6] rounded-full" />
-                </View>
 
                 <UploadSection
                     title="Branch Customers"

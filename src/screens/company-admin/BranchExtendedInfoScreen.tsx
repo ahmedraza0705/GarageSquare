@@ -1,12 +1,17 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, FlatList } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function BranchExtendedInfoScreen() {
+    const navigation = useNavigation();
     const route = useRoute();
     const { branch } = route.params as { branch: Branch };
+    const { theme, toggleTheme, themeName } = useTheme();
+    const { user } = useAuth();
 
     // Mock data matching the image
     const stats = [
@@ -19,10 +24,10 @@ export default function BranchExtendedInfoScreen() {
     ];
 
     const inventory = [
-        { name: 'OIL', status: '12 Units remaining', color: 'text-gray-600' },
-        { name: 'Tyre Stock', status: 'Out of Stock', color: 'text-red-500' },
-        { name: 'Brake Fluid', status: '3 Units remaining', color: 'text-gray-600' },
-        { name: 'Coolant', status: '16 Units remaining', color: 'text-gray-600' },
+        { name: 'OIL', status: '12 Units remaining', color: themeName === 'dark' ? '#9CA3AF' : '#6B7280' },
+        { name: 'Tyre Stock', status: 'Out of Stock', color: '#EF4444' },
+        { name: 'Brake Fluid', status: '3 Units remaining', color: themeName === 'dark' ? '#9CA3AF' : '#6B7280' },
+        { name: 'Coolant', status: '16 Units remaining', color: themeName === 'dark' ? '#9CA3AF' : '#6B7280' },
     ];
 
     const staff = [
@@ -41,74 +46,220 @@ export default function BranchExtendedInfoScreen() {
     ];
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            <ScrollView className="flex-1 px-5 pt-6 pb-20">
+        <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB' }}>
+            {/* Custom Header */}
+            <View style={{
+                backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottomWidth: 1,
+                borderBottomColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
+            }}>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
+                    <Ionicons name="arrow-back" size={24} color={themeName === 'dark' ? '#F9FAFB' : '#111827'} />
+                </TouchableOpacity>
+                <Text style={{
+                    fontSize: 18,
+                    fontWeight: 'bold',
+                    color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                }}>
+                    Branch Information
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <TouchableOpacity
+                        onPress={toggleTheme}
+                        style={{
+                            backgroundColor: themeName === 'dark' ? '#60A5FA' : '#DBEAFE',
+                            width: 40,
+                            height: 40,
+                            borderRadius: 10,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Ionicons
+                            name={themeName === 'dark' ? 'sunny' : 'moon'}
+                            size={20}
+                            color={themeName === 'dark' ? '#1E3A8A' : '#1E40AF'}
+                        />
+                    </TouchableOpacity>
+                    <View style={{
+                        backgroundColor: themeName === 'dark' ? '#FCA5A5' : '#FECACA',
+                        width: 40,
+                        height: 40,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: themeName === 'dark' ? '#7F1D1D' : '#991B1B',
+                        }}>
+                            {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+            <ScrollView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 24, paddingBottom: 80 }}>
 
                 {/* Stats Grid */}
-                <View className="flex-row flex-wrap justify-between mb-2">
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 8 }}>
                     {stats.map((stat, index) => (
-                        <View key={index} className="w-[48%] bg-white rounded-[20px] p-4 mb-3 shadow-sm border border-gray-200">
-                            <Text className="text-gray-900 text-xs font-bold mb-2">{stat.title}</Text>
-                            <Text className="text-xl font-bold text-gray-900">{stat.value}</Text>
+                        <View key={index} style={{
+                            width: '48%',
+                            backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                            borderRadius: 20,
+                            padding: 16,
+                            marginBottom: 12,
+                            borderWidth: 1,
+                            borderColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
+                        }}>
+                            <Text style={{
+                                color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                                marginBottom: 8,
+                            }}>{stat.title}</Text>
+                            <Text style={{
+                                fontSize: 20,
+                                fontWeight: 'bold',
+                                color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                            }}>{stat.value}</Text>
                         </View>
                     ))}
                 </View>
 
                 {/* Inventory Status */}
-                <View className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-200 mb-4 h-64 justify-between">
+                <View style={{
+                    backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                    borderRadius: 20,
+                    padding: 20,
+                    borderWidth: 1,
+                    borderColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
+                    marginBottom: 16,
+                    height: 256,
+                    justifyContent: 'space-between',
+                }}>
                     <View>
-                        <View className="flex-row items-center mb-4">
-                            <Ionicons name="cube-outline" size={24} color="#000" />
-                            <Text className="text-lg font-bold text-gray-900 ml-2">Inventory Status</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <Ionicons name="cube-outline" size={24} color={themeName === 'dark' ? '#F9FAFB' : '#000'} />
+                            <Text style={{
+                                fontSize: 18,
+                                fontWeight: 'bold',
+                                color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                                marginLeft: 8,
+                            }}>Inventory Status</Text>
                         </View>
 
-                        <View className="space-y-3">
+                        <View style={{ gap: 12 }}>
                             {inventory.map((item, index) => (
-                                <View key={index} className="flex-row justify-between">
-                                    <Text className="text-gray-500 font-medium">{item.name}</Text>
-                                    <Text className={`text-sm ${item.color.replace('text-gray-600', 'text-gray-500')}`}>{item.status}</Text>
+                                <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                    <Text style={{
+                                        color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
+                                        fontWeight: '500',
+                                    }}>{item.name}</Text>
+                                    <Text style={{ fontSize: 14, color: item.color }}>{item.status}</Text>
                                 </View>
                             ))}
                         </View>
                     </View>
 
-                    <TouchableOpacity className="w-full py-2.5 bg-white rounded-full border border-gray-300 items-center">
-                        <Text className="text-gray-600 font-medium text-sm">Open Branch Inventory</Text>
+                    <TouchableOpacity style={{
+                        width: '100%',
+                        paddingVertical: 10,
+                        backgroundColor: themeName === 'dark' ? '#272727' : '#FFFFFF',
+                        borderRadius: 999,
+                        borderWidth: 1,
+                        borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
+                        alignItems: 'center',
+                    }}>
+                        <Text style={{
+                            color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
+                            fontWeight: '500',
+                            fontSize: 14,
+                        }}>Open Branch Inventory</Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Staff and Vehicles Row */}
-                <View className="flex-row justify-between">
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
 
                     {/* Staff */}
-                    <View className="w-[48%] bg-white rounded-[20px] p-4 shadow-sm border border-gray-200">
-                        <Text className="text-lg font-bold text-gray-900 mb-4">Staff</Text>
-                        <View className="space-y-3">
+                    <View style={{
+                        width: '48%',
+                        backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                        borderRadius: 20,
+                        padding: 16,
+                        borderWidth: 1,
+                        borderColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
+                    }}>
+                        <Text style={{
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                            marginBottom: 16,
+                        }}>Staff</Text>
+                        <View style={{ gap: 12 }}>
                             {staff.map((s, i) => (
-                                <View key={i} className="flex-row justify-between items-center">
-                                    <Text className="text-gray-500 text-[11px] flex-1 mr-1" numberOfLines={1}>{s.role}</Text>
-                                    <Text className="text-gray-900 font-bold text-sm">{s.count}</Text>
+                                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{
+                                        color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
+                                        fontSize: 11,
+                                        flex: 1,
+                                        marginRight: 4,
+                                    }} numberOfLines={1}>{s.role}</Text>
+                                    <Text style={{
+                                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                                        fontWeight: 'bold',
+                                        fontSize: 14,
+                                    }}>{s.count}</Text>
                                 </View>
                             ))}
                         </View>
                     </View>
 
                     {/* Vehicles Status */}
-                    <View className="w-[48%] bg-white rounded-[20px] p-4 shadow-sm border border-gray-200">
-                        <Text className="text-lg font-bold text-gray-900 mb-4">Vehicles Status</Text>
-                        <View className="space-y-3">
+                    <View style={{
+                        width: '48%',
+                        backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                        borderRadius: 20,
+                        padding: 16,
+                        borderWidth: 1,
+                        borderColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
+                    }}>
+                        <Text style={{
+                            fontSize: 18,
+                            fontWeight: 'bold',
+                            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                            marginBottom: 16,
+                        }}>Vehicles Status</Text>
+                        <View style={{ gap: 12 }}>
                             {vehiclesStatus.map((v, i) => (
-                                <View key={i} className="flex-row justify-between items-center">
-                                    <Text className="text-gray-500 text-[11px] flex-1 mr-1">{v.status}</Text>
-                                    <Text className="text-gray-900 font-bold text-sm">{v.count}</Text>
+                                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{
+                                        color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
+                                        fontSize: 11,
+                                        flex: 1,
+                                        marginRight: 4,
+                                    }}>{v.status}</Text>
+                                    <Text style={{
+                                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                                        fontWeight: 'bold',
+                                        fontSize: 14,
+                                    }}>{v.count}</Text>
                                 </View>
                             ))}
                         </View>
                     </View>
 
                 </View>
-                <View className="h-20" />
+                <View style={{ height: 80 }} />
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
