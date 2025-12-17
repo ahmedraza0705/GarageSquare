@@ -126,9 +126,9 @@ function CustomHeader({
 // Bottom Tab Navigator
 function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
   // We want a blue bar with white icons, matching the user's image request
-  const BAR_COLOR = '#2563EB'; // Blue-600
-  const ACTIVE_COLOR = '#FFFFFF';
-  const INACTIVE_COLOR = 'rgba(255, 255, 255, 0.6)';
+  const BAR_COLOR = '#4682B4'; // Blue-600
+  const ACTIVE_COLOR = '#ffffff86';
+  const INACTIVE_COLOR = '#FFFFFF';
 
   return (
     <Tab.Navigator
