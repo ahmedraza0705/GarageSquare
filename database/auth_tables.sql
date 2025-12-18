@@ -172,9 +172,9 @@ CREATE POLICY "Company admins can view all profiles"
   ON user_profiles FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role_id = (SELECT id FROM roles WHERE name = 'company_admin')
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid()
+      AND role_id = (SELECT id FROM roles WHERE name = 'company_admin')
     )
   );
 
@@ -184,9 +184,9 @@ CREATE POLICY "Company admins can update any profile"
   ON user_profiles FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM user_profiles up
-      WHERE up.id = auth.uid()
-      AND up.role_id = (SELECT id FROM roles WHERE name = 'company_admin')
+      SELECT 1 FROM user_profiles
+      WHERE id = auth.uid()
+      AND role_id = (SELECT id FROM roles WHERE name = 'company_admin')
     )
   );
 
@@ -212,8 +212,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- RPC: assign role by admin (app-only helper)
 -- ============================================
 -- This function lets a company_admin (by RLS/policy) assign a role and update
--- basic profile fields WITHOUT causing policy recursion on I do not want to add users directly from the Supabase dashboard.
-I want all users to be created from the application itself.user_profiles.
+-- basic profile fields WITHOUT causing policy recursion on user_profiles.
 -- Call via supabase.rpc('assign_role_by_admin', { target_email, role_name, full_name, phone })
 CREATE OR REPLACE FUNCTION assign_role_by_admin(
   target_email text,
@@ -247,39 +246,3 @@ BEGIN
   WHERE id = target_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- ============================================
--- VERIFICATION QUERIES
--- ============================================
--- Run these to verify everything is set up correctly:
-
--- Check if roles were created
--- SELECT * FROM roles ORDER BY name;
-
--- Check if user_profiles table exists
--- SELECT column_name, data_type FROM information_schema.columns 
--- WHERE table_name = 'user_profiles';
-
--- Check if trigger exists
--- SELECT trigger_name FROM information_schema.triggers 
--- WHERE trigger_name = 'on_auth_user_created';
-
--- ============================================
--- TEST QUERIES (Optional - for testing)
--- ============================================
-
--- View all roles
--- SELECT id, name, display_name FROM roles;
-
--- View all user profiles (after users sign up)
--- SELECT 
---   up.id,
---   up.email,
---   up.full_name,
---   r.name as role_name,
---   up.is_active,
---   up.created_at
--- FROM user_profiles up
--- LEFT JOIN roles r ON up.role_id = r.id
--- ORDER BY up.created_at DESC;
-

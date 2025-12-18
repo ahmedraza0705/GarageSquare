@@ -51,17 +51,19 @@ export class AuthService {
    */
   static async signIn(credentials: LoginCredentials, _selectedRole?: RoleName) {
     const client = ensureClient();
-
+    console.log('Signing in with credentials:', credentials,);
     const { data, error } = await client.auth.signInWithPassword({
       email: (credentials.email || '').trim().toLowerCase(),
       password: (credentials.password || '').trim(),
     });
 
     if (error) {
+      console.log('Error signing in:', error);
       throw error;
     }
 
     const user = data.user;
+    console.log('User:', user);
     if (!user) {
       throw new Error('Unable to log in. No user returned.');
     }

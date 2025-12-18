@@ -172,7 +172,7 @@ export default function UsersScreen() {
       {/* Header */}
       <View className="px-6 py-4 bg-white border-b border-gray-100 flex-row justify-between items-center">
         <View>
-          <Text className="text-2xl font-bold text-gray-900">Team Members</Text>
+          <Text className="text-2xl font-bold text-gray-900">User Management</Text>
           <Text className="text-gray-500 text-sm">
             {users.length} {users.length === 1 ? 'user' : 'users'} total
           </Text>
@@ -288,7 +288,7 @@ export default function UsersScreen() {
       {/* FAB */}
       <TouchableOpacity
         onPress={openAddModal}
-        className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full items-center justify-center shadow-lg elevation-5"
+        className="absolute bottom-6 right-6 w-14 h-14 bg-[#4682B4] rounded-full items-center justify-center shadow-lg mb-16"
       >
         <UserPlus size={24} color="white" />
       </TouchableOpacity>
