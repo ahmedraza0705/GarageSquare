@@ -73,7 +73,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
     { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
+    { label: 'Job Tasks and Assignments', screenName: 'Tasks', isWorking: true },
     { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
     { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
     { label: 'Reports', screenName: 'Reports', isWorking: true },
