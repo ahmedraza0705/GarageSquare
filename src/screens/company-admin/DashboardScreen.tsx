@@ -93,7 +93,7 @@ export default function CompanyAdminDashboard() {
       <View style={styles.chartContainer}>
         <View style={styles.chartLegend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#2563eb' }]} />
+            <View style={[styles.legendColor, { backgroundColor: '#4682B4' }]} />
             <Text style={styles.legendText}>branch 1</Text>
           </View>
           <View style={styles.legendItem}>
@@ -120,12 +120,14 @@ export default function CompanyAdminDashboard() {
                   <View
                     style={[
                       styles.bar,
+                      { width: 10 },
                       { height: (item.branch1 / maxValue) * 120, backgroundColor: '#4682B4' },
                     ]}
                   />
                   <View
                     style={[
                       styles.bar,
+                      { width: 10 },
                       { height: (item.branch2 / maxValue) * 120, backgroundColor: '#35C56A' },
                     ]}
                   />

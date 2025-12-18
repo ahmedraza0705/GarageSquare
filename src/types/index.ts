@@ -2,7 +2,7 @@
 // TYPE DEFINITIONS
 // ============================================
 
-export type RoleName = 
+export type RoleName =
   | 'company_admin'
   | 'manager'
   | 'supervisor'
@@ -10,14 +10,14 @@ export type RoleName =
   | 'technician'
   | 'customer';
 
-export type JobCardStatus = 
+export type JobCardStatus =
   | 'pending'
   | 'in_progress'
   | 'on_hold'
   | 'completed'
   | 'cancelled';
 
-export type TaskStatus = 
+export type TaskStatus =
   | 'pending'
   | 'in_progress'
   | 'completed'
@@ -52,8 +52,23 @@ export interface Permission {
   created_at: string;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  logo_url?: string;
+  subscription_plan: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Branch {
   id: string;
+  company_id: string;
   name: string;
   address?: string;
   phone?: string;
@@ -70,12 +85,14 @@ export interface UserProfile {
   full_name?: string;
   phone?: string;
   role_id: string | null;
+  company_id?: string;
   branch_id?: string;
   avatar_url?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   role?: Role;
+  company?: Company;
   branch?: Branch;
 }
 
@@ -232,6 +249,7 @@ export interface SignupData {
   full_name: string;
   phone?: string;
   role_id?: string;
+  company_id?: string;
   branch_id?: string;
 }
 

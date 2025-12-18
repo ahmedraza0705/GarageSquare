@@ -16,20 +16,6 @@ export default function RoleBasedNavigator() {
   const { role } = useRole();
   const { user } = useAuth();
 
-  // Hard-coded company admin emails – these ALWAYS see the admin panel,
-  // even if role detection fails or profile/role_id is missing.
-  const adminEmails = [
-    'solutionsquares@gmail.com',
-    'ahmedraza.solutionsquares@gmail.com',
-  ];
-
-  const email = user?.email?.toLowerCase() || '';
-
-  // If the logged-in email is one of the admin emails, force admin navigator
-  if (email && adminEmails.includes(email)) {
-    return <CompanyAdminNavigator />;
-  }
-
   switch (role) {
     case 'company_admin':
       return <CompanyAdminNavigator />;
