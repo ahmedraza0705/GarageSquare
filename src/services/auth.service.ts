@@ -2,6 +2,7 @@
 // AUTHENTICATION SERVICE (SUPABASE)
 // ============================================
 
+import { createClient } from '@supabase/supabase-js';
 import { supabase, supabaseConfig } from '@/lib/supabase';
 import { LoginCredentials, SignupData, UserProfile, AuthUser, RoleName, Role } from '@/types';
 
@@ -14,6 +15,11 @@ const PROFILE_SELECT = `
   email,
   full_name,
   phone,
+  username,
+  address,
+  city,
+  state,
+  postal_code,
   role_id,
   branch_id,
   avatar_url,
@@ -35,6 +41,11 @@ const mapProfile = (row: any): UserProfile => ({
   email: row.email,
   full_name: row.full_name ?? undefined,
   phone: row.phone ?? undefined,
+  username: row.username ?? undefined,
+  address: row.address ?? undefined,
+  city: row.city ?? undefined,
+  state: row.state ?? undefined,
+  postal_code: row.postal_code ?? undefined,
   role_id: row.role_id ?? null,
   branch_id: row.branch_id ?? undefined,
   avatar_url: row.avatar_url ?? undefined,
@@ -50,17 +61,19 @@ export class AuthService {
    */
   static async signIn(credentials: LoginCredentials, _selectedRole?: RoleName) {
     const client = ensureClient();
-
+    console.log('Signing in with credentials:', credentials,);
     const { data, error } = await client.auth.signInWithPassword({
       email: (credentials.email || '').trim().toLowerCase(),
       password: (credentials.password || '').trim(),
     });
 
     if (error) {
+      console.log('Error signing in:', error);
       throw error;
     }
 
     const user = data.user;
+    console.log('User:', user);
     if (!user) {
       throw new Error('Unable to log in. No user returned.');
     }
@@ -125,6 +138,86 @@ export class AuthService {
       session: data.session,
       profile: profile || undefined,
     };
+  }
+
+  /**
+   * Create a new user (Admin function)
+   * Uses a temporary client to avoid logging out the admin
+   */
+  static async createUserWithProfile(
+    userData: SignupData & { role: RoleName; branch_id?: string; company_id?: string }
+  ) {
+    // 1. Ensure configuration
+    if (!supabaseConfig.isConfigured) {
+      throw new Error('Supabase is not configured.');
+    }
+
+    // 2. Create a temporary client for the new user signup
+    // This isolates the session so the admin stays logged in
+    const tempClient = createClient(supabaseConfig.url, supabaseConfig.key, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+
+    const email = (userData.email || '').trim().toLowerCase();
+    const password = (userData.password || '').trim();
+
+    // 3. Create the user in Auth
+    const { data: authData, error: authError } = await tempClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: userData.full_name,
+          phone: userData.phone,
+        },
+      },
+    });
+
+    if (authError) {
+      throw authError; // e.g. "User already registered"
+    }
+
+    const newUser = authData.user;
+    if (!newUser) {
+      throw new Error('Failed to create user: No user data returned.');
+    }
+
+    // 4. Get Role ID
+    const mainClient = ensureClient();
+    const { data: roleData, error: roleError } = await mainClient
+      .from('roles')
+      .select('id')
+      .eq('name', userData.role)
+      .single();
+
+    if (roleError || !roleData) {
+      // Ideally rollback auth user here if possible, but requires Service Role key.
+      // For client-side, we just throw, leaving a "zombie" auth user (better than inconsistent state).
+      // In prod with edge functions, this is transactional.
+      throw new Error(`Invalid role: ${userData.role}`);
+    }
+
+    // 5. Insert into user_profiles using Main Client (Admin privileges via RLS)
+    const { error: profileError } = await mainClient
+      .from('user_profiles')
+      .insert({
+        id: newUser.id,
+        email: email,
+        full_name: userData.full_name,
+        phone: userData.phone,
+        role_id: roleData.id,
+        branch_id: userData.branch_id || null, // Optional
+        is_active: true,
+      });
+
+    if (profileError) {
+      throw new Error(`Failed to create profile: ${profileError.message}`);
+    }
+
+    return { success: true, userId: newUser.id };
   }
 
   /**
@@ -287,36 +380,55 @@ export class AuthService {
   }
 
   /**
-   * Assign role to user
+   * Update full user profile (Admin function)
+   * Can update: role_id, branch_id, email, phone, full_name
    */
-  static async assignRoleToUser(userId: string, roleName: RoleName) {
+  static async updateUserProfile(userId: string, updates: {
+    role?: RoleName;
+    branch_id?: string | null;
+    email?: string;
+    phone?: string;
+    full_name?: string;
+  }) {
     const client = ensureClient();
+    const dbUpdates: any = {
+      updated_at: new Date().toISOString(),
+    };
 
-    const { data: role, error: roleError } = await client
-      .from('roles')
-      .select('id, name, display_name, description, created_at, updated_at')
-      .eq('name', roleName)
-      .maybeSingle();
+    // specific field mapping
+    if (updates.email) dbUpdates.email = updates.email.trim().toLowerCase();
+    if (updates.phone) dbUpdates.phone = updates.phone;
+    if (updates.full_name) dbUpdates.full_name = updates.full_name;
+    if (updates.branch_id !== undefined) dbUpdates.branch_id = updates.branch_id;
 
-    if (roleError) throw roleError;
-    if (!role) throw new Error('Role not found');
+    // Handle Role Name -> ID conversion
+    if (updates.role) {
+      const { data: roleData, error: roleError } = await client
+        .from('roles')
+        .select('id')
+        .eq('name', updates.role)
+        .single();
+
+      if (roleError || !roleData) throw new Error(`Invalid role: ${updates.role}`);
+      dbUpdates.role_id = roleData.id;
+    }
 
     const { data, error } = await client
       .from('user_profiles')
-      .update({
-        role_id: role.id,
-        updated_at: new Date().toISOString(),
-      })
+      .update(dbUpdates)
       .eq('id', userId)
       .select(PROFILE_SELECT)
       .maybeSingle();
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
+    return data ? mapProfile(data) : null;
+  }
 
-    if (!data) return null;
-    return mapProfile({ ...data, role });
+  /**
+   * Assign role to user (Legacy wrapper)
+   */
+  static async assignRoleToUser(userId: string, roleName: RoleName) {
+    return this.updateUserProfile(userId, { role: roleName });
   }
 
   /**
