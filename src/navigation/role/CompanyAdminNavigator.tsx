@@ -45,6 +45,7 @@ import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
 import ProfilePopup from '@/components/navigation/ProfilePopup';
 
+
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -65,6 +66,7 @@ function CustomHeader({
 }) {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
@@ -184,6 +186,21 @@ function CustomHeader({
   );
 }
 
+// Dashboard Stack (to show bottom bar on nested screens)
+function DashboardStack() {
+  const { theme } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Dashboard" component={CompanyAdminDashboard} />
+      <Stack.Screen name="Customers" component={CustomersScreen} />
+    </Stack.Navigator>
+  );
+}
+
 // Bottom Tab Navigator
 function CompanyAdminTabs({
   theme,
@@ -236,7 +253,7 @@ function CompanyAdminTabs({
     >
       <Tab.Screen
         name="DashboardTab"
-        component={CompanyAdminDashboard}
+        component={DashboardStack}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
@@ -362,6 +379,15 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' },
         }}
       />
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Settings',
+          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
+
     </Drawer.Navigator>
   );
 }
@@ -399,10 +425,7 @@ export default function CompanyAdminNavigator() {
         name="CustomerDetail"
         component={CustomerDetailScreen}
         options={{
-          headerShown: true,
-          title: 'Customer Details',
-          headerStyle: { backgroundColor: theme.headerBg },
-          headerTintColor: theme.headerText,
+          headerShown: false,
         }}
       />
       <Stack.Screen

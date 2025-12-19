@@ -2,14 +2,17 @@
 // COMPANY ADMIN DASHBOARD
 // ============================================
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
+import { CustomerService } from '@/services/customer.service';
+import { JobCardService } from '@/services/jobCard.service';
+import { VehicleService } from '@/services/vehicle.service';
 
 export default function CompanyAdminDashboard() {
   const navigation = useNavigation();
@@ -25,6 +28,7 @@ export default function CompanyAdminDashboard() {
     delivery: 40,
     newCustomers: 12,
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   const [chartData] = useState([
     { month: 'Jan', branch1: 8, branch2: 6 },
@@ -42,8 +46,19 @@ export default function CompanyAdminDashboard() {
   });
 
   useEffect(() => {
-    loadStats();
     showLoginCredentials();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+    }, [])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadStats();
+    setRefreshing(false);
   }, []);
 
   const showLoginCredentials = async () => {
@@ -82,7 +97,12 @@ export default function CompanyAdminDashboard() {
       }
 
       // Load actual stats from database
-      // For now, using default values
+      const customerCount = await CustomerService.getCount();
+
+      setStats(prev => ({
+        ...prev,
+        customers: customerCount
+      }));
     } catch (error) {
       console.error('Error loading stats:', error);
     }
@@ -143,8 +163,13 @@ export default function CompanyAdminDashboard() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View className="flex-1 bg-gray-50">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4682B4" />
+        }
+      >
         <View style={styles.container}>
           {/* Top Row Cards */}
           <View style={styles.cardRow}>
@@ -167,7 +192,11 @@ export default function CompanyAdminDashboard() {
             </TouchableOpacity>
 
             {/* Customers Card */}
-            <View style={[styles.largeCard, { backgroundColor: theme.surface }]}>
+            <TouchableOpacity
+              style={[styles.largeCard, styles.whiteCard]}
+              onPress={() => navigation.navigate('Customers' as never)}
+              activeOpacity={0.8}
+            >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={[styles.cardTitle, { color: theme.textMuted }]}>Customers</Text>
@@ -178,7 +207,7 @@ export default function CompanyAdminDashboard() {
                   <Ionicons name="people-outline" size={32} color={theme.text} />
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Second Row Cards */}
