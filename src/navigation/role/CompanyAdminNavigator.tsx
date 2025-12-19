@@ -39,6 +39,8 @@ import VehicleDetailScreen from '@/screens/shared/VehicleDetailScreen';
 import CreateCustomerScreen from '@/screens/shared/CreateCustomerScreen';
 import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
+import BranchDetailsScreen from '@/screens/company-admin/BranchDetailsScreen';
+import BranchFileUploadScreen from '@/screens/company-admin/BranchFileUploadScreen';
 // New Imports
 import ChangePasswordScreen from '@/screens/shared/ChangePasswordScreen';
 import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
@@ -159,7 +161,15 @@ function CustomHeader({
 }
 
 // Bottom Tab Navigator
-function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
+function CompanyAdminTabs({
+  theme,
+  themeName,
+  toggleTheme
+}: {
+  theme: ThemeColors;
+  themeName: ThemeName;
+  toggleTheme: () => void;
+}) {
   // We want a blue bar with white icons, matching the user's image request
   const BAR_COLOR = '#4682B4'; // Blue-600
   const ACTIVE_COLOR = '#ffffff86';
@@ -167,8 +177,16 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
 
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
+      screenOptions={({ route }) => ({
+        header: () => (
+          <CustomHeader
+            route={route}
+            theme={theme}
+            themeName={themeName}
+            onToggleTheme={toggleTheme}
+          />
+        ),
+        headerShown: true, // Enable headers for tabs
         tabBarStyle: {
           backgroundColor: BAR_COLOR,
           borderTopWidth: 0,
@@ -191,7 +209,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         tabBarActiveTintColor: ACTIVE_COLOR,
         tabBarInactiveTintColor: INACTIVE_COLOR,
         tabBarShowLabel: false, // Hide labels for a cleaner look like the image
-      }}
+      })}
     >
       <Tab.Screen
         name="DashboardTab"
@@ -208,6 +226,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         name="BranchesTab"
         component={BranchesScreen}
         options={{
+          headerShown: false, // Branches has its own internal custom header
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Building2 color={color} size={24} />
@@ -277,9 +296,16 @@ function CompanyAdminDrawer({
         name="MainTabs"
         options={{
           title: 'Dashboard',
+          headerShown: false, // Hide drawer header for tabs since they have their own
         }}
       >
-        {() => <CompanyAdminTabs theme={theme} />}
+        {() => (
+          <CompanyAdminTabs
+            theme={theme}
+            themeName={themeName}
+            toggleTheme={onToggleTheme}
+          />
+        )}
       </Drawer.Screen>
       <Drawer.Screen
         name="Vehicles"
@@ -313,7 +339,6 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-
     </Drawer.Navigator>
   );
 }
@@ -395,6 +420,20 @@ export default function CompanyAdminNavigator() {
           title: 'Create Job Card',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
+        }}
+      />
+      <Stack.Screen
+        name="BranchDetails"
+        component={BranchDetailsScreen}
+        options={{
+          headerShown: false, // Custom dark mode header in component
+        }}
+      />
+      <Stack.Screen
+        name="BranchFileUpload"
+        component={BranchFileUploadScreen}
+        options={{
+          headerShown: false,
         }}
       />
       <Stack.Screen

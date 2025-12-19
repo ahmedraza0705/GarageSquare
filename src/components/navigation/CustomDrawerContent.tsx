@@ -59,11 +59,11 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
-        // @ts-ignore - navigating into nested tabs
-        navigation.navigate(item.screenName, { screen: item.tabScreen });
+        // @ts-ignore
+        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
       } else {
         // @ts-ignore
-        navigation.navigate(item.screenName);
+        props.navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
