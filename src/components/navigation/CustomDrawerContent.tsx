@@ -15,6 +15,7 @@ interface MenuItem {
   label: string;
   screenName?: string;
   tabScreen?: string;
+  nestedScreen?: string;
   isWorking: boolean;
 }
 
@@ -44,6 +45,22 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
   const currentParentRoute = props.state.routes[props.state.index].name;
 
+  const menuItems: MenuItem[] = [
+    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
+    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
+    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
+    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
+    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
+    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
+    { label: 'Reports', screenName: 'Reports', isWorking: true },
+    { label: 'Invoice and Billing', isWorking: false },
+    { label: 'Customers', screenName: 'MainTabs', tabScreen: 'DashboardTab', nestedScreen: 'Customers', isWorking: true },
+    { label: 'Inventory', isWorking: false },
+    { label: 'Shop Timing', isWorking: false },
+    { label: 'Privacy Policy', isWorking: false },
+    { label: 'Settings', screenName: 'Settings', isWorking: true },
+  ];
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -65,38 +82,36 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     );
   };
 
-  const handleMenuPress = (item: MenuItem) => {
+  const [activeLabel, setActiveLabel] = useState('Dashboard');
 
+  const handleMenuPress = (item: MenuItem) => {
     if (!item.isWorking) {
       Alert.alert('Coming Soon', `${item.label} feature will be available soon.`);
       return;
     }
 
+    setActiveLabel(item.label);
+
     if (item.screenName) {
       if (item.tabScreen) {
-        // @ts-ignore
-        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        if (item.nestedScreen) {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, {
+            screen: item.tabScreen,
+            params: { screen: item.nestedScreen }
+          });
+        } else {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        }
       } else {
         // @ts-ignore
         props.navigation.navigate(item.screenName);
       }
+      // props.navigation.closeDrawer() is better but dispatch works too
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
   };
-
-  const menuItems: MenuItem[] = [
-    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
-    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
-    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'Tasks', isWorking: true },
-    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
-    { label: 'Reports', screenName: 'Reports', isWorking: true },
-    { label: 'Invoice and Billing', isWorking: false },
-    { label: 'Customers', screenName: 'Customers', isWorking: true },
-    { label: 'Inventory', isWorking: false },
-    { label: 'Shop Timing', isWorking: false },
-  ];
 
   const footerItems: MenuItem[] = [
     { label: 'Privacy Policy', isWorking: false },
@@ -131,13 +146,15 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
       if (activeRoute.includes('Reports')) return 'Reports';
     }
 
-    return 'Dashboard';
+    return activeLabel;
   };
 
-  const activeLabel = getActiveLabel();
+  const currentActiveLabel = getActiveLabel();
+
+  const { theme } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <View style={{ flex: 1 }}>
         <DrawerContentScrollView
           {...props}
