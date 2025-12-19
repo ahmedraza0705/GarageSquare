@@ -14,6 +14,7 @@ interface MenuItem {
   label: string;
   screenName?: string;
   tabScreen?: string;
+  nestedScreen?: string;
   isWorking: boolean;
 }
 
@@ -37,7 +38,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
     { label: 'Reports', screenName: 'Reports', isWorking: true },
     { label: 'Invoice and Billing', isWorking: false },
-    { label: 'Customers', screenName: 'Customers', isWorking: true },
+    { label: 'Customers', screenName: 'MainTabs', tabScreen: 'DashboardTab', nestedScreen: 'Customers', isWorking: true },
     { label: 'Inventory', isWorking: false },
     { label: 'Shop Timing', isWorking: false },
     { label: 'Privacy Policy', isWorking: false },
@@ -102,8 +103,16 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
-        // @ts-ignore
-        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        if (item.nestedScreen) {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, {
+            screen: item.tabScreen,
+            params: { screen: item.nestedScreen }
+          });
+        } else {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        }
       } else {
         // @ts-ignore
         console.log('Navigating to:', item.screenName);

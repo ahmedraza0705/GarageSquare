@@ -17,7 +17,7 @@ export class CustomerService {
 
     let query = supabase
       .from('customers')
-      .select('*, vehicles(*)')
+      .select('*') // Simplified for debugging
       .order('created_at', { ascending: false });
 
     if (filters?.branch_id) {
@@ -36,6 +36,24 @@ export class CustomerService {
     }
 
     return data as Customer[];
+  }
+
+  /**
+   * Get total customer count
+   */
+  static async getCount() {
+    if (!supabase) return 0;
+
+    const { count, error } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching customer count:', error);
+      return 0;
+    }
+
+    return count || 0;
   }
 
   /**

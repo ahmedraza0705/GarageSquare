@@ -160,6 +160,21 @@ function CustomHeader({
   );
 }
 
+// Dashboard Stack (to show bottom bar on nested screens)
+function DashboardStack() {
+  const { theme } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Dashboard" component={CompanyAdminDashboard} />
+      <Stack.Screen name="Customers" component={CustomersScreen} />
+    </Stack.Navigator>
+  );
+}
+
 // Bottom Tab Navigator
 function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
   // We want a blue bar with white icons, matching the user's image request
@@ -197,7 +212,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
     >
       <Tab.Screen
         name="DashboardTab"
-        component={CompanyAdminDashboard}
+        component={DashboardStack}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
@@ -293,12 +308,12 @@ function CompanyAdminDrawer({
       />
       <Drawer.Screen
         name="Customers"
-        component={CustomersScreen}
         options={{
           title: 'Customers',
-          // drawerItemStyle: { display: 'none' }, // Shown in drawer now
         }}
-      />
+      >
+        {() => <CompanyAdminTabs theme={theme} />}
+      </Drawer.Screen>
       <Drawer.Screen
         name="JobCards"
         component={JobCardsScreen}

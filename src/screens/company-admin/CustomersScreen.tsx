@@ -3,7 +3,7 @@
 // ============================================
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, ActivityIndicator } from 'react-native';
 import { DrawerActions, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CustomerService } from '@/services/customer.service';
 import { Customer } from '@/types';
@@ -16,20 +16,25 @@ export default function CustomersScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const loadCustomers = async (isManualRefresh = false) => {
     try {
+      setError(null);
       if (isManualRefresh) {
         setRefreshing(true);
       } else if (customers.length === 0) {
         setLoading(true);
       }
 
+      console.log('Fetching customers...');
       const data = await CustomerService.getAll();
+      console.log('Fetched customers count:', data?.length || 0);
       setCustomers(data);
       setFilteredCustomers(data);
-    } catch (error) {
-      console.error('Error loading customers:', error);
+    } catch (err: any) {
+      console.error('Error loading customers:', err);
+      setError(err.message || 'Failed to load customers. Please check your connection.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -86,6 +91,7 @@ export default function CustomersScreen() {
 
       <ScrollView
         className="flex-1 px-6"
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -96,7 +102,26 @@ export default function CustomersScreen() {
         }
       >
         <View className="pt-0 pb-4">
-          {filteredCustomers.length === 0 && !loading ? (
+          {loading && !refreshing && (
+            <View className="py-20 items-center justify-center">
+              <ActivityIndicator size="large" color="#2563EB" />
+              <Text className="text-gray-400 mt-4 text-lg">Loading customers...</Text>
+            </View>
+          )}
+
+          {error && !loading && (
+            <View className="py-20 items-center justify-center px-6">
+              <Text className="text-red-500 text-center text-lg mb-6">{error}</Text>
+              <TouchableOpacity
+                onPress={() => loadCustomers(false)}
+                className="bg-blue-600 px-8 py-3 rounded-2xl shadow-sm"
+              >
+                <Text className="text-white font-bold text-lg">Retry</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {!loading && !error && filteredCustomers.length === 0 ? (
             <View className="py-20 items-center justify-center">
               <Text className="text-gray-400 text-lg">No customers found</Text>
             </View>
