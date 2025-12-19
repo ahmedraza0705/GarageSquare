@@ -7,11 +7,18 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-
 import { useNavigation } from '@react-navigation/native';
 import { JobCardService } from '@/services/jobCard.service';
 import { JobCard } from '@/types';
+import { useJobs } from '@/context/JobContext';
 
 export default function JobCardsScreen() {
   const navigation = useNavigation();
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const { jobs } = useJobs();
+
+  // Get delivered jobs from JobContext
+  const deliveredJobs = jobs.filter(job =>
+    job.status.toLowerCase() === 'delivered'
+  );
 
   useEffect(() => {
     loadJobCards();
@@ -30,8 +37,9 @@ export default function JobCardsScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'completed':
+      case 'delivered':
         return 'bg-green-100 text-green-800';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800';
@@ -61,6 +69,37 @@ export default function JobCardsScreen() {
           </Text>
         </TouchableOpacity>
 
+        {/* Delivered Jobs from JobContext */}
+        {deliveredJobs.map((job) => (
+          <TouchableOpacity
+            key={job.id}
+            className="bg-white rounded-lg p-4 mb-4 shadow-sm"
+            onPress={() => navigation.navigate('JobTasksDetail' as never, { jobId: job.id } as never)}
+          >
+            <View className="flex-row justify-between items-start mb-2">
+              <Text className="text-lg font-semibold text-gray-900">
+                {job.jobId}
+              </Text>
+              <View className={`px-3 py-1 rounded-full ${getStatusColor('delivered')}`}>
+                <Text className="text-xs font-medium capitalize">
+                  Delivered
+                </Text>
+              </View>
+            </View>
+
+            <Text className="text-gray-600 text-sm mb-1">
+              Customer: {job.customer}
+            </Text>
+            <Text className="text-gray-600 text-sm mb-1">
+              Vehicle: {job.vehicle}
+            </Text>
+            <Text className="text-gray-600 text-sm">
+              Amount: {job.amount}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
+        {/* Supabase Job Cards */}
         {jobCards.map((jobCard) => (
           <TouchableOpacity
             key={jobCard.id}
@@ -77,7 +116,7 @@ export default function JobCardsScreen() {
                 </Text>
               </View>
             </View>
-            
+
             {jobCard.customer && (
               <Text className="text-gray-600 text-sm mb-1">
                 Customer: {jobCard.customer.full_name}
@@ -96,7 +135,7 @@ export default function JobCardsScreen() {
           </TouchableOpacity>
         ))}
 
-        {jobCards.length === 0 && !loading && (
+        {deliveredJobs.length === 0 && jobCards.length === 0 && !loading && (
           <View className="items-center py-12">
             <Text className="text-gray-500">No job cards found</Text>
           </View>

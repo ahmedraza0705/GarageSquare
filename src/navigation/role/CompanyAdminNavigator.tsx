@@ -19,6 +19,8 @@ import CustomersScreen from '@/screens/company-admin/CustomersScreen';
 import VehiclesScreen from '@/screens/company-admin/VehiclesScreen';
 import JobCardsScreen from '@/screens/company-admin/JobCardsScreen';
 import ActiveJobsScreen from '@/screens/company-admin/ActiveJobsScreen';
+import JobTasksScreen from '@/screens/company-admin/JobTasksScreen';
+import JobTasksDetailScreen from '@/screens/company-admin/JobTasksDetailScreen';
 import JobCardDetailScreen from '@/screens/shared/JobCardDetailScreen';
 import SettingsScreen from '@/screens/shared/SettingsScreen';
 import CustomerDetailScreen from '@/screens/shared/CustomerDetailScreen';
@@ -64,6 +66,7 @@ function CustomHeader({
       Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
+      JobTasks: 'Task Management',
     };
     return titleMap[routeName] || 'Dashboard';
   };
@@ -84,9 +87,9 @@ function CustomHeader({
       >
         <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
       </TouchableOpacity>
-      
+
       <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
-      
+
       <View style={styles.headerRight}>
         <TouchableOpacity
           onPress={onToggleTheme}
@@ -276,42 +279,49 @@ function CompanyAdminDrawer({
       >
         {() => <CompanyAdminTabs theme={theme} />}
       </Drawer.Screen>
-      <Drawer.Screen 
-        name="Vehicles" 
+      <Drawer.Screen
+        name="Vehicles"
         component={VehiclesScreen}
-        options={{ 
+        options={{
           title: 'Vehicles',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Customers" 
+      <Drawer.Screen
+        name="Customers"
         component={CustomersScreen}
-        options={{ 
+        options={{
           title: 'Customers',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="JobCards" 
+      <Drawer.Screen
+        name="JobCards"
         component={JobCardsScreen}
-        options={{ 
+        options={{
           title: 'Job Cards',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Reports" 
+      <Drawer.Screen
+        name="JobTasks"
+        component={JobTasksScreen}
+        options={{
+          title: 'Job Tasks and Assignments',
+        }}
+      />
+      <Drawer.Screen
+        name="Reports"
         component={ReportsScreen}
-        options={{ 
+        options={{
           title: 'Reports',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen 
-        name="Settings" 
+      <Drawer.Screen
+        name="Settings"
         component={SettingsScreen}
-        options={{ 
+        options={{
           title: 'Settings',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
@@ -334,64 +344,71 @@ export default function CompanyAdminNavigator() {
           />
         )}
       </Stack.Screen>
-      <Stack.Screen 
-        name="ActiveJobs" 
+      <Stack.Screen
+        name="ActiveJobs"
         component={ActiveJobsScreen}
-        options={{ 
+        options={{
           headerShown: false, // Using custom header in screen
         }}
       />
-      <Stack.Screen 
-        name="JobCardDetail" 
+      <Stack.Screen
+        name="JobTasksDetail"
+        component={JobTasksDetailScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="JobCardDetail"
         component={JobCardDetailScreen}
-        options={{ 
+        options={{
           headerShown: false, // Using custom header in screen
         }}
       />
-      <Stack.Screen 
-        name="CustomerDetail" 
+      <Stack.Screen
+        name="CustomerDetail"
         component={CustomerDetailScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Customer Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="VehicleDetail" 
+      <Stack.Screen
+        name="VehicleDetail"
         component={VehicleDetailScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Vehicle Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateCustomer" 
+      <Stack.Screen
+        name="CreateCustomer"
         component={CreateCustomerScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Add Customer',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateVehicle" 
+      <Stack.Screen
+        name="CreateVehicle"
         component={CreateVehicleScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Add Vehicle',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
         }}
       />
-      <Stack.Screen 
-        name="CreateJobCard" 
+      <Stack.Screen
+        name="CreateJobCard"
         component={CreateJobCardScreen}
-        options={{ 
+        options={{
           headerShown: true,
           title: 'Create Job Card',
           headerStyle: { backgroundColor: '#ffffff' },

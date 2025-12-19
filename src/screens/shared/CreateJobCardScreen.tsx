@@ -2,167 +2,207 @@
 // CREATE JOB CARD SCREEN
 // ============================================
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '@/hooks/useAuth';
-import { useRole } from '@/hooks/useRole';
-import { JobCardService } from '@/services/jobCard.service';
-import { CustomerService } from '@/services/customer.service';
-import { VehicleService } from '@/services/vehicle.service';
-import { Customer, Vehicle, Priority } from '@/types';
-import Button from '@/components/shared/Button';
-import Input from '@/components/shared/Input';
+import { useJobs } from '@/context/JobContext';
+import { Feather } from '@expo/vector-icons'; // Assuming expo vector icons are available, standard in expo
+// If not, I'll use standard Text for icons or existing components.
 
 export default function CreateJobCardScreen() {
   const navigation = useNavigation();
-  const { user } = useAuth();
-  const { branchId } = useRole();
-  const [loading, setLoading] = useState(false);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
-  const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const { addJob } = useJobs();
+
   const [formData, setFormData] = useState({
-    description: '',
-    priority: 'medium' as Priority,
-    estimated_cost: '',
-    estimated_time: '',
+    customerName: '',
+    phone: '',
+    email: '',
+    vin: '',
+    brand: '',
+    model: '',
+    odometer: '',
+    pickupAddress: '',
+    dropoffAddress: '',
   });
+
+  const [services, setServices] = useState({
+    engineInspection: false,
+    oilChange: false,
+    tiresChange: false,
+    bodyPaint: false,
+    acRepair: false,
+    alignment: false,
+    replaceBattery: false,
+    coolentChange: false,
+  });
+
+  const [otherRequirement, setOtherRequirement] = useState('');
+  const [otherRequirementsList, setOtherRequirementsList] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  useEffect(() => {
-    if (selectedCustomerId) {
-      loadVehicles();
-    }
-  }, [selectedCustomerId]);
-
-  const loadCustomers = async () => {
-    try {
-      const data = await CustomerService.getAll({ branch_id: branchId });
-      setCustomers(data);
-    } catch (error) {
-      console.error('Error loading customers:', error);
-    }
+  const toggleService = (key: keyof typeof services) => {
+    setServices(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const loadVehicles = async () => {
-    try {
-      const data = await VehicleService.getAll({ customer_id: selectedCustomerId });
-      setVehicles(data);
-    } catch (error) {
-      console.error('Error loading vehicles:', error);
+  const addOtherRequirement = () => {
+    if (otherRequirement.trim()) {
+      setOtherRequirementsList(prev => [...prev, otherRequirement.trim()]);
+      setOtherRequirement('');
     }
   };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
-    if (!selectedCustomerId) {
-      newErrors.customer = 'Customer is required';
-    }
-    
-    if (!selectedVehicleId) {
-      newErrors.vehicle = 'Vehicle is required';
-    }
-    
+    if (!formData.customerName) newErrors.customerName = 'Required';
+    if (!formData.phone) newErrors.phone = 'Required';
+    if (!formData.email) newErrors.email = 'Required';
+    if (!formData.vin) newErrors.vin = 'Required';
+    if (!formData.brand) newErrors.brand = 'Required';
+    if (!formData.model) newErrors.model = 'Required';
+    if (!formData.odometer) newErrors.odometer = 'Required';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    if (!validate()) return;
-
-    try {
-      setLoading(true);
-      await JobCardService.create({
-        customer_id: selectedCustomerId,
-        vehicle_id: selectedVehicleId,
-        description: formData.description || undefined,
-        priority: formData.priority,
-        estimated_cost: formData.estimated_cost ? Number(formData.estimated_cost) : undefined,
-        estimated_time: formData.estimated_time ? Number(formData.estimated_time) : undefined,
-      }, user?.id || '', branchId || '');
-      
-      Alert.alert('Success', 'Job card created successfully', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create job card');
-    } finally {
-      setLoading(false);
+  const handleSubmit = () => {
+    if (!validate()) {
+      Alert.alert('Missing Fields', 'Please fill in all required fields.');
+      return;
     }
+
+    const selectedServices = Object.entries(services)
+      .filter(([_, selected]) => selected)
+      .map(([name]) => name.replace(/([A-Z])/g, ' $1').trim()); // CamelCase to space
+
+    addJob({
+      customer: formData.customerName,
+      phone: formData.phone,
+      email: formData.email,
+      vin: formData.vin,
+      brand: formData.brand,
+      model: formData.model,
+      odometer: formData.odometer,
+      pickupAddress: formData.pickupAddress,
+      dropoffAddress: formData.dropoffAddress,
+      vehicle: `${formData.brand} ${formData.model}`,
+      regNo: formData.vin, // Using VIN as RegNo for now as it's the unique ID available
+      services: [...selectedServices, ...otherRequirementsList],
+      amount: '₹0',
+    });
+
+    navigation.goBack();
   };
 
-  return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-gray-50"
+  const renderInput = (
+    label: string,
+    value: string,
+    field: keyof typeof formData,
+    placeholder: string,
+    required = false
+  ) => (
+    <View className="mb-4">
+      <Text className="text-sm font-semibold text-gray-800 mb-1.5">
+        {label}{required && '*'}
+      </Text>
+      <TextInput
+        className={`w-full bg-white border ${errors[field] ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2.5 text-gray-800`}
+        placeholder={placeholder}
+        value={value}
+        onChangeText={(text) => setFormData({ ...formData, [field]: text })}
+        placeholderTextColor="#9ca3af"
+      />
+    </View>
+  );
+
+  const renderCheckbox = (label: string, field: keyof typeof services) => (
+    <TouchableOpacity
+      onPress={() => toggleService(field)}
+      className="flex-row items-center mb-3 w-[48%]"
     >
-      <ScrollView
-        contentContainerClassName="px-6 py-4"
-        keyboardShouldPersistTaps="handled"
-      >
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Customer *
-          </Text>
-          <Text className="text-gray-500 text-sm mb-2">
-            Select customer (feature to be implemented)
-          </Text>
-          <Text className="text-red-500 text-sm">{errors.customer}</Text>
+      <View className={`w-5 h-5 border rounded mr-2 items-center justify-center ${services[field] ? 'bg-blue-500 border-blue-500' : 'border-gray-400 bg-white'}`}>
+        {services[field] && <Text className="text-white text-xs">✓</Text>}
+      </View>
+      <Text className="text-gray-700 text-sm">{label}</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View className="flex-1 bg-gray-50">
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200 safe-top">
+        {/* Hamburger menu would be here usually, handled by nav drawer but we can just show title */}
+        {/* <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
+             <Feather name="menu" size={24} color="#374151" />
+         </TouchableOpacity> */}
+        {/* Design shows simple header */}
+        <Text className="text-lg font-bold text-gray-900">Active Jobs</Text>
+        <View className="flex-row gap-2">
+          <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center">
+            <Text className="text-blue-600 font-bold">☾</Text>
+          </View>
+          <View className="w-8 h-8 rounded-full bg-red-200 items-center justify-center">
+            <Text className="text-red-600 font-bold">A</Text>
+          </View>
         </View>
+      </View>
 
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Vehicle *
-          </Text>
-          <Text className="text-gray-500 text-sm mb-2">
-            Select vehicle (feature to be implemented)
-          </Text>
-          <Text className="text-red-500 text-sm">{errors.vehicle}</Text>
+      <ScrollView contentContainerClassName="p-4 pb-24">
+        <View className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+
+          {renderInput('Customer', formData.customerName, 'customerName', 'Enter Customer Name', true)}
+          {renderInput('Phone', formData.phone, 'phone', 'Enter Phone', true)}
+          {renderInput('Email', formData.email, 'email', 'Enter Your Email', true)}
+          {renderInput('VIN', formData.vin, 'vin', 'Enter VIN', true)}
+          {renderInput('Vehicle Brand', formData.brand, 'brand', 'Select Vehicle Brand', true)}
+          {renderInput('Vehicle Model', formData.model, 'model', 'Select Vehicle Model', true)}
+          {renderInput('Odometer Reading', formData.odometer, 'odometer', 'Select Vehicle Modal', true)}
+          {renderInput('Pick-up Address', formData.pickupAddress, 'pickupAddress', 'Pick-up Address')}
+          {renderInput('Drop-off Address', formData.dropoffAddress, 'dropoffAddress', 'Drop-off Address')}
+
+          <View className="mt-2 flex-row flex-wrap justify-between">
+            {renderCheckbox('Engine Inspection', 'engineInspection')}
+            {renderCheckbox('AC repair', 'acRepair')}
+            {renderCheckbox('Engine oil change', 'oilChange')}
+            {renderCheckbox('Alignment', 'alignment')}
+            {renderCheckbox('Tires Change', 'tiresChange')}
+            {renderCheckbox('Replace Battery', 'replaceBattery')}
+            {renderCheckbox('Body Paint', 'bodyPaint')}
+            {renderCheckbox('Coolent Change', 'coolentChange')}
+          </View>
+
+          <View className="mt-4 flex-row items-center gap-2">
+            <View className="px-3 py-2 bg-gray-100 rounded-lg border border-gray-200">
+              <Text className="text-gray-600">Others</Text>
+            </View>
+            <TextInput
+              className="flex-1 bg-white border border-gray-300 rounded-full px-4 py-2 text-sm"
+              placeholder="Enter other requirement"
+              value={otherRequirement}
+              onChangeText={setOtherRequirement}
+            />
+            <TouchableOpacity
+              onPress={handleSubmit}
+              className="bg-white px-4 py-2 rounded-full border border-gray-800"
+            >
+              <Text className="text-gray-900 font-semibold text-sm">Add</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* List of added other requirements */}
+          {otherRequirementsList.length > 0 && (
+            <View className="mt-2 flex-row flex-wrap gap-2">
+              {otherRequirementsList.map((req, index) => (
+                <View key={index} className="bg-gray-100 px-2 py-1 rounded border border-gray-200">
+                  <Text className="text-xs text-gray-600">{req}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
         </View>
-
-        <Input
-          label="Description"
-          placeholder="Job description"
-          value={formData.description}
-          onChangeText={(text) => setFormData({ ...formData, description: text })}
-          multiline
-          numberOfLines={4}
-          error={errors.description}
-        />
-
-        <Input
-          label="Estimated Cost"
-          placeholder="Estimated cost in dollars"
-          value={formData.estimated_cost}
-          onChangeText={(text) => setFormData({ ...formData, estimated_cost: text })}
-          keyboardType="decimal-pad"
-          error={errors.estimated_cost}
-        />
-
-        <Input
-          label="Estimated Time (minutes)"
-          placeholder="Estimated time in minutes"
-          value={formData.estimated_time}
-          onChangeText={(text) => setFormData({ ...formData, estimated_time: text })}
-          keyboardType="numeric"
-          error={errors.estimated_time}
-        />
-
-        <Button
-          title="Create Job Card"
-          onPress={handleSubmit}
-          loading={loading}
-          className="mt-4"
-        />
       </ScrollView>
-    </KeyboardAvoidingView>
+
+    </View>
   );
 }
-
