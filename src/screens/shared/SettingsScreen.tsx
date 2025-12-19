@@ -1,82 +1,151 @@
-// ============================================
-// SETTINGS SCREEN
-// ============================================
 
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
-import { useRole } from '@/hooks/useRole';
-import Button from '@/components/shared/Button';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function SettingsScreen() {
-  const { user, signOut } = useAuth();
-  const { role } = useRole();
+  const navigation = useNavigation();
+  const { signOut } = useAuth();
 
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch (error: any) {
-              Alert.alert('Error', error.message);
-            }
-          },
-        },
-      ]
-    );
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const menuItems = [
+    {
+      title: 'Account Details',
+      icon: <Feather name="user" size={24} color="#000" />,
+      screen: 'AccountDetails'
+    },
+    {
+      title: 'Notifications',
+      icon: <Feather name="bell" size={24} color="#000" />,
+      screen: 'Notifications'
+    },
+    {
+      title: 'Help and Support',
+      icon: <Feather name="headphones" size={24} color="#000" />,
+      screen: 'Support'
+    },
+    {
+      title: 'Language',
+      icon: <Ionicons name="text" size={24} color="#000" />,
+      screen: 'Language'
+    },
+    {
+      title: 'About GarageSquares',
+      icon: <Feather name="info" size={24} color="#000" />,
+      screen: 'About'
+    },
+  ];
+
+  const handlePress = (item: any) => {
+    if (item.screen) {
+      if (['Support', 'Language'].includes(item.screen)) {
+        console.warn('Screen not implemented:', item.screen);
+        return;
+      }
+      navigation.navigate(item.screen as never);
+    }
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="px-6 py-4">
-        <View className="bg-white rounded-lg p-6 mb-4">
-          <Text className="text-lg font-semibold text-gray-900 mb-4">
-            Profile Information
-          </Text>
-          
-          <View className="mb-4">
-            <Text className="text-sm text-gray-500 mb-1">Name</Text>
-            <Text className="text-base text-gray-900">
-              {user?.profile?.full_name || 'N/A'}
-            </Text>
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-sm text-gray-500 mb-1">Email</Text>
-            <Text className="text-base text-gray-900">
-              {user?.email || 'N/A'}
-            </Text>
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-sm text-gray-500 mb-1">Phone</Text>
-            <Text className="text-base text-gray-900">
-              {user?.profile?.phone || 'N/A'}
-            </Text>
-          </View>
-
-          <View className="mb-4">
-            <Text className="text-sm text-gray-500 mb-1">Role</Text>
-            <Text className="text-base text-gray-900 capitalize">
-              {role?.replace('_', ' ') || 'N/A'}
-            </Text>
-          </View>
+    <View style={[styles.container, { backgroundColor: '#f3f4f6' }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.menuContainer}>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.menuItemCard}
+              onPress={() => handlePress(item)}
+            >
+              <View style={styles.menuLeft}>
+                <View style={styles.iconContainer}>
+                  {item.icon}
+                </View>
+                <Text style={styles.menuTitle}>{item.title}</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#000" />
+            </TouchableOpacity>
+          ))}
         </View>
 
-        <Button
-          title="Sign Out"
-          onPress={handleSignOut}
-          variant="danger"
-        />
-      </View>
-    </ScrollView>
+        <TouchableOpacity
+          style={styles.logoutCard}
+          onPress={handleLogout}
+        >
+          <View style={styles.menuLeft}>
+            <View style={styles.iconContainer}>
+              {/* Using Custom Logout Image */}
+              <Image
+                source={require('../../assets/logout_icon_v2.png')}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+              />
+            </View>
+            <Text style={[styles.menuTitle, { color: '#FF4242' }]}>Log Out</Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  menuContainer: {
+    gap: 12, // Gap between cards
+  },
+  menuItemCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  logoutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 32,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  menuTitle: {
+    fontSize: 16,
+    fontWeight: '700', // Bold as in the image
+    color: '#000',
+  },
+});

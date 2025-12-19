@@ -1,9 +1,10 @@
+
 // ============================================
 // CUSTOM DRAWER CONTENT
 // ============================================
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,22 +14,24 @@ interface MenuItem {
   label: string;
   screenName?: string;
   tabScreen?: string;
-  icon?: string;
   isWorking: boolean;
-  onPress?: () => void;
 }
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps) {
   const navigation = useNavigation();
   const { user, signOut } = useAuth();
-  const { theme, toggleTheme, themeName } = useTheme();
-  const [language, setLanguage] = useState('English');
+
+  // Provide default values to avoid undefined text rendering
+  const language = 'English';
+  const companyName = user?.profile?.branch?.name || user?.profile?.full_name || 'Company Admin';
+  const location = `${user?.profile?.city || 'Surat'}, ${user?.profile?.postal_code || '395009'}, ${user?.profile?.state || 'INDIA'}`;
+
   const [activeLabel, setActiveLabel] = useState('Dashboard');
 
   const handleLogout = () => {
     Alert.alert(
       'Logout',
-      'Are you sure you want to logout from this account?',
+      'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -63,9 +66,6 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
         navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
-    } else if (item.onPress) {
-      item.onPress();
-      props.navigation.dispatch(DrawerActions.closeDrawer());
     }
   };
 
@@ -73,7 +73,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
     { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
+    { label: 'Job Tasks and Assignments', screenName: 'Tasks', isWorking: true },
     { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
     { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
     { label: 'Reports', screenName: 'Reports', isWorking: true },
@@ -81,100 +81,90 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Customers', screenName: 'Customers', isWorking: true },
     { label: 'Inventory', isWorking: false },
     { label: 'Shop Timing', isWorking: false },
+  ];
+
+  const footerItems: MenuItem[] = [
     { label: 'Privacy Policy', isWorking: false },
     { label: 'Settings', screenName: 'Settings', isWorking: true },
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.drawerBackground }]}>
-      <DrawerContentScrollView
-        {...props}
-        contentContainerStyle={[styles.scrollContent, { backgroundColor: theme.drawerBackground }]}
-      >
-        {/* Top Bar */}
-        <View style={[styles.topBar, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <View style={styles.languageSelector}>
-            <Text style={[styles.languageText, { color: theme.text }]}>{language}</Text>
-            <Text style={[styles.dropdownIcon, { color: theme.textMuted }]}>▼</Text>
-          </View>
-          <View style={styles.topBarRight}>
-            <TouchableOpacity
-              onPress={toggleTheme}
-              style={styles.iconButton}
-            >
-              <Text style={[styles.iconText, { color: theme.headerIcon }]}>
-                {themeName === 'dark' ? '☀️' : '🌙'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <Text style={[styles.iconText, { color: theme.headerIcon }]}>✏️</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* User Profile Section */}
-        <View
-          style={[
-            styles.profileSection,
-            { backgroundColor: theme.surface, borderBottomColor: theme.border },
-          ]}
+    <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
+      <View style={{ flex: 1 }}>
+        <DrawerContentScrollView
+          {...props}
+          contentContainerStyle={styles.scrollContent}
         >
-          <View style={styles.avatarContainer}>
-            <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-              <Text style={[styles.avatarEmoji, { color: theme.onPrimary }]}>👤</Text>
+          {/* Header Section */}
+          <View style={styles.header}>
+            <View style={styles.headerTopRow}>
+              <Text style={styles.languageText}>{language}</Text>
+              <TouchableOpacity style={styles.editIcon}>
+                <Text style={{ fontSize: 16 }}>✏️</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-          <Text style={[styles.companyName, { color: theme.text }]}>
-            {user?.profile?.company_name || 'Company Admin'}
-          </Text>
-          <Text style={[styles.companyAddress, { color: theme.textMuted }]}>
-            {user?.profile?.city || 'Surat'}, {user?.profile?.postal_code || '395009'} ,{' '}
-            {user?.profile?.country || 'INDIA'}
-          </Text>
-        </View>
 
-        {/* Menu Items */}
-        <View style={[styles.menuContainer, { backgroundColor: theme.surface }]}>
-          {menuItems.map((item, index) => {
-            const isLastItem = index === menuItems.length - 1;
-            const isActive = activeLabel === item.label;
-            
-            return (
-              <React.Fragment key={index}>
+            <Text style={styles.companyName}>{companyName}</Text>
+            <Text style={styles.locationText}>{location}</Text>
+          </View>
+
+          <View style={styles.separator} />
+
+          {/* Main Menu Items */}
+          <View style={styles.menuList}>
+            {menuItems.map((item, index) => {
+              const isActive = activeLabel === item.label;
+              return (
                 <TouchableOpacity
+                  key={index}
                   style={[
                     styles.menuItem,
-                    !isLastItem && { borderBottomColor: theme.border },
-                    !item.isWorking && { backgroundColor: theme.disabledBg },
-                    isActive && { backgroundColor: theme.primary, borderColor: theme.primary },
+                    isActive && styles.menuItemActive
                   ]}
                   onPress={() => handleMenuPress(item)}
-                  disabled={!item.isWorking}
                 >
-                  <Text
-                    style={[
-                      styles.menuItemText,
-                      { color: theme.text },
-                      !item.isWorking && { color: theme.textMuted },
-                      isActive && { color: theme.onPrimary },
-                    ]}
-                  >
+                  <Text style={[
+                    styles.menuItemText,
+                    isActive && styles.menuItemTextActive
+                  ]}>
                     {item.label}
                   </Text>
                 </TouchableOpacity>
-              </React.Fragment>
-            );
-          })}
+              );
+            })}
+          </View>
+        </DrawerContentScrollView>
+      </View>
+
+      {/* Pinned Bottom Selection */}
+      <View style={styles.bottomSection}>
+        {/* Separator above fixed section */}
+        <View style={styles.separator} />
+
+        <View style={styles.footerInfo}>
+          {footerItems.map((item, index) => (
+            <TouchableOpacity
+              key={`footer-${index}`}
+              style={styles.menuItem}
+              onPress={() => handleMenuPress(item)}
+            >
+              <Text style={styles.menuItemText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Logout Button */}
+        <View style={[styles.separator, { marginVertical: 0 }]} />
         <TouchableOpacity
-          style={[styles.logoutButton, { backgroundColor: theme.primary }]}
+          style={styles.logoutButton}
           onPress={handleLogout}
         >
-          <Text style={[styles.logoutText, { color: theme.onPrimary }]}>Logout</Text>
+          <Image
+            source={require('../../assets/logout_icon_v2.png')}
+            style={styles.logoutImage}
+          />
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
-      </DrawerContentScrollView>
+      </View>
     </View>
   );
 }
@@ -182,141 +172,89 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
   },
   scrollContent: {
-    flexGrow: 1,
-    paddingTop: 20,
+    paddingTop: 0,
   },
-  topBar: {
+  header: {
+    padding: 24,
+    backgroundColor: '#ffffff',
+  },
+  headerTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    marginHorizontal: 16,
-  },
-  languageSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    marginBottom: 8,
   },
   languageText: {
+    color: '#3b82f6', // Blueish
     fontSize: 14,
-    color: '#111827',
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  dropdownIcon: {
-    fontSize: 10,
-    color: '#6b7280',
-  },
-  topBarRight: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconButton: {
+  editIcon: {
     padding: 4,
   },
-  iconText: {
-    fontSize: 18,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  avatarContainer: {
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f3f4f6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-  },
-  avatarEmoji: {
-    fontSize: 40,
-  },
   companyName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#111827',
+    color: '#000000',
     marginBottom: 4,
   },
-  companyAddress: {
-    fontSize: 14,
+  locationText: {
+    fontSize: 12,
     color: '#6b7280',
-    textAlign: 'center',
+    fontWeight: '500',
   },
-  menuContainer: {
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginTop: 12,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+  separator: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    width: '100%',
+  },
+  menuList: {
+    paddingVertical: 8,
   },
   menuItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  menuItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
   },
   menuItemActive: {
-    backgroundColor: '#d7e5f6',
-    borderRadius: 12,
-  },
-  menuItemDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#e0f2fe',
+    borderLeftWidth: 4,
+    borderLeftColor: '#3b82f6',
   },
   menuItemText: {
-    fontSize: 17,
-    color: '#111827',
-    fontWeight: '700',
-  },
-  menuItemTextDisabled: {
-    color: '#9ca3af',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
   },
   menuItemTextActive: {
-    color: '#0f172a',
+    color: '#000000',
+  },
+  footerInfo: {
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  bottomSection: {
+    backgroundColor: '#ffffff',
+    paddingBottom: 16, // Safe area padding
   },
   logoutButton: {
-    marginTop: 'auto',
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 16,
-    backgroundColor: '#ffffff',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    paddingHorizontal: 24,
+  },
+  logoutImage: {
+    width: 20,
+    height: 20,
+    marginRight: 12,
+    resizeMode: 'contain',
   },
   logoutText: {
     fontSize: 16,
+    fontWeight: 'bold',
     color: '#ef4444',
-    fontWeight: '600',
-    textAlign: 'center',
   },
 });
-

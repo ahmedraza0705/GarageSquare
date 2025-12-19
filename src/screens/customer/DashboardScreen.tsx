@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 export default function CustomerDashboard() {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     vehicles: 0,
     activeServices: 0,
@@ -31,6 +32,7 @@ export default function CustomerDashboard() {
           activeServices: 0,
           completedServices: 0,
         });
+        setLoading(false);
         return;
       }
 
@@ -82,6 +84,8 @@ export default function CustomerDashboard() {
         activeServices: 0,
         completedServices: 0,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,25 +104,32 @@ export default function CustomerDashboard() {
     <ScrollView className="flex-1 bg-gray-50">
       <View className="px-6 py-4">
         <Text className="text-2xl font-bold text-gray-900 mb-6">
-          Welcome Back
+          Welcome Back{user?.profile?.full_name ? `, ${user.profile.full_name.split(' ')[0]}` : ''}
         </Text>
 
-        <StatCard
-          title="My Vehicles"
-          value={stats.vehicles}
-          onPress={() => navigation.navigate('MyVehicles' as never)}
-        />
-        <StatCard
-          title="Active Services"
-          value={stats.activeServices}
-          onPress={() => navigation.navigate('MyJobCards' as never)}
-        />
-        <StatCard
-          title="Completed Services"
-          value={stats.completedServices}
-        />
+        {loading ? (
+          <View className="h-40 flex items-center justify-center">
+            <Text className="text-gray-400">Loading stats...</Text>
+          </View>
+        ) : (
+          <>
+            <StatCard
+              title="My Vehicles"
+              value={stats.vehicles}
+              onPress={() => navigation.navigate('MyVehicles' as never)}
+            />
+            <StatCard
+              title="Active Services"
+              value={stats.activeServices}
+              onPress={() => navigation.navigate('MyJobCards' as never)}
+            />
+            <StatCard
+              title="Completed Services"
+              value={stats.completedServices}
+            />
+          </>
+        )}
       </View>
     </ScrollView>
   );
 }
-
