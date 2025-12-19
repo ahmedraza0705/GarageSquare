@@ -361,10 +361,7 @@ export default function CompanyAdminNavigator() {
         name="CustomerDetail"
         component={CustomerDetailScreen}
         options={{
-          headerShown: true,
-          title: 'Customer Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false,
         }}
       />
       <Stack.Screen

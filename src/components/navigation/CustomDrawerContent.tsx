@@ -37,7 +37,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
     { label: 'Reports', screenName: 'Reports', isWorking: true },
     { label: 'Invoice and Billing', isWorking: false },
-    { label: 'Customers', screenName: 'CustomersList', isWorking: true },
+    { label: 'Customers', screenName: 'Customers', isWorking: true },
     { label: 'Inventory', isWorking: false },
     { label: 'Shop Timing', isWorking: false },
     { label: 'Privacy Policy', isWorking: false },

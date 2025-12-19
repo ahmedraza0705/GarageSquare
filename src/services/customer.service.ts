@@ -1,11 +1,9 @@
 // ============================================
-// CUSTOMER SERVICE (MOCK)
+// CUSTOMER SERVICE (SUPABASE)
 // ============================================
 
-
-
 import { supabase } from '@/lib/supabase';
-import { Customer, CreateCustomerForm, Vehicle } from '@/types';
+import { Customer, CreateCustomerForm } from '@/types';
 
 export class CustomerService {
   /**
@@ -19,15 +17,15 @@ export class CustomerService {
 
     let query = supabase
       .from('customers')
-      .select('*')
+      .select('*, vehicles(*)')
       .order('created_at', { ascending: false });
-
-    if (filters?.search) {
-      query = query.or(`full_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
-    }
 
     if (filters?.branch_id) {
       query = query.eq('branch_id', filters.branch_id);
+    }
+
+    if (filters?.search) {
+      query = query.or(`full_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
     }
 
     const { data, error } = await query;
@@ -41,7 +39,7 @@ export class CustomerService {
   }
 
   /**
-   * Get customer by ID with vehicles
+   * Get customer by ID
    */
   static async getById(id: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
@@ -53,7 +51,7 @@ export class CustomerService {
       .single();
 
     if (error) {
-      console.error('Error fetching customer:', error);
+      console.error('Error fetching customer by ID:', error);
       throw error;
     }
 
@@ -66,15 +64,27 @@ export class CustomerService {
   static async create(formData: CreateCustomerForm, userId: string, branchId?: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
-    const newCustomer = {
+    // Check if the user profile exists before setting it as created_by
+    // to avoid foreign key constraint violations if the user was manually created in Auth
+    // but not yet in user_profiles.
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const insertData: any = {
       ...formData,
-      created_by: userId,
       branch_id: branchId,
     };
 
+    if (profile) {
+      insertData.created_by = userId;
+    }
+
     const { data, error } = await supabase
       .from('customers')
-      .insert(newCustomer)
+      .insert([insertData])
       .select()
       .single();
 
@@ -92,12 +102,15 @@ export class CustomerService {
   static async update(id: string, updates: Partial<Customer>) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
-    // Remove fields that shouldn't be updated directly or are read-only
-    const { vehicles, ...updateData } = updates;
+    // Remove relations/read-only fields before update
+    const { vehicles, id: _, created_at, updated_at, ...cleanUpdates } = updates as any;
 
     const { data, error } = await supabase
       .from('customers')
-      .update(updateData)
+      .update({
+        ...cleanUpdates,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', id)
       .select()
       .single();
@@ -127,4 +140,3 @@ export class CustomerService {
     }
   }
 }
-
