@@ -1,17 +1,51 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Linking, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Linking, Alert, Platform, Modal, TextInput, ActivityIndicator, KeyboardAvoidingView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
+import { branchService } from '@/services/branchService';
+
+const getInitials = (name: string) => {
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+};
 
 export default function BranchDetailsScreen() {
     const navigation = useNavigation();
     const route = useRoute();
-    const { branch, onDelete } = route.params as { branch: Branch, onDelete?: (id: string) => void };
+    const { branch: initialBranch, onDelete } = route.params as { branch: Branch, onDelete?: (id: string) => void };
     const { theme, toggleTheme, themeName } = useTheme();
     const { user } = useAuth();
+
+    const [branch, setBranch] = useState<Branch>(initialBranch);
+    const [manager, setManager] = useState<any>(null);
+    const [loadingManager, setLoadingManager] = useState(false);
+
+    // Edit State
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editName, setEditName] = useState(initialBranch.name);
+    const [editAddress, setEditAddress] = useState(initialBranch.address || '');
+    const [editLocation, setEditLocation] = useState(initialBranch.location || '');
+
+    // Fetch manager details
+    useEffect(() => {
+        const fetchManager = async () => {
+            if (branch.manager_id) {
+                setLoadingManager(true);
+                const managerData = await branchService.getBranchManager(branch.manager_id);
+                setManager(managerData);
+                setLoadingManager(false);
+            }
+        };
+        fetchManager();
+    }, [branch.manager_id]);
 
     // Mock data for display since these fields aren't in the Branch type yet
     const operatingHours = [
@@ -30,12 +64,45 @@ export default function BranchDetailsScreen() {
         'Less revenue'
     ];
 
+    const stats = [
+        { title: 'Jobs Today', value: '22' },
+        { title: 'Jobs in Progress', value: '10' },
+        { title: 'Pending Payment', value: '22' },
+        { title: 'Revenue Week', value: '25,000' },
+        { title: 'Revenue Month', value: '2,50,000' },
+        { title: 'Revenue Year', value: '25,00,000' },
+    ];
+
+    const inventory = [
+        { name: 'OIL', status: '12 Units remaining', color: themeName === 'dark' ? '#9CA3AF' : '#6B7280' },
+        { name: 'Tyre Stock', status: 'Out of Stock', color: '#EF4444' },
+        { name: 'Brake Fluid', status: '3 Units remaining', color: themeName === 'dark' ? '#9CA3AF' : '#6B7280' },
+        { name: 'Coolant', status: '16 Units remaining', color: themeName === 'dark' ? '#9CA3AF' : '#6B7280' },
+    ];
+
+    const staff = [
+        { role: 'Branch Manager', count: 1 },
+        { role: 'Supervisor', count: 4 },
+        { role: 'Technician Manager', count: 10 },
+        { role: 'Technician', count: 40 },
+    ];
+
+    const vehiclesStatus = [
+        { status: 'Check In', count: 12 },
+        { status: 'In Progress', count: 10 },
+        { status: 'On Hold', count: 10 },
+        { status: 'Ready To Deliver', count: 12 },
+        { status: 'Delivered', count: 18 },
+    ];
+
     const handleCall = () => {
-        if (branch.phone) Linking.openURL(`tel:${branch.phone}`);
+        const phoneNumber = manager?.phone || branch.phone || '+919662280843';
+        Linking.openURL(`tel:${phoneNumber}`);
     };
 
     const handleEmail = () => {
-        if (branch.email) Linking.openURL(`mailto:${branch.email}`);
+        const emailAddress = manager?.email || branch.email || 'ahmed.raza@gmail.com';
+        Linking.openURL(`mailto:${emailAddress}`);
     };
 
     const handleDelete = () => {
@@ -54,311 +121,486 @@ export default function BranchDetailsScreen() {
         ]);
     };
 
+    const handleSave = async () => {
+        if (!editName.trim()) {
+            Alert.alert('Error', 'Branch name is required');
+            return;
+        }
+
+
+        try {
+            setIsSaving(true);
+            const updatedBranch = await branchService.updateBranch(branch.id, {
+                name: editName,
+                address: editAddress,
+                location: editLocation
+            });
+            // Update local location state manually as backend might not return it yet
+            setBranch({ ...updatedBranch, location: editLocation });
+            setIsEditing(false);
+            Alert.alert('Success', 'Branch details updated successfully');
+        } catch (error: any) {
+            Alert.alert('Error', 'Failed to update branch');
+            console.error(error);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const openEditModal = () => {
+        setEditName(branch.name);
+        setEditAddress(branch.address || '');
+        setEditLocation(branch.location || (branch.address ? branch.address.split(',')[0] : ''));
+        setIsEditing(true);
+    };
+
     return (
-        <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB' }}>
+        <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#E5E7EB' : '#F3F4F6' }}>
             {/* Custom Header */}
             <View style={{
-                backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                backgroundColor: themeName === 'dark' ? '#333333' : '#F3F4F6',
                 paddingHorizontal: 20,
                 paddingVertical: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottomWidth: 1,
-                borderBottomColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
+                marginTop: Platform.OS === 'ios' ? 40 : 0
             }}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    <Ionicons name="arrow-back" size={24} color={themeName === 'dark' ? '#F9FAFB' : '#111827'} />
-                </TouchableOpacity>
-                <Text style={{
-                    fontSize: 18,
-                    fontWeight: 'bold',
-                    color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                }}>
-                    Branch Management
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+                    <TouchableOpacity onPress={() => navigation.goBack()}>
+                        <Ionicons name="arrow-back" size={24} color={themeName === 'dark' ? '#F9FAFB' : '#111827'} />
+                    </TouchableOpacity>
+                    <Text style={{
+                        fontSize: 20,
+                        fontWeight: 'bold',
+                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                    }}>
+                        Branch Management
+                    </Text>
+                </View>
                 <View style={{ flexDirection: 'row', gap: 12 }}>
                     <TouchableOpacity
-                        onPress={toggleTheme}
+                        onPress={handleDelete}
                         style={{
-                            backgroundColor: themeName === 'dark' ? '#60A5FA' : '#DBEAFE',
-                            width: 40,
-                            height: 40,
-                            borderRadius: 10,
+                            backgroundColor: '#FEE2E2',
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
                             alignItems: 'center',
                             justifyContent: 'center',
                         }}
                     >
-                        <Ionicons
-                            name={themeName === 'dark' ? 'sunny' : 'moon'}
-                            size={20}
-                            color={themeName === 'dark' ? '#1E3A8A' : '#1E40AF'}
-                        />
+                        <Ionicons name="trash-outline" size={20} color="#EF4444" />
                     </TouchableOpacity>
-                    <View style={{
-                        backgroundColor: themeName === 'dark' ? '#FCA5A5' : '#FECACA',
-                        width: 40,
-                        height: 40,
-                        borderRadius: 10,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}>
-                        <Text style={{
-                            fontSize: 16,
-                            fontWeight: 'bold',
-                            color: themeName === 'dark' ? '#7F1D1D' : '#991B1B',
-                        }}>
-                            {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-                        </Text>
-                    </View>
+                    <TouchableOpacity
+                        onPress={openEditModal}
+                        style={{
+                            backgroundColor: '#D1FAE5',
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <Ionicons name="add" size={24} color="#059669" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
-            <ScrollView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 24 }}>
+            <ScrollView style={{ flex: 1, paddingHorizontal: 20 }}>
 
-                {/* Header Card */}
+                {/* Header Card (Surat Branch) */}
                 <View style={{
-                    backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
-                    borderRadius: 20,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 24,
                     padding: 24,
                     marginBottom: 16,
                     alignItems: 'center',
                     borderWidth: 1,
-                    borderColor: themeName === 'dark' ? '#444444' : '#FED7AA',
+                    borderColor: '#D1D5DB',
                 }}>
                     <Text style={{
-                        fontSize: 24,
+                        fontSize: 28,
                         fontWeight: 'bold',
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                        color: '#111827',
                         marginBottom: 4,
                         textAlign: 'center',
                     }}>{branch.name}</Text>
                     <Text style={{
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                        color: '#111827',
                         fontWeight: 'bold',
-                        marginBottom: 12,
+                        marginBottom: 16,
                         textAlign: 'center',
                         fontSize: 18,
-                    }}>Workshop, Vesu</Text>
+                    }}>{branch.address || 'No Address'}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="location-outline" size={18} color={themeName === 'dark' ? '#9CA3AF' : '#6B7280'} />
+                        <Ionicons name="location-outline" size={18} color="#6B7280" />
                         <Text style={{
-                            color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
-                            fontSize: 14,
+                            color: '#6B7280',
+                            fontSize: 13,
                             marginLeft: 4,
                             textAlign: 'center',
-                        }} numberOfLines={2}>
-                            {branch.address || '1234, Main St. Vesu, Surat, Gujarat'} <Text style={{
+                        }}>
+                            {branch.location || 'No Location'} <Text style={{
                                 fontWeight: 'bold',
                                 textDecorationLine: 'underline',
-                                color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                                color: '#111827',
                             }}>(MAP)</Text>
                         </Text>
                     </View>
                 </View>
 
-                {/* Middle Section: Alerts and Manager */}
-                <View style={{ flexDirection: 'row', marginBottom: 16, height: 192 }}>
+                {/* Stats Grid 2x3 */}
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 8 }}>
+                    {stats.map((stat, index) => (
+                        <View key={index} style={{
+                            width: '48%',
+                            backgroundColor: '#FFFFFF',
+                            borderRadius: 16,
+                            padding: 12,
+                            marginBottom: 12,
+                            borderWidth: 1,
+                            borderColor: '#D1D5DB',
+                        }}>
+                            <Text style={{
+                                color: '#111827',
+                                fontSize: 11,
+                                fontWeight: 'bold',
+                                marginBottom: 4,
+                            }}>{stat.title}</Text>
+                            <Text style={{
+                                fontSize: 16,
+                                fontWeight: 'bold',
+                                color: '#111827',
+                            }}>{stat.value}</Text>
+                        </View>
+                    ))}
+                </View>
 
-                    {/* Alerts Card */}
+                {/* Inventory Status */}
+                <View style={{
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 20,
+                    padding: 16,
+                    borderWidth: 1,
+                    borderColor: '#D1D5DB',
+                    marginBottom: 16,
+                }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                        <Ionicons name="cube-outline" size={24} color="#000" />
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#111827',
+                            marginLeft: 8,
+                        }}>Inventory Status</Text>
+                    </View>
+
+                    <View style={{ gap: 10, marginBottom: 16 }}>
+                        {inventory.map((item, index) => (
+                            <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Text style={{
+                                    color: '#6B7280',
+                                    fontWeight: '500',
+                                    fontSize: 13
+                                }}>{item.name}</Text>
+                                <Text style={{ fontSize: 13, color: item.color }}>{item.status}</Text>
+                            </View>
+                        ))}
+                    </View>
+
+                    <TouchableOpacity style={{
+                        width: '100%',
+                        paddingVertical: 10,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 12,
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB',
+                        alignItems: 'center',
+                    }}>
+                        <Text style={{
+                            color: '#6B7280',
+                            fontWeight: '500',
+                            fontSize: 13,
+                        }}>Open Branch Inventory</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Staff and Vehicles Row */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+                    {/* Staff */}
                     <View style={{
-                        flex: 0.8,
-                        backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                        width: '48%',
+                        backgroundColor: '#FFFFFF',
                         borderRadius: 20,
                         padding: 16,
-                        marginRight: 12,
-                        justifyContent: 'space-between',
                         borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#FED7AA',
+                        borderColor: '#D1D5DB',
                     }}>
-                        <View>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                                <Ionicons name="warning-outline" size={20} color={themeName === 'dark' ? '#F9FAFB' : '#000'} />
-                                <Text style={{
-                                    fontWeight: 'bold',
-                                    color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                                    marginLeft: 8,
-                                    fontSize: 16,
-                                }}>Alerts</Text>
-                            </View>
-                            <View style={{ gap: 12 }}>
-                                {alerts.map((alert, index) => (
-                                    <Text key={index} style={{
-                                        color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
-                                        fontSize: 12,
-                                        fontWeight: '500',
-                                    }}>{alert}</Text>
-                                ))}
-                            </View>
+                        <Text style={{
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#111827',
+                            marginBottom: 12,
+                        }}>Staff</Text>
+                        <View style={{ gap: 8 }}>
+                            {staff.map((s, i) => (
+                                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{ color: '#6B7280', fontSize: 12, flex: 1 }}>{s.role}</Text>
+                                    <Text style={{ color: '#111827', fontWeight: 'bold', fontSize: 13 }}>{s.count}</Text>
+                                </View>
+                            ))}
                         </View>
                     </View>
 
-                    {/* Manager Card */}
+                    {/* Vehicles Status */}
                     <View style={{
-                        flex: 1,
-                        backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                        width: '48%',
+                        backgroundColor: '#FFFFFF',
                         borderRadius: 20,
                         padding: 16,
-                        justifyContent: 'space-between',
                         borderWidth: 1,
-                        borderColor: themeName === 'dark' ? '#444444' : '#FED7AA',
+                        borderColor: '#D1D5DB',
                     }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                        <Text style={{
+                            fontSize: 14,
+                            fontWeight: 'bold',
+                            color: '#111827',
+                            marginBottom: 12,
+                        }}>Vehicles Status</Text>
+                        <View style={{ gap: 8 }}>
+                            {vehiclesStatus.map((v, i) => (
+                                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{ color: '#6B7280', fontSize: 10 }}>{v.status}</Text>
+                                    <Text style={{ color: '#111827', fontWeight: 'bold', fontSize: 12 }}>{v.count}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                </View>
+
+                {/* Alerts and Contacts Column */}
+                <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+                    {/* Alerts Card */}
+                    <View style={{
+                        flex: 0.9,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 20,
+                        padding: 16,
+                        marginRight: 12,
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB',
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                            <Ionicons name="warning-outline" size={20} color="#000" />
+                            <Text style={{ fontWeight: 'bold', color: '#111827', marginLeft: 8, fontSize: 16 }}>Alerts</Text>
+                        </View>
+                        <View style={{ gap: 12 }}>
+                            {alerts.map((alert, index) => (
+                                <Text key={index} style={{ color: '#6B7280', fontSize: 12, fontWeight: '500' }}>{alert}</Text>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Nested Contact Card Container */}
+                    <View style={{
+                        flex: 1,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: 24,
+                        padding: 16,
+                        borderWidth: 1,
+                        borderColor: '#F3F4F6',
+                        gap: 16,
+                    }}>
+                        {/* Manager Profile */}
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                        }}>
                             <View style={{
-                                width: 40,
-                                height: 40,
-                                borderRadius: 20,
-                                backgroundColor: '#4A72B2',
+                                width: 44,
+                                height: 44,
+                                borderRadius: 22,
+                                backgroundColor: '#587eb5',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginRight: 12,
                             }}>
-                                <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }}>
-                                    {(branch.manager_id || 'AR').substring(0, 2).toUpperCase()}
+                                {loadingManager ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                ) : (
+                                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 16 }}>
+                                        {manager?.full_name ? getInitials(manager.full_name) : 'AR'}
+                                    </Text>
+                                )}
+                            </View>
+                            <View>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#111827' }}>
+                                    {loadingManager ? 'Loading...' : (manager?.full_name || 'Ahmed Raza')}
                                 </Text>
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={{
-                                    fontSize: 14,
-                                    fontWeight: 'bold',
-                                    color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                                }} numberOfLines={1}>{branch.manager_id || 'Ahmed Raza'}</Text>
-                                <Text style={{
-                                    fontSize: 10,
-                                    color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
-                                }} numberOfLines={1}>Branch Manager</Text>
+                                <Text style={{ fontSize: 13, color: '#9CA3AF' }}>Branch Manager</Text>
                             </View>
                         </View>
 
-                        <View style={{ gap: 8 }}>
-                            <TouchableOpacity onPress={handleCall} style={{
-                                backgroundColor: '#4A72B2',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                paddingHorizontal: 12,
-                                paddingVertical: 10,
-                                borderRadius: 12,
-                                width: '100%',
-                            }}>
-                                <Ionicons name="call" size={14} color="white" />
-                                <Text style={{
-                                    color: '#FFFFFF',
-                                    fontSize: 10,
-                                    fontWeight: 'bold',
-                                    marginLeft: 8,
-                                }}>{branch.phone || '+91 96622 80843'}</Text>
-                            </TouchableOpacity>
+                        {/* Phone Card */}
+                        <TouchableOpacity onPress={handleCall} style={{
+                            backgroundColor: '#587eb5',
+                            borderRadius: 15,
+                            padding: 12,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            height: 50,
+                            justifyContent: 'center',
+                        }}>
+                            <View style={{ marginRight: 10 }}>
+                                <Ionicons name="call" size={18} color="white" />
+                            </View>
+                            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFFFFF' }}>
+                                {loadingManager ? '...' : (manager?.phone || branch.phone || '+91 96622 80843')}
+                            </Text>
+                        </TouchableOpacity>
 
-                            <TouchableOpacity onPress={handleEmail} style={{
-                                backgroundColor: themeName === 'dark' ? '#272727' : '#F3F4F6',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                paddingHorizontal: 12,
-                                paddingVertical: 10,
-                                borderRadius: 12,
-                                width: '100%',
-                                borderWidth: 1,
-                                borderColor: themeName === 'dark' ? '#444444' : '#E5E7EB',
-                            }}>
-                                <Ionicons name="mail" size={14} color="#4A72B2" />
-                                <Text style={{
-                                    color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
-                                    fontSize: 10,
-                                    fontWeight: '500',
-                                    marginLeft: 8,
-                                }} numberOfLines={1}>{branch.email || 'ahmed.raza@gmail.com'}</Text>
-                            </TouchableOpacity>
-                        </View>
+                        {/* Email Card */}
+                        <TouchableOpacity onPress={handleEmail} style={{
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 15,
+                            padding: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            height: 50,
+                            justifyContent: 'center',
+                        }}>
+                            <View style={{ marginRight: 5 }}>
+                                <Ionicons name="mail" size={18} color="#587eb5" />
+                            </View>
+                            <Text style={{ fontSize: 10, color: '#4B5563', fontWeight: '600' }} numberOfLines={1}>
+                                {loadingManager ? '...' : (manager?.email || branch.email || 'ahmed.raza@gmail.com')}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
                 {/* Operating Hours */}
                 <View style={{
-                    backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
-                    borderRadius: 20,
-                    padding: 20,
-                    marginBottom: 24,
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: 24,
+                    padding: 24,
+                    marginBottom: 40,
                     borderWidth: 1,
-                    borderColor: themeName === 'dark' ? '#444444' : '#FED7AA',
+                    borderColor: '#D1D5DB',
                 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                        <Ionicons name="time-outline" size={22} color={themeName === 'dark' ? '#F9FAFB' : '#000'} />
-                        <Text style={{
-                            fontSize: 18,
-                            fontWeight: 'bold',
-                            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                            marginLeft: 8,
-                        }}>Operating Hours</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                        <Ionicons name="time-outline" size={24} color="#000" />
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#111827', marginLeft: 10 }}>Operating Hours</Text>
                     </View>
 
-                    <View style={{ gap: 8 }}>
+                    <View style={{ gap: 10 }}>
                         {operatingHours.map((item, index) => (
                             <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{
-                                    color: themeName === 'dark' ? '#9CA3AF' : '#6B7280',
-                                    fontSize: 14,
-                                }}>{item.day}</Text>
+                                <Text style={{ color: '#6B7280', fontSize: 14 }}>{item.day}</Text>
                                 <Text style={{
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: item.time === 'Closed' ? '#EF4444' : (themeName === 'dark' ? '#9CA3AF' : '#6B7280'),
-                                }}>
-                                    {item.time}
-                                </Text>
+                                    color: item.time === 'Closed' ? '#EF4444' : '#6B7280',
+                                }}>{item.time}</Text>
                             </View>
                         ))}
                     </View>
                 </View>
 
-                {/* Footer Buttons */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 40, gap: 8 }}>
-                    <TouchableOpacity onPress={handleDelete} style={{
-                        borderWidth: 1,
-                        borderColor: '#FECACA',
-                        borderRadius: 12,
-                        paddingHorizontal: 16,
-                        paddingVertical: 12,
-                        backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
-                        minWidth: 80,
-                        alignItems: 'center',
-                    }}>
-                        <Text style={{ color: '#EF4444', fontWeight: 'bold' }}>Delete</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={{
-                        borderWidth: 1,
-                        borderColor: '#BBF7D0',
-                        borderRadius: 12,
-                        paddingHorizontal: 24,
-                        paddingVertical: 12,
-                        backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
-                        minWidth: 80,
-                        alignItems: 'center',
-                    }}>
-                        <Text style={{ color: '#16A34A', fontWeight: 'bold' }}>Edit</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={{
-                            flex: 1,
-                            backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
-                            borderWidth: 1,
-                            borderColor: '#EAC4A0',
-                            borderRadius: 12,
-                            paddingVertical: 12,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                        onPress={() => (navigation as any).navigate('BranchExtendedInfo', { branch })}
-                    >
-                        <Text style={{
-                            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-                            fontWeight: 'bold',
-                        }}>Branch Information</Text>
-                    </TouchableOpacity>
-                </View>
-
             </ScrollView>
+
+            {/* Edit Modal */}
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isEditing}
+                onRequestClose={() => setIsEditing(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}
+                >
+                    <View style={{ backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827' }}>Edit Branch Details</Text>
+                            <TouchableOpacity onPress={() => setIsEditing(false)}>
+                                <Ionicons name="close" size={24} color="#6B7280" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 }}>Branch Name</Text>
+                        <TextInput
+                            value={editName}
+                            onChangeText={setEditName}
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#D1D5DB',
+                                borderRadius: 12,
+                                padding: 12,
+                                marginBottom: 16,
+                                fontSize: 16,
+                                color: '#111827'
+                            }}
+                            placeholder="Enter branch name"
+                        />
+
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 }}>Full Address</Text>
+                        <TextInput
+                            value={editAddress}
+                            onChangeText={setEditAddress}
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#D1D5DB',
+                                borderRadius: 12,
+                                padding: 12,
+                                marginBottom: 16,
+                                fontSize: 16,
+                                color: '#111827',
+                                height: 60,
+                                textAlignVertical: 'top'
+                            }}
+                            multiline
+                            placeholder="Enter full address (e.g. Workshop, Vesu)"
+                        />
+
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 }}>Location (Map Label)</Text>
+                        <TextInput
+                            value={editLocation}
+                            onChangeText={setEditLocation}
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#D1D5DB',
+                                borderRadius: 12,
+                                padding: 12,
+                                marginBottom: 24,
+                                fontSize: 16,
+                                color: '#111827'
+                            }}
+                            placeholder="Enter map location (e.g. Adajan)"
+                        />
+
+                        <TouchableOpacity
+                            onPress={handleSave}
+                            disabled={isSaving}
+                            style={{
+                                backgroundColor: '#2563EB',
+                                borderRadius: 12,
+                                paddingVertical: 14,
+                                alignItems: 'center',
+                                marginBottom: 10
+                            }}
+                        >
+                            {isSaving ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>Save Changes</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
         </View>
     );
 }

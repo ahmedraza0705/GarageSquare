@@ -10,6 +10,9 @@ import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { branchService } from '@/services/branchService';
+import { AuthService } from '@/services/auth.service';
+import { useAuth } from '@/hooks/useAuth';
+
 
 export default function BranchesScreen() {
   // State - now fetched from Supabase
@@ -30,6 +33,7 @@ export default function BranchesScreen() {
 
   const navigation = useNavigation();
   const { theme, toggleTheme, themeName } = useTheme();
+  const { user } = useAuth();
 
   // Fetch branches from Supabase
   const fetchBranches = async () => {
@@ -114,7 +118,9 @@ export default function BranchesScreen() {
 
     try {
       setLoading(true);
-      console.log('Creating branch with data:', { newBranchName, newBranchAddress, newPhone, newEmail });
+      const companyId = user?.profile?.company_id;
+
+      console.log('Creating branch with data:', { newBranchName, newBranchAddress, newPhone, newEmail, companyId });
 
       const newBranchData = {
         name: newBranchName,
@@ -122,10 +128,40 @@ export default function BranchesScreen() {
         phone: newPhone,
         email: newEmail,
         is_active: true,
-        manager_id: undefined // Explicitly undefined to avoid FK constraint issues
+        company_id: companyId,
+        manager_id: undefined
       };
 
-      await branchService.createBranch(newBranchData);
+      const createdBranch = await branchService.createBranch(newBranchData);
+
+      // 2. Create Manager Profile
+      if (newManagerName && newEmail) {
+        try {
+          // Use a temporary password for new managers
+          const tempPassword = 'Manager@' + Math.random().toString(36).slice(-8);
+
+          const managerResult = await AuthService.createUserWithProfile({
+            email: newEmail,
+            password: tempPassword,
+            full_name: newManagerName,
+            phone: newPhone,
+            role: 'manager',
+            branch_id: createdBranch.id,
+            company_id: companyId
+          });
+
+          if (managerResult.success) {
+            // Updated branch with the new manager_id
+            await branchService.updateBranch(createdBranch.id, {
+              manager_id: managerResult.userId
+            });
+          }
+        } catch (mgrError) {
+          console.error('Error creating manager profile:', mgrError);
+          // Don't fail the whole branch creation if manager creation fails (e.g. email exists)
+          Alert.alert('Warning', 'Branch created, but manager profile could not be created. They might already have an account.');
+        }
+      }
 
       setModalVisible(false);
       resetForm();
@@ -159,9 +195,12 @@ export default function BranchesScreen() {
       .substring(0, 2);
   };
 
-  const filteredBranches = branches.filter(branch =>
+  const allBranches = branches;
+
+  const filteredBranches = allBranches.filter(branch =>
     branch.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (branch.address && branch.address.toLowerCase().includes(searchQuery.toLowerCase()))
+    (branch.address && branch.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (branch.manager_id && branch.manager_id.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const renderInput = (
@@ -195,7 +234,7 @@ export default function BranchesScreen() {
         paddingVertical: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
+        backgroundColor: themeName === 'dark' ? '#272727a0' : '#F9FAFB',
       }}>
         <TextInput
           placeholder={placeholder}
@@ -222,7 +261,7 @@ export default function BranchesScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727' : '#F3F4F6' }}>
+    <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727a0' : '#F3F4F6' }}>
       {/* Custom Header - Toggleable Dark Mode */}
       <View style={{
         backgroundColor: themeName === 'dark' ? '#333333' : '#E5E7EB',
@@ -251,31 +290,31 @@ export default function BranchesScreen() {
             onPress={toggleTheme}
             style={{
               backgroundColor: themeName === 'dark' ? '#60A5FA' : '#DBEAFE',
-              width: 44,
-              height: 44,
-              borderRadius: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 8,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
             <Ionicons
               name={themeName === 'dark' ? 'sunny' : 'moon'}
-              size={22}
+              size={18}
               color={themeName === 'dark' ? '#1E3A8A' : '#1E40AF'}
             />
           </TouchableOpacity>
           <TouchableOpacity
             style={{
               backgroundColor: themeName === 'dark' ? '#FCA5A5' : '#FECACA',
-              width: 44,
-              height: 44,
-              borderRadius: 12,
+              width: 36,
+              height: 36,
+              borderRadius: 8,
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
             <Text style={{
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: 'bold',
               color: themeName === 'dark' ? '#7F1D1D' : '#991B1B',
             }}>
@@ -286,14 +325,14 @@ export default function BranchesScreen() {
       </View>
 
       <ScrollView
-        style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727' : '#F3F4F6' }}
+        style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727a0' : '#F3F4F6' }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={fetchBranches} />
         }
       >
-        <View style={{ paddingHorizontal: 20, paddingVertical: 16 }}>
+        <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
           {/* Search Bar and Add Button */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <View style={{
               flex: 1,
               flexDirection: 'row',
@@ -366,10 +405,15 @@ export default function BranchesScreen() {
                     {branch.name}
                   </Text>
                   <Text style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
-                    {branch.manager_id || 'No Manager'} , {branch.address?.split(',')[1]?.trim() || 'Location'}
+                    {branch.manager_id || 'No Manager'} , {branch.address || 'Location'}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {(branch.id === 'mock-1' || branch.id === 'mock-3') && (
+                    <Ionicons name="warning-outline" size={20} color="#EF4444" />
+                  )}
+                  {/* <Ionicons name="chevron-forward" size={20} color="#9CA3AF" /> */}
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -431,11 +475,11 @@ export default function BranchesScreen() {
                     style={{
                       flex: 1,
                       borderWidth: 1,
-                      borderColor: themeName === 'dark' ? '#272727' : '#35C56A',
+                      borderColor: themeName === 'dark' ? '#272727a0' : '#35C56A',
                       borderRadius: 12,
                       paddingVertical: 12,
                       alignItems: 'center',
-                      backgroundColor: themeName === 'dark' ? '#272727' : '#35c56a58',
+                      backgroundColor: themeName === 'dark' ? '#272727a0' : '#35c56a58',
                     }}
                     onPress={handleFinish}
                     disabled={loading}>
@@ -453,7 +497,7 @@ export default function BranchesScreen() {
                       borderRadius: 12,
                       paddingVertical: 12,
                       alignItems: 'center',
-                      backgroundColor: themeName === 'dark' ? '#272727' : '#F9FAFB',
+                      backgroundColor: themeName === 'dark' ? '#272727a0' : '#F9FAFB',
                     }}
                     onPress={handleGoToUpload}
                   >

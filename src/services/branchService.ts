@@ -112,5 +112,30 @@ export const branchService = {
             console.error('Error searching branches:', error);
             throw error;
         }
+    },
+
+    // Get branch manager profile
+    async getBranchManager(managerId: string): Promise<any> {
+        try {
+            if (!supabase) throw new Error('Supabase client not initialized');
+
+            const { data, error } = await supabase
+                .from('user_profiles')
+                .select(`
+                    id,
+                    full_name,
+                    email,
+                    phone,
+                    role:roles(name, display_name)
+                `)
+                .eq('id', managerId)
+                .single();
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching branch manager:', error);
+            return null;
+        }
     }
 };
