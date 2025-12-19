@@ -155,25 +155,26 @@ export default function BranchDetailsScreen() {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#E5E7EB' : '#F3F4F6' }}>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
             {/* Custom Header */}
             <View style={{
-                backgroundColor: themeName === 'dark' ? '#333333' : '#F3F4F6',
+                backgroundColor: theme.headerBg,
                 paddingHorizontal: 20,
                 paddingVertical: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
+                borderBottomColor: theme.headerBorder,
                 marginTop: Platform.OS === 'ios' ? 40 : 0
             }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Ionicons name="arrow-back" size={24} color={themeName === 'dark' ? '#F9FAFB' : '#111827'} />
+                        <Ionicons name="arrow-back" size={24} color={theme.headerText} />
                     </TouchableOpacity>
                     <Text style={{
                         fontSize: 20,
                         fontWeight: 'bold',
-                        color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                        color: theme.headerText,
                     }}>
                         Branch Management
                     </Text>
@@ -210,34 +211,31 @@ export default function BranchDetailsScreen() {
 
             <ScrollView style={{ flex: 1, paddingHorizontal: 20 }}>
 
-                {/* Header Card (Surat Branch) */}
                 <View style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: theme.surface,
                     borderRadius: 24,
                     padding: 24,
                     marginBottom: 16,
                     alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: '#D1D5DB',
                 }}>
                     <Text style={{
                         fontSize: 28,
                         fontWeight: 'bold',
-                        color: '#111827',
+                        color: theme.text,
                         marginBottom: 4,
                         textAlign: 'center',
                     }}>{branch.name}</Text>
                     <Text style={{
-                        color: '#111827',
+                        color: theme.text,
                         fontWeight: 'bold',
                         marginBottom: 16,
                         textAlign: 'center',
                         fontSize: 18,
                     }}>{branch.address || 'No Address'}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="location-outline" size={18} color="#6B7280" />
+                        <Ionicons name="location-outline" size={18} color={theme.textMuted} />
                         <Text style={{
-                            color: '#6B7280',
+                            color: theme.textMuted,
                             fontSize: 13,
                             marginLeft: 4,
                             textAlign: 'center',
@@ -245,7 +243,7 @@ export default function BranchDetailsScreen() {
                             {branch.location || 'No Location'} <Text style={{
                                 fontWeight: 'bold',
                                 textDecorationLine: 'underline',
-                                color: '#111827',
+                                color: theme.text,
                             }}>(MAP)</Text>
                         </Text>
                     </View>
@@ -256,15 +254,13 @@ export default function BranchDetailsScreen() {
                     {stats.map((stat, index) => (
                         <View key={index} style={{
                             width: '48%',
-                            backgroundColor: '#FFFFFF',
+                            backgroundColor: theme.surface,
                             borderRadius: 16,
                             padding: 12,
                             marginBottom: 12,
-                            borderWidth: 1,
-                            borderColor: '#D1D5DB',
                         }}>
                             <Text style={{
-                                color: '#111827',
+                                color: theme.text,
                                 fontSize: 11,
                                 fontWeight: 'bold',
                                 marginBottom: 4,
@@ -272,7 +268,7 @@ export default function BranchDetailsScreen() {
                             <Text style={{
                                 fontSize: 16,
                                 fontWeight: 'bold',
-                                color: '#111827',
+                                color: theme.text,
                             }}>{stat.value}</Text>
                         </View>
                     ))}
@@ -280,19 +276,17 @@ export default function BranchDetailsScreen() {
 
                 {/* Inventory Status */}
                 <View style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: theme.surface,
                     borderRadius: 20,
                     padding: 16,
-                    borderWidth: 1,
-                    borderColor: '#D1D5DB',
                     marginBottom: 16,
                 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                        <Ionicons name="cube-outline" size={24} color="#000" />
+                        <Ionicons name="cube-outline" size={24} color={theme.text} />
                         <Text style={{
                             fontSize: 16,
                             fontWeight: 'bold',
-                            color: '#111827',
+                            color: theme.text,
                             marginLeft: 8,
                         }}>Inventory Status</Text>
                     </View>
@@ -301,7 +295,7 @@ export default function BranchDetailsScreen() {
                         {inventory.map((item, index) => (
                             <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Text style={{
-                                    color: '#6B7280',
+                                    color: theme.textMuted,
                                     fontWeight: '500',
                                     fontSize: 13
                                 }}>{item.name}</Text>
@@ -313,14 +307,12 @@ export default function BranchDetailsScreen() {
                     <TouchableOpacity style={{
                         width: '100%',
                         paddingVertical: 10,
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surfaceAlt,
                         borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
                         alignItems: 'center',
                     }}>
                         <Text style={{
-                            color: '#6B7280',
+                            color: theme.textMuted,
                             fontWeight: '500',
                             fontSize: 13,
                         }}>Open Branch Inventory</Text>
@@ -332,23 +324,23 @@ export default function BranchDetailsScreen() {
                     {/* Staff */}
                     <View style={{
                         width: '48%',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
                         borderRadius: 20,
                         padding: 16,
                         borderWidth: 1,
-                        borderColor: '#D1D5DB',
+                        borderColor: theme.border,
                     }}>
                         <Text style={{
                             fontSize: 16,
                             fontWeight: 'bold',
-                            color: '#111827',
+                            color: theme.text,
                             marginBottom: 12,
                         }}>Staff</Text>
                         <View style={{ gap: 8 }}>
                             {staff.map((s, i) => (
                                 <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ color: '#6B7280', fontSize: 12, flex: 1 }}>{s.role}</Text>
-                                    <Text style={{ color: '#111827', fontWeight: 'bold', fontSize: 13 }}>{s.count}</Text>
+                                    <Text style={{ color: theme.textMuted, fontSize: 12, flex: 1 }}>{s.role}</Text>
+                                    <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 13 }}>{s.count}</Text>
                                 </View>
                             ))}
                         </View>
@@ -357,23 +349,21 @@ export default function BranchDetailsScreen() {
                     {/* Vehicles Status */}
                     <View style={{
                         width: '48%',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
                         borderRadius: 20,
                         padding: 16,
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
                     }}>
                         <Text style={{
                             fontSize: 14,
                             fontWeight: 'bold',
-                            color: '#111827',
+                            color: theme.text,
                             marginBottom: 12,
                         }}>Vehicles Status</Text>
                         <View style={{ gap: 8 }}>
                             {vehiclesStatus.map((v, i) => (
                                 <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ color: '#6B7280', fontSize: 10 }}>{v.status}</Text>
-                                    <Text style={{ color: '#111827', fontWeight: 'bold', fontSize: 12 }}>{v.count}</Text>
+                                    <Text style={{ color: theme.textMuted, fontSize: 10 }}>{v.status}</Text>
+                                    <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 12 }}>{v.count}</Text>
                                 </View>
                             ))}
                         </View>
@@ -385,20 +375,18 @@ export default function BranchDetailsScreen() {
                     {/* Alerts Card */}
                     <View style={{
                         flex: 0.9,
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
                         borderRadius: 20,
                         padding: 16,
                         marginRight: 12,
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
                     }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                            <Ionicons name="warning-outline" size={20} color="#000" />
-                            <Text style={{ fontWeight: 'bold', color: '#111827', marginLeft: 8, fontSize: 16 }}>Alerts</Text>
+                            <Ionicons name="warning-outline" size={20} color={theme.text} />
+                            <Text style={{ fontWeight: 'bold', color: theme.text, marginLeft: 8, fontSize: 16 }}>Alerts</Text>
                         </View>
                         <View style={{ gap: 12 }}>
                             {alerts.map((alert, index) => (
-                                <Text key={index} style={{ color: '#6B7280', fontSize: 12, fontWeight: '500' }}>{alert}</Text>
+                                <Text key={index} style={{ color: theme.textMuted, fontSize: 12, fontWeight: '500' }}>{alert}</Text>
                             ))}
                         </View>
                     </View>
@@ -409,8 +397,6 @@ export default function BranchDetailsScreen() {
                         backgroundColor: '#FFFFFF',
                         borderRadius: 24,
                         padding: 16,
-                        borderWidth: 1,
-                        borderColor: '#F3F4F6',
                         gap: 16,
                     }}>
                         {/* Manager Profile */}
@@ -436,10 +422,10 @@ export default function BranchDetailsScreen() {
                                 )}
                             </View>
                             <View>
-                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#111827' }}>
+                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.text }}>
                                     {loadingManager ? 'Loading...' : (manager?.full_name || 'Ahmed Raza')}
                                 </Text>
-                                <Text style={{ fontSize: 13, color: '#9CA3AF' }}>Branch Manager</Text>
+                                <Text style={{ fontSize: 13, color: theme.textMuted }}>Branch Manager</Text>
                             </View>
                         </View>
 
@@ -463,7 +449,7 @@ export default function BranchDetailsScreen() {
 
                         {/* Email Card */}
                         <TouchableOpacity onPress={handleEmail} style={{
-                            backgroundColor: '#F3F4F6',
+                            backgroundColor: theme.surfaceAlt,
                             borderRadius: 15,
                             padding: 8,
                             flexDirection: 'row',
@@ -474,35 +460,32 @@ export default function BranchDetailsScreen() {
                             <View style={{ marginRight: 5 }}>
                                 <Ionicons name="mail" size={18} color="#587eb5" />
                             </View>
-                            <Text style={{ fontSize: 10, color: '#4B5563', fontWeight: '600' }} numberOfLines={1}>
+                            <Text style={{ fontSize: 10, color: theme.textMuted, fontWeight: '600' }} numberOfLines={1}>
                                 {loadingManager ? '...' : (manager?.email || branch.email || 'ahmed.raza@gmail.com')}
                             </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Operating Hours */}
                 <View style={{
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: theme.surface,
                     borderRadius: 24,
                     padding: 24,
                     marginBottom: 40,
-                    borderWidth: 1,
-                    borderColor: '#D1D5DB',
                 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                        <Ionicons name="time-outline" size={24} color="#000" />
-                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#111827', marginLeft: 10 }}>Operating Hours</Text>
+                        <Ionicons name="time-outline" size={24} color={theme.text} />
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', color: theme.text, marginLeft: 10 }}>Operating Hours</Text>
                     </View>
 
                     <View style={{ gap: 10 }}>
                         {operatingHours.map((item, index) => (
                             <View key={index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Text style={{ color: '#6B7280', fontSize: 14 }}>{item.day}</Text>
+                                <Text style={{ color: theme.textMuted, fontSize: 14 }}>{item.day}</Text>
                                 <Text style={{
                                     fontSize: 14,
                                     fontWeight: 'bold',
-                                    color: item.time === 'Closed' ? '#EF4444' : '#6B7280',
+                                    color: item.time === 'Closed' ? '#EF4444' : theme.textMuted,
                                 }}>{item.time}</Text>
                             </View>
                         ))}
@@ -522,63 +505,66 @@ export default function BranchDetailsScreen() {
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' }}
                 >
-                    <View style={{ backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
+                    <View style={{ backgroundColor: theme.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                            <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111827' }}>Edit Branch Details</Text>
+                            <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.text }}>Edit Branch Details</Text>
                             <TouchableOpacity onPress={() => setIsEditing(false)}>
-                                <Ionicons name="close" size={24} color="#6B7280" />
+                                <Ionicons name="close" size={24} color={theme.textMuted} />
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 }}>Branch Name</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: theme.textMuted, marginBottom: 6 }}>Branch Name</Text>
                         <TextInput
                             value={editName}
                             onChangeText={setEditName}
                             style={{
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: theme.border,
                                 borderRadius: 12,
                                 padding: 12,
                                 marginBottom: 16,
                                 fontSize: 16,
-                                color: '#111827'
+                                color: theme.text
                             }}
                             placeholder="Enter branch name"
+                            placeholderTextColor={theme.textMuted}
                         />
 
-                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 }}>Full Address</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: theme.textMuted, marginBottom: 6 }}>Full Address</Text>
                         <TextInput
                             value={editAddress}
                             onChangeText={setEditAddress}
                             style={{
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: theme.border,
                                 borderRadius: 12,
                                 padding: 12,
                                 marginBottom: 16,
                                 fontSize: 16,
-                                color: '#111827',
+                                color: theme.text,
                                 height: 60,
                                 textAlignVertical: 'top'
                             }}
                             multiline
                             placeholder="Enter full address (e.g. Workshop, Vesu)"
+                            placeholderTextColor={theme.textMuted}
                         />
 
-                        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 }}>Location (Map Label)</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '500', color: theme.textMuted, marginBottom: 6 }}>Location (Map Label)</Text>
                         <TextInput
                             value={editLocation}
                             onChangeText={setEditLocation}
                             style={{
                                 borderWidth: 1,
-                                borderColor: '#D1D5DB',
+                                borderColor: theme.border,
                                 borderRadius: 12,
                                 padding: 12,
                                 marginBottom: 24,
                                 fontSize: 16,
-                                color: '#111827'
+                                color: theme.text
                             }}
                             placeholder="Enter map location (e.g. Adajan)"
+                            placeholderTextColor={theme.textMuted}
                         />
 
                         <TouchableOpacity

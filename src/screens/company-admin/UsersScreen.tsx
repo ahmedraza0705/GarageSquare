@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, TextInput, Modal, Platform, Switch } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserProfile, RoleName } from '@/types';
 import { AuthService } from '@/services/auth.service';
@@ -50,6 +51,7 @@ type FilterType = {
 };
 
 export default function UsersScreen() {
+  const { theme, themeName } = useTheme();
   // State
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -257,14 +259,15 @@ export default function UsersScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#F5F5F5' }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
       {/* Search Bar */}
       <View className="px-4 py-3">
         <View className="flex-row items-center gap-2">
           {/* Search Input */}
-          <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2.5">
+          <View style={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }} className="flex-1 flex-row items-center rounded-lg px-3 py-2.5">
             <Search size={20} color="#9CA3AF" />
             <TextInput
+              style={{ color: theme.text }}
               className="flex-1 ml-2 text-base"
               placeholder="Search User"
               placeholderTextColor="#9CA3AF"
@@ -302,8 +305,8 @@ export default function UsersScreen() {
             <TouchableOpacity
               key={user.id}
               onPress={() => openEditModal(user)}
-              className="bg-white rounded-xl p-4 mb-3 flex-row items-center justify-between"
-              style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}
+              className="rounded-xl p-4 mb-3 flex-row items-center justify-between"
+              style={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}
             >
               {/* Left: Avatar + Info */}
               <View className="flex-row items-center flex-1">
@@ -319,17 +322,17 @@ export default function UsersScreen() {
 
                 {/* User Info */}
                 <View className="flex-1">
-                  <Text className="font-semibold text-base" style={{ color: '#000000' }} numberOfLines={1}>
+                  <Text className="font-semibold text-base" style={{ color: theme.text }} numberOfLines={1}>
                     {user.full_name || 'Unknown User'}
                   </Text>
-                  <Text className="text-sm" style={{ color: '#757575' }} numberOfLines={1}>
+                  <Text className="text-sm" style={{ color: theme.textMuted }} numberOfLines={1}>
                     {branchName || 'No Branch'} , {roleConfig?.label || user.role?.name || 'No Role'}
                   </Text>
                 </View>
               </View>
 
               {/* Right: Chevron */}
-              <ChevronRight size={20} color="#757575" />
+              <ChevronRight size={20} color={theme.textMuted} />
             </TouchableOpacity>
           );
         })}
@@ -354,58 +357,64 @@ export default function UsersScreen() {
 
       {/* Modal */}
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-white">
-          <View className="px-6 py-4 border-b border-gray-100 flex-row justify-between items-center">
-            <Text className="text-xl font-bold text-gray-900">
+        <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
+          <View style={{ borderBottomColor: theme.border }} className="px-6 py-4 border-b flex-row justify-between items-center">
+            <Text style={{ color: theme.text }} className="text-xl font-bold">
               {editingUser ? 'Edit Profile' : 'New Team Member'}
             </Text>
-            <TouchableOpacity onPress={() => setShowModal(false)} className="p-2 bg-gray-100 rounded-full">
-              <X size={20} color="#374151" />
+            <TouchableOpacity onPress={() => setShowModal(false)} style={{ backgroundColor: theme.surfaceAlt }} className="p-2 rounded-full">
+              <X size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView className="flex-1 px-6 py-6">
             {/* Full Name */}
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">Full Name</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+              <Text style={{ color: theme.textMuted }} className="text-sm font-medium mb-1.5">Full Name</Text>
+              <View style={{ borderColor: theme.border, backgroundColor: theme.surface }} className="flex-row items-center border rounded-xl px-4 py-3">
                 <Users size={20} color="#9CA3AF" />
                 <TextInput
                   value={form.full_name}
                   onChangeText={t => setForm({ ...form, full_name: t })}
                   placeholder="e.g. John Doe"
-                  className="flex-1 ml-3 text-base text-gray-900"
+                  placeholderTextColor={theme.textMuted}
+                  style={{ color: theme.text }}
+                  className="flex-1 ml-3 text-base"
                 />
               </View>
             </View>
 
             {/* Email */}
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">Email Address</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+              <Text style={{ color: theme.textMuted }} className="text-sm font-medium mb-1.5">Email Address</Text>
+              <View style={{ borderColor: theme.border, backgroundColor: theme.surface }} className="flex-row items-center border rounded-xl px-4 py-3">
                 <Mail size={20} color="#9CA3AF" />
                 <TextInput
                   value={form.email}
                   onChangeText={t => setForm({ ...form, email: t.trim().toLowerCase() })}
                   placeholder="john@company.com"
+                  placeholderTextColor={theme.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  className="flex-1 ml-3 text-base text-gray-900"
+                  style={{ color: theme.text }}
+                  className="flex-1 ml-3 text-base"
                 />
               </View>
             </View>
 
             {/* Phone */}
             <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">Phone (Optional)</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+              <Text style={{ color: theme.textMuted }} className="text-sm font-medium mb-1.5">Phone (Optional)</Text>
+              <View style={{ borderColor: theme.border, backgroundColor: theme.surface }} className="flex-row items-center border rounded-xl px-4 py-3">
                 <Phone size={20} color="#9CA3AF" />
                 <TextInput
                   value={form.phone}
                   onChangeText={t => setForm({ ...form, phone: t })}
                   placeholder="+1 (555) 000-0000"
+                  placeholderTextColor={theme.textMuted}
                   keyboardType="phone-pad"
-                  className="flex-1 ml-3 text-base text-gray-900"
+                  style={{ color: theme.text }}
+                  className="flex-1 ml-3 text-base"
                 />
               </View>
             </View>
@@ -413,15 +422,17 @@ export default function UsersScreen() {
             {/* Password (Only for New Users) */}
             {!editingUser && (
               <View className="mb-6">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Temporary Password</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+                <Text style={{ color: theme.textMuted }} className="text-sm font-medium mb-1.5">Temporary Password</Text>
+                <View style={{ borderColor: theme.border, backgroundColor: theme.surface }} className="flex-row items-center border rounded-xl px-4 py-3">
                   <Shield size={20} color="#9CA3AF" />
                   <TextInput
                     value={form.password}
                     onChangeText={t => setForm({ ...form, password: t })}
                     placeholder="Create a secure password"
+                    placeholderTextColor={theme.textMuted}
                     secureTextEntry
-                    className="flex-1 ml-3 text-base text-gray-900"
+                    style={{ color: theme.text }}
+                    className="flex-1 ml-3 text-base"
                   />
                 </View>
               </View>
@@ -470,9 +481,17 @@ export default function UsersScreen() {
                   <TouchableOpacity
                     key={branch.id}
                     onPress={() => setForm({ ...form, branch_id: branch.id })}
-                    className={`mr-2 px-4 py-3 rounded-xl border ${form.branch_id === branch.id ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-200'}`}
+                    style={{
+                      backgroundColor: form.branch_id === branch.id ? '#1e40af' : theme.surface,
+                      borderColor: form.branch_id === branch.id ? '#1e40af' : theme.border,
+                      borderWidth: 1
+                    }}
+                    className={`mr-2 px-4 py-3 rounded-xl`}
                   >
-                    <Text className={form.branch_id === branch.id ? 'text-white font-medium' : 'text-gray-600 font-medium'}>
+                    <Text
+                      style={{ color: form.branch_id === branch.id ? '#ffffff' : theme.text }}
+                      className="font-medium"
+                    >
                       {branch.name}
                     </Text>
                   </TouchableOpacity>
@@ -483,7 +502,7 @@ export default function UsersScreen() {
           </ScrollView>
 
           {/* Footer Actions */}
-          <View className="p-6 border-t border-gray-100">
+          <View style={{ borderTopColor: theme.border, backgroundColor: theme.surface }} className="p-6 border-t font-medium">
             <TouchableOpacity
               onPress={handleSave}
               disabled={saving}

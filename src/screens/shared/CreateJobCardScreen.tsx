@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { JobCardService } from '@/services/jobCard.service';
@@ -15,6 +16,7 @@ import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 
 export default function CreateJobCardScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation();
   const { user } = useAuth();
   const { branchId } = useRole();
@@ -61,15 +63,15 @@ export default function CreateJobCardScreen() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!selectedCustomerId) {
       newErrors.customer = 'Customer is required';
     }
-    
+
     if (!selectedVehicleId) {
       newErrors.vehicle = 'Vehicle is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -87,7 +89,7 @@ export default function CreateJobCardScreen() {
         estimated_cost: formData.estimated_cost ? Number(formData.estimated_cost) : undefined,
         estimated_time: formData.estimated_time ? Number(formData.estimated_time) : undefined,
       }, user?.id || '', branchId || '');
-      
+
       Alert.alert('Success', 'Job card created successfully', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
@@ -101,27 +103,28 @@ export default function CreateJobCardScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-gray-50"
+      style={{ flex: 1, backgroundColor: theme.background }}
     >
       <ScrollView
         contentContainerClassName="px-6 py-4"
+        style={{ flex: 1, backgroundColor: theme.background }}
         keyboardShouldPersistTaps="handled"
       >
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text style={{ color: theme.text }} className="text-sm font-medium mb-2">
             Customer *
           </Text>
-          <Text className="text-gray-500 text-sm mb-2">
+          <Text style={{ color: theme.textMuted }} className="text-sm mb-2">
             Select customer (feature to be implemented)
           </Text>
           <Text className="text-red-500 text-sm">{errors.customer}</Text>
         </View>
 
         <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">
+          <Text style={{ color: theme.text }} className="text-sm font-medium mb-2">
             Vehicle *
           </Text>
-          <Text className="text-gray-500 text-sm mb-2">
+          <Text style={{ color: theme.textMuted }} className="text-sm mb-2">
             Select vehicle (feature to be implemented)
           </Text>
           <Text className="text-red-500 text-sm">{errors.vehicle}</Text>

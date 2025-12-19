@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import { TextInput, View, Text, TextInputProps, TouchableOpacity } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -22,26 +23,26 @@ export default function Input({
   secureTextEntry,
   ...props
 }: InputProps) {
+  const { theme } = useTheme();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const showValidationIcon = isValid || error;
 
   return (
     <View className={`mb-4 ${containerClassName}`}>
       {label && (
-        <Text className="text-sm font-medium text-gray-700 mb-2">
+        <Text style={{ color: theme.textMuted }} className="text-sm font-medium mb-2">
           {label}
         </Text>
       )}
       <View className="relative">
         <TextInput
-          className={`px-4 py-3 border rounded-lg pr-12 ${
-            error 
-              ? 'border-red-500' 
-              : isValid 
-              ? 'border-green-500' 
-              : 'border-gray-300'
-          } bg-white text-gray-900`}
-          placeholderTextColor="#9ca3af"
+          style={{
+            backgroundColor: theme.surface,
+            color: theme.text,
+            borderColor: error ? theme.primary : (isValid ? '#22c55e' : theme.border)
+          }}
+          className="px-4 py-3 border rounded-lg pr-12"
+          placeholderTextColor={theme.textMuted}
           secureTextEntry={showPasswordToggle ? !isPasswordVisible : secureTextEntry}
           {...props}
         />
@@ -51,15 +52,14 @@ export default function Input({
               onPress={() => setIsPasswordVisible(!isPasswordVisible)}
               className="mr-2"
             >
-              <Text className="text-gray-500 text-lg">
+              <Text style={{ color: theme.textMuted }} className="text-lg">
                 {isPasswordVisible ? '👁️' : '👁️‍🗨️'}
               </Text>
             </TouchableOpacity>
           )}
           {showValidationIcon && (
-            <View className={`w-5 h-5 rounded-full items-center justify-center ${
-              error ? 'bg-red-500' : 'bg-green-500'
-            }`}>
+            <View className={`w-5 h-5 rounded-full items-center justify-center ${error ? 'bg-red-500' : 'bg-green-500'
+              }`}>
               <Text className="text-white text-xs font-bold">
                 {error ? '!' : '✓'}
               </Text>

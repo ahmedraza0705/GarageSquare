@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -26,19 +27,20 @@ export default function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const { theme } = useTheme();
   const baseClasses = 'px-6 py-3 rounded-lg items-center justify-center flex-row';
-  
+
   const variantClasses = {
-    primary: 'bg-primary-600',
+    primary: '',
     secondary: 'bg-secondary-600',
-    outline: 'border-2 border-primary-600 bg-transparent',
+    outline: 'border-2 bg-transparent',
     danger: 'bg-red-600',
   };
 
   const textVariantClasses = {
     primary: 'text-white',
     secondary: 'text-white',
-    outline: 'text-primary-600',
+    outline: '',
     danger: 'text-white',
   };
 
@@ -49,15 +51,22 @@ export default function Button({
       onPress={onPress}
       disabled={isDisabled}
       className={`${baseClasses} ${variantClasses[variant]} ${isDisabled ? 'opacity-50' : ''} ${className}`}
-      style={style}
+      style={[
+        variant === 'primary' && { backgroundColor: theme.primary },
+        variant === 'outline' && { borderColor: theme.primary },
+        style
+      ]}
     >
       {loading ? (
-        <ActivityIndicator 
-          color={variant === 'outline' ? '#0ea5e9' : '#ffffff'} 
-          size="small" 
+        <ActivityIndicator
+          color={variant === 'outline' ? theme.primary : '#ffffff'}
+          size="small"
         />
       ) : (
-        <Text className={`font-semibold text-base ${textVariantClasses[variant]}`} style={textStyle}>
+        <Text
+          className={`font-semibold text-base ${textVariantClasses[variant]}`}
+          style={[{ color: variant === 'outline' ? theme.primary : (variant === 'primary' ? '#fff' : undefined) }, textStyle]}
+        >
           {title}
         </Text>
       )}

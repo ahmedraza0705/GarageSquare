@@ -7,11 +7,14 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'rea
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/context/ThemeContext';
 import * as SecureStore from 'expo-secure-store';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function CompanyAdminDashboard() {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { theme, themeName } = useTheme();
   const [stats, setStats] = useState({
     activeJobs: 56,
     customers: 156,
@@ -94,11 +97,11 @@ export default function CompanyAdminDashboard() {
         <View style={styles.chartLegend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#2563eb' }]} />
-            <Text style={styles.legendText}>branch 1</Text>
+            <Text style={[styles.legendText, { color: theme.text }]}>branch 1</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: '#10b981' }]} />
-            <Text style={styles.legendText}>branch 2</Text>
+            <Text style={[styles.legendText, { color: theme.text }]}>branch 2</Text>
           </View>
         </View>
 
@@ -106,7 +109,7 @@ export default function CompanyAdminDashboard() {
           {/* Y-axis labels */}
           <View style={styles.yAxis}>
             {[15, 10, 5, 0].map((value) => (
-              <Text key={value} style={styles.yAxisLabel}>
+              <Text key={value} style={[styles.yAxisLabel, { color: theme.text }]}>
                 {value}
               </Text>
             ))}
@@ -130,7 +133,7 @@ export default function CompanyAdminDashboard() {
                     ]}
                   />
                 </View>
-                <Text style={styles.xAxisLabel}>{item.month}</Text>
+                <Text style={[styles.xAxisLabel, { color: theme.text }]}>{item.month}</Text>
               </View>
             ))}
           </View>
@@ -140,7 +143,7 @@ export default function CompanyAdminDashboard() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           {/* Top Row Cards */}
@@ -158,21 +161,21 @@ export default function CompanyAdminDashboard() {
                   <Text style={[styles.cardTrend, styles.whiteText]}>+10%</Text>
                 </View>
                 <View style={styles.cardIcon}>
-                  <Text style={styles.iconEmoji}>🔧</Text>
+                  <Ionicons name="construct-outline" size={32} color="#ffffff" />
                 </View>
               </View>
             </TouchableOpacity>
 
             {/* Customers Card */}
-            <View style={[styles.largeCard, styles.whiteCard]}>
+            <View style={[styles.largeCard, { backgroundColor: theme.surface }]}>
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
-                  <Text style={styles.cardTitle}>Customers</Text>
-                  <Text style={styles.cardValue}>{stats.customers}</Text>
+                  <Text style={[styles.cardTitle, { color: theme.textMuted }]}>Customers</Text>
+                  <Text style={[styles.cardValue, { color: theme.text }]}>{stats.customers}</Text>
                   <Text style={styles.cardTrend}>+12%</Text>
                 </View>
                 <View style={styles.cardIcon}>
-                  <Text style={styles.iconEmoji}>👥</Text>
+                  <Ionicons name="people-outline" size={32} color={theme.text} />
                 </View>
               </View>
             </View>
@@ -182,18 +185,18 @@ export default function CompanyAdminDashboard() {
           <View style={styles.cardRow}>
             {/* Vehicle Card */}
             <TouchableOpacity
-              style={[styles.largeCard, styles.whiteCard]}
+              style={[styles.largeCard, { backgroundColor: theme.surface }]}
               onPress={() => navigation.navigate('Vehicles' as never)}
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
-                  <Text style={styles.cardTitle}>Vehicle</Text>
-                  <Text style={styles.cardValue}>{stats.vehicles}</Text>
+                  <Text style={[styles.cardTitle, { color: theme.textMuted }]}>Vehicle</Text>
+                  <Text style={[styles.cardValue, { color: theme.text }]}>{stats.vehicles}</Text>
                   <Text style={styles.cardTrend}>+9%</Text>
                 </View>
                 <View style={styles.cardIcon}>
-                  <Text style={styles.iconEmoji}>🚗</Text>
+                  <Ionicons name="car-outline" size={32} color={theme.text} />
                 </View>
               </View>
             </TouchableOpacity>
@@ -207,63 +210,63 @@ export default function CompanyAdminDashboard() {
                   <Text style={[styles.cardTrend, styles.whiteText]}>+10%</Text>
                 </View>
                 <View style={styles.cardIcon}>
-                  <Text style={styles.iconEmoji}>💰</Text>
+                  <Ionicons name="cash-outline" size={32} color="#ffffff" />
                 </View>
               </View>
             </View>
           </View>
 
           {/* Bar Chart Card */}
-          <View style={[styles.chartCard, styles.whiteCard]}>
+          <View style={[styles.chartCard, { backgroundColor: theme.surface }]}>
             <BarChart />
           </View>
 
           {/* Third Row - Status Cards */}
           <View style={styles.statusRow}>
-            <View style={[styles.statusCard, styles.whiteCard]}>
-              <Text style={styles.statusTitle}>Check-in</Text>
-              <Text style={styles.statusValue}>{stats.checkIn}</Text>
+            <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Check-in</Text>
+              <Text style={[styles.statusValue, { color: theme.text }]}>{stats.checkIn}</Text>
             </View>
-            <View style={[styles.statusCard, styles.whiteCard]}>
-              <Text style={styles.statusTitle}>Processing</Text>
-              <Text style={styles.statusValue}>{stats.processing}</Text>
+            <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Processing</Text>
+              <Text style={[styles.statusValue, { color: theme.text }]}>{stats.processing}</Text>
             </View>
-            <View style={[styles.statusCard, styles.whiteCard]}>
-              <Text style={styles.statusTitle}>Delivery</Text>
-              <Text style={styles.statusValue}>{stats.delivery}</Text>
+            <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Delivery</Text>
+              <Text style={[styles.statusValue, { color: theme.text }]}>{stats.delivery}</Text>
             </View>
           </View>
 
           {/* Bottom Row - Staff and New Customers */}
           <View style={styles.bottomRow}>
             {/* Staff Card */}
-            <View style={[styles.bottomCard, styles.whiteCard]}>
-              <Text style={styles.bottomCardTitle}>Staff</Text>
+            <View style={[styles.bottomCard, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.bottomCardTitle, { color: theme.text }]}>Staff</Text>
               <View style={styles.staffList}>
                 <View style={styles.staffItem}>
-                  <Text style={styles.staffLabel}>Branch Manager:</Text>
-                  <Text style={styles.staffValue}>{staffData.branchManager}</Text>
+                  <Text style={[styles.staffLabel, { color: theme.textMuted }]}>Branch Manager:</Text>
+                  <Text style={[styles.staffValue, { color: theme.text }]}>{staffData.branchManager}</Text>
                 </View>
                 <View style={styles.staffItem}>
-                  <Text style={styles.staffLabel}>Supervisor:</Text>
-                  <Text style={styles.staffValue}>{staffData.supervisor}</Text>
+                  <Text style={[styles.staffLabel, { color: theme.textMuted }]}>Supervisor:</Text>
+                  <Text style={[styles.staffValue, { color: theme.text }]}>{staffData.supervisor}</Text>
                 </View>
                 <View style={styles.staffItem}>
-                  <Text style={styles.staffLabel}>Technician Manager:</Text>
-                  <Text style={styles.staffValue}>{staffData.technicianManager}</Text>
+                  <Text style={[styles.staffLabel, { color: theme.textMuted }]}>Technician Manager:</Text>
+                  <Text style={[styles.staffValue, { color: theme.text }]}>{staffData.technicianManager}</Text>
                 </View>
                 <View style={styles.staffItem}>
-                  <Text style={styles.staffLabel}>Technician:</Text>
-                  <Text style={styles.staffValue}>{staffData.technician}</Text>
+                  <Text style={[styles.staffLabel, { color: theme.textMuted }]}>Technician:</Text>
+                  <Text style={[styles.staffValue, { color: theme.text }]}>{staffData.technician}</Text>
                 </View>
               </View>
             </View>
 
             {/* New Customers Card */}
-            <View style={[styles.bottomCard, styles.whiteCard]}>
-              <Text style={styles.bottomCardTitle}>New Customers</Text>
-              <Text style={styles.bottomCardSubtitle}>This month</Text>
-              <Text style={styles.newCustomersValue}>{stats.newCustomers}</Text>
+            <View style={[styles.bottomCard, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.bottomCardTitle, { color: theme.text }]}>New Customers</Text>
+              <Text style={[styles.bottomCardSubtitle, { color: theme.textMuted }]}>This month</Text>
+              <Text style={[styles.newCustomersValue, { color: theme.text }]}>{stats.newCustomers}</Text>
             </View>
           </View>
         </View>
@@ -287,6 +290,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     minHeight: 120,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   activeJobsCard: {
     backgroundColor: '#4682B4',
@@ -295,12 +300,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#C37125',
   },
   whiteCard: {
-    backgroundColor: '#ffffff',
-    shadowColor: '#272727',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   cardContent: {
     flexDirection: 'row',
@@ -312,12 +311,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#272727a0',
     marginBottom: 8,
   },
   cardValue: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#272727',
     marginBottom: 4,
@@ -340,13 +339,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconEmoji: {
-    fontSize: 32,
+    // Kept for backward compatibility if needed, but not used for Ionicons
   },
   chartCard: {
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     minHeight: 200,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   chartContainer: {
     flex: 1,
@@ -423,6 +424,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
+    elevation: 0,
+    shadowOpacity: 0,
   },
   statusTitle: {
     fontSize: 14,
@@ -442,6 +445,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     padding: 16,
+    elevation: 0,
+    shadowOpacity: 0,
   },
   bottomCardTitle: {
     fontSize: 16,

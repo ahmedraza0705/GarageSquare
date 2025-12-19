@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { CustomerService } from '@/services/customer.service';
@@ -12,6 +13,7 @@ import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 
 export default function CreateCustomerScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation();
   const { user } = useAuth();
   const { branchId } = useRole();
@@ -26,19 +28,19 @@ export default function CreateCustomerScreen() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.full_name.trim()) {
       newErrors.full_name = 'Full name is required';
     }
-    
+
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone is required';
     }
-    
+
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -62,7 +64,7 @@ export default function CreateCustomerScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-[#36454F]"
+      style={{ flex: 1, backgroundColor: theme.background }}
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingVertical: 32 }}

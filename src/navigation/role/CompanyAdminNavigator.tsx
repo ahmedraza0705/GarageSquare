@@ -1,4 +1,3 @@
-
 // ============================================
 // COMPANY ADMIN NAVIGATOR
 // ============================================
@@ -12,16 +11,15 @@ import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeColors, ThemeName } from '@/context/ThemeContext';
 import CustomDrawerContent from '@/components/navigation/CustomDrawerContent';
+
 // Icons
 import {
   LayoutDashboard,
   Building2,
   Users,
   FileBarChart,
-  Menu,
-  Moon,
-  Sun
 } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Screens
 import CompanyAdminDashboard from '@/screens/company-admin/DashboardScreen';
@@ -41,7 +39,6 @@ import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
 import BranchDetailsScreen from '@/screens/company-admin/BranchDetailsScreen';
 import BranchFileUploadScreen from '@/screens/company-admin/BranchFileUploadScreen';
-// New Imports
 import ChangePasswordScreen from '@/screens/shared/ChangePasswordScreen';
 import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
@@ -77,8 +74,8 @@ function CustomHeader({
       DashboardTab: 'Dashboard',
       MainTabs: 'Dashboard',
       Dashboard: 'Dashboard',
-      BranchesTab: 'Branches',
-      Branches: 'Branches',
+      BranchesTab: 'Branch Management',
+      Branches: 'Branch Management',
       UsersTab: 'User Management',
       UserManagement: 'User Management',
       ReportsTab: 'Reports',
@@ -88,7 +85,6 @@ function CustomHeader({
       Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
-      // New titles
       ChangePassword: 'Change Password',
       AccountDetails: 'Account Details',
       Notifications: 'Notifications',
@@ -102,7 +98,10 @@ function CustomHeader({
       <View
         style={[
           styles.header,
-          { backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder },
+          {
+            backgroundColor: theme.headerBg,
+            borderBottomColor: theme.headerBorder
+          },
         ]}
       >
         <View style={styles.headerLeft}>
@@ -119,12 +118,11 @@ function CustomHeader({
           ) : (
             <TouchableOpacity
               onPress={() => {
-                // Open drawer or menu
                 navigation.dispatch(DrawerActions.openDrawer());
               }}
               style={styles.headerButton}
             >
-              <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
+              <Ionicons name="menu" size={28} color={theme.headerIcon} />
             </TouchableOpacity>
           )}
 
@@ -134,20 +132,46 @@ function CustomHeader({
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={onToggleTheme}
-            style={styles.headerButton}
+            style={[
+              styles.headerButton,
+              {
+                backgroundColor: themeName === 'dark' ? '#60A5FA' : '#DBEAFE',
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+            ]}
           >
-            <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
+            <Ionicons
+              name={themeName === 'dark' ? 'sunny' : 'moon'}
+              size={18}
+              color={themeName === 'dark' ? '#1E3A8A' : '#1E40AF'}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.avatarButton}
+            style={[
+              styles.avatarButton,
+              {
+                backgroundColor: themeName === 'dark' ? '#FCA5A5' : '#FECACA',
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+            ]}
             onPress={() => setProfilePopupVisible(true)}
           >
-            <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
-              <Text style={[styles.avatarText, { color: theme.avatarText }]}>
-                {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-              </Text>
-            </View>
+            <Text style={{
+              fontSize: 14,
+              fontWeight: 'bold',
+              color: themeName === 'dark' ? '#7F1D1D' : '#991B1B',
+            }}>
+              {(user?.profile?.full_name?.[0] || user?.email?.[0] || 'A').toUpperCase()}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -170,8 +194,7 @@ function CompanyAdminTabs({
   themeName: ThemeName;
   toggleTheme: () => void;
 }) {
-  // We want a blue bar with white icons, matching the user's image request
-  const BAR_COLOR = '#4682B4'; // Blue-600
+  const BAR_COLOR = '#4682B4';
   const ACTIVE_COLOR = '#ffffff86';
   const INACTIVE_COLOR = '#FFFFFF';
 
@@ -186,7 +209,7 @@ function CompanyAdminTabs({
             onToggleTheme={toggleTheme}
           />
         ),
-        headerShown: true, // Enable headers for tabs
+        headerShown: true,
         tabBarStyle: {
           backgroundColor: BAR_COLOR,
           borderTopWidth: 0,
@@ -199,8 +222,8 @@ function CompanyAdminTabs({
           left: 0,
           right: 0,
           bottom: 0,
-          elevation: 8, // Increased elevation for Android
-          zIndex: 50, // Added zIndex for iOS
+          elevation: 8,
+          zIndex: 50,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
@@ -208,7 +231,7 @@ function CompanyAdminTabs({
         },
         tabBarActiveTintColor: ACTIVE_COLOR,
         tabBarInactiveTintColor: INACTIVE_COLOR,
-        tabBarShowLabel: false, // Hide labels for a cleaner look like the image
+        tabBarShowLabel: false,
       })}
     >
       <Tab.Screen
@@ -226,7 +249,7 @@ function CompanyAdminTabs({
         name="BranchesTab"
         component={BranchesScreen}
         options={{
-          headerShown: false, // Branches has its own internal custom header
+          headerShown: true, // Uses shared header
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Building2 color={color} size={24} />
@@ -296,7 +319,7 @@ function CompanyAdminDrawer({
         name="MainTabs"
         options={{
           title: 'Dashboard',
-          headerShown: false, // Hide drawer header for tabs since they have their own
+          headerShown: false,
         }}
       >
         {() => (
@@ -312,7 +335,7 @@ function CompanyAdminDrawer({
         component={VehiclesScreen}
         options={{
           title: 'Vehicles',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -320,7 +343,7 @@ function CompanyAdminDrawer({
         component={CustomersScreen}
         options={{
           title: 'Customers',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -328,7 +351,7 @@ function CompanyAdminDrawer({
         component={JobCardsScreen}
         options={{
           title: 'Job Cards',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -336,7 +359,7 @@ function CompanyAdminDrawer({
         component={ReportsScreen}
         options={{
           title: 'Reports',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          drawerItemStyle: { display: 'none' },
         }}
       />
     </Drawer.Navigator>
@@ -362,14 +385,14 @@ export default function CompanyAdminNavigator() {
         name="ActiveJobs"
         component={ActiveJobsScreen}
         options={{
-          headerShown: false, // Using custom header in screen
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="JobCardDetail"
         component={JobCardDetailScreen}
         options={{
-          headerShown: false, // Using custom header in screen
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -378,8 +401,8 @@ export default function CompanyAdminNavigator() {
         options={{
           headerShown: true,
           title: 'Customer Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerStyle: { backgroundColor: theme.headerBg },
+          headerTintColor: theme.headerText,
         }}
       />
       <Stack.Screen
@@ -388,8 +411,8 @@ export default function CompanyAdminNavigator() {
         options={{
           headerShown: true,
           title: 'Vehicle Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerStyle: { backgroundColor: theme.headerBg },
+          headerTintColor: theme.headerText,
         }}
       />
       <Stack.Screen
@@ -398,8 +421,8 @@ export default function CompanyAdminNavigator() {
         options={{
           headerShown: true,
           title: 'Add Customer',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerStyle: { backgroundColor: theme.headerBg },
+          headerTintColor: theme.headerText,
         }}
       />
       <Stack.Screen
@@ -408,8 +431,8 @@ export default function CompanyAdminNavigator() {
         options={{
           headerShown: true,
           title: 'Add Vehicle',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerStyle: { backgroundColor: theme.headerBg },
+          headerTintColor: theme.headerText,
         }}
       />
       <Stack.Screen
@@ -418,15 +441,15 @@ export default function CompanyAdminNavigator() {
         options={{
           headerShown: true,
           title: 'Create Job Card',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerStyle: { backgroundColor: theme.headerBg },
+          headerTintColor: theme.headerText,
         }}
       />
       <Stack.Screen
         name="BranchDetails"
         component={BranchDetailsScreen}
         options={{
-          headerShown: false, // Custom dark mode header in component
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -525,49 +548,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     zIndex: 10,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
   },
   headerButton: {
-    padding: 8,
-  },
-  darkModeIcon: {
-    fontSize: 24,
-    color: '#fff',
+    padding: 0,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-  },
-  menuIcon: {
-    fontSize: 24,
-    color: '#fff',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   avatarButton: {
-    padding: 4,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    padding: 0,
   },
   activeTabIcon: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',

@@ -6,9 +6,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { useNavigation, DrawerActions, useNavigationState } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface MenuItem {
   label: string;
@@ -26,7 +27,22 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   const companyName = user?.profile?.branch?.name || user?.profile?.full_name || 'Company Admin';
   const location = `${user?.profile?.city || 'Surat'}, ${user?.profile?.postal_code || '395009'}, ${user?.profile?.state || 'INDIA'}`;
 
-  const [activeLabel, setActiveLabel] = useState('Dashboard');
+  // Get the deep active route name across all navigators
+  const activeRoute = useNavigationState((state) => {
+    if (!state) return 'Dashboard';
+
+    const getDeepRoute = (navState: any): string => {
+      const route = navState.routes[navState.index];
+      if (route.state) {
+        return getDeepRoute(route.state);
+      }
+      return route.name;
+    };
+
+    return getDeepRoute(state);
+  });
+
+  const currentParentRoute = props.state.routes[props.state.index].name;
 
   const handleLogout = () => {
     Alert.alert(
@@ -50,7 +66,6 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   };
 
   const handleMenuPress = (item: MenuItem) => {
-    setActiveLabel(item.label);
 
     if (!item.isWorking) {
       Alert.alert('Coming Soon', `${item.label} feature will be available soon.`);
@@ -88,6 +103,39 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Settings', screenName: 'Settings', isWorking: true },
   ];
 
+  const getActiveLabel = () => {
+    const allItems = [...menuItems, ...footerItems];
+
+    // Priority 1: Match specifically for known detail/sub-screens to their parent category
+    if (activeRoute === 'CustomerDetail' || activeRoute === 'CreateCustomer') return 'Customers';
+    if (activeRoute === 'VehicleDetail' || activeRoute === 'CreateVehicle') return 'Vehicle Management';
+    if (activeRoute === 'JobCardDetail' || activeRoute === 'CreateJobCard' || activeRoute === 'ActiveJobs') return 'Job Cards';
+    if (activeRoute === 'BranchDetails' || activeRoute === 'BranchFileUpload') return 'Branches';
+    if (activeRoute === 'AccountDetails' || activeRoute === 'ChangePassword' || activeRoute === 'Notifications' || activeRoute === 'About') return 'Settings';
+
+    // Priority 2: Match by exact screen name or tab screen name
+    const activeItem = allItems.find(item =>
+      item.screenName === activeRoute ||
+      item.tabScreen === activeRoute ||
+      (item.screenName === 'MainTabs' && item.tabScreen === activeRoute)
+    );
+
+    if (activeItem) return activeItem.label;
+
+    // Priority 3: Fallback to checking the current parent route name if activeRoute didn't yield a match
+    if (currentParentRoute === 'MainTabs') {
+      // Handled by Priority 2 matches for tabScreen usually, but just in case:
+      if (activeRoute.includes('Dashboard')) return 'Dashboard';
+      if (activeRoute.includes('Branches')) return 'Branches';
+      if (activeRoute.includes('Users')) return 'Users';
+      if (activeRoute.includes('Reports')) return 'Reports';
+    }
+
+    return 'Dashboard';
+  };
+
+  const activeLabel = getActiveLabel();
+
   return (
     <View style={[styles.container, { backgroundColor: '#ffffff' }]}>
       <View style={{ flex: 1 }}>
@@ -100,7 +148,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
             <View style={styles.headerTopRow}>
               <Text style={styles.languageText}>{language}</Text>
               <TouchableOpacity style={styles.editIcon}>
-                <Text style={{ fontSize: 16 }}>✏️</Text>
+                <Ionicons name="create-outline" size={18} color="#3b82f6" />
               </TouchableOpacity>
             </View>
 

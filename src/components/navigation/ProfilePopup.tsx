@@ -47,13 +47,14 @@ export default function ProfilePopup({ visible, onClose }: ProfilePopupProps) {
                                 <View style={styles.profileLeft}>
                                     <View style={styles.avatar}>
                                         <Text style={styles.avatarText}>
-                                            {user?.profile?.full_name?.[0]?.toUpperCase() || 'A'}
-                                            {user?.profile?.full_name?.split(' ')?.[1]?.[0]?.toUpperCase() || 'R'}
+                                            {(user?.profile?.full_name?.[0] || user?.email?.[0] || 'A').toUpperCase()}
                                         </Text>
                                     </View>
                                     <View style={styles.userInfo}>
-                                        <Text style={styles.userName}>{user?.profile?.full_name || 'Ahmed Raza'}</Text>
-                                        <Text style={styles.userBranch}>Branch Name: Surat</Text>
+                                        <Text style={styles.userName}>
+                                            {user?.profile?.full_name || user?.email?.split('@')[0] || 'User'}
+                                        </Text>
+                                        <Text style={styles.userBranch}>{user?.email}</Text>
                                     </View>
                                 </View>
                                 <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>

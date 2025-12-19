@@ -8,8 +8,10 @@ import { useNavigation } from '@react-navigation/native';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function VehiclesScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,20 +73,22 @@ export default function VehiclesScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="px-4 py-4 bg-gray-50 border-b border-gray-200">
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={{ backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder }} className="px-4 py-4 border-b">
         {/* Search Bar Row */}
         <View className="flex-row items-center gap-2">
-          <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
-            <Ionicons name="search" size={20} color="#6b7280" />
+          <View style={{ backgroundColor: theme.surface }} className="flex-1 flex-row items-center rounded-lg px-3 py-2">
+            <Ionicons name="search" size={20} color={theme.textMuted} />
             <TextInput
-              className="flex-1 ml-2 text-base text-gray-900"
+              style={{ color: theme.text }}
+              className="flex-1 ml-2 text-base"
               placeholder="Search User"
+              placeholderTextColor={theme.textMuted}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
             <TouchableOpacity>
-              <Ionicons name="filter-outline" size={20} color="#6b7280" />
+              <Ionicons name="filter-outline" size={20} color={theme.textMuted} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity
@@ -97,46 +101,48 @@ export default function VehiclesScreen() {
       </View>
 
       <ScrollView
-        className="flex-1 bg-gray-50 px-4 pt-2"
+        style={{ flex: 1, backgroundColor: theme.background }}
+        className="px-4 pt-2"
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadVehicles} />
+          <RefreshControl refreshing={loading} onRefresh={loadVehicles} tintColor={theme.primary} />
         }
       >
         {vehicles.map((vehicle) => (
           <TouchableOpacity
             key={vehicle.id}
-            className="bg-white rounded-xl p-4 mb-4 border border-gray-200 shadow-sm"
-            onPress={() => navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never)}
+            style={{ backgroundColor: theme.surface }}
+            className="rounded-xl p-4 mb-4 shadow-sm"
+            onPress={() => (navigation.navigate as any)('VehicleDetail', { vehicleId: vehicle.id })}
           >
             <View className="flex-row justify-between mb-2">
               <View className="flex-row items-center gap-2">
-                <Ionicons name="car-sport" size={20} color="#000" />
-                <Text className="text-base font-bold text-gray-900">{vehicle.make} {vehicle.model}</Text>
+                <Ionicons name="car-sport" size={20} color={theme.text} />
+                <Text style={{ color: theme.text }} className="text-base font-bold">{vehicle.make} {vehicle.model}</Text>
               </View>
-              <Text className="text-sm font-bold text-gray-900">{vehicle.license_plate}</Text>
+              <Text style={{ color: theme.text }} className="text-sm font-bold">{vehicle.license_plate}</Text>
             </View>
 
             <View className="flex-row justify-between mt-1">
               <View className="flex-row items-center gap-2">
-                <Ionicons name="person" size={16} color="#000" />
-                <Text className="text-xs font-bold text-gray-800 w-16">Customer : </Text>
+                <Ionicons name="person" size={16} color={theme.textMuted} />
+                <Text style={{ color: theme.textMuted }} className="text-xs font-bold w-16">Customer : </Text>
               </View>
-              <Text className="text-xs font-bold text-gray-900">{vehicle.customer?.full_name}</Text>
+              <Text style={{ color: theme.text }} className="text-xs font-bold">{vehicle.customer?.full_name}</Text>
             </View>
 
             <View className="flex-row justify-between mt-2">
               <View className="flex-row items-center gap-2">
-                <MaterialCommunityIcons name="office-building" size={16} color="#000" />
-                <Text className="text-xs font-bold text-gray-800 w-16">Branch : </Text>
+                <MaterialCommunityIcons name="office-building" size={16} color={theme.textMuted} />
+                <Text style={{ color: theme.textMuted }} className="text-xs font-bold w-16">Branch : </Text>
               </View>
-              <Text className="text-xs font-bold text-gray-900">Surat , Gujarat</Text>
+              <Text style={{ color: theme.text }} className="text-xs font-bold">Surat , Gujarat</Text>
             </View>
           </TouchableOpacity>
         ))}
 
         {vehicles.length === 0 && !loading && (
           <View className="items-center py-12">
-            <Text className="text-gray-500">No vehicles found</Text>
+            <Text style={{ color: theme.textMuted }}>No vehicles found</Text>
           </View>
         )}
         <View className="h-20" />
@@ -150,27 +156,33 @@ export default function VehiclesScreen() {
         onRequestClose={() => setIsAddModalVisible(false)}
       >
         <View className="flex-1 bg-black/50 justify-center items-center px-4">
-          <View className="bg-white rounded-2xl w-full max-w-sm p-4">
-            <Text className="text-sm font-bold text-gray-900 mb-1">Customer Name</Text>
+          <View style={{ backgroundColor: theme.surface }} className="rounded-2xl w-full max-w-sm p-4">
+            <Text style={{ color: theme.text }} className="text-sm font-bold mb-1">Customer Name</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 text-gray-700"
+              style={{ color: theme.text, borderColor: theme.border }}
+              className="border rounded-lg px-3 py-2 text-sm mb-3"
               placeholder="Enter Customer Name"
+              placeholderTextColor={theme.textMuted}
               value={newCustomerName}
               onChangeText={setNewCustomerName}
             />
 
-            <Text className="text-sm font-bold text-gray-900 mb-1">Customer ID</Text>
+            <Text style={{ color: theme.text }} className="text-sm font-bold mb-1">Customer ID</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 text-gray-700"
+              style={{ color: theme.text, borderColor: theme.border }}
+              className="border rounded-lg px-3 py-2 text-sm mb-3"
               placeholder="Enter Customer ID"
+              placeholderTextColor={theme.textMuted}
               value={newCustomerId}
               onChangeText={setNewCustomerId}
             />
 
-            <Text className="text-sm font-bold text-gray-900 mb-1">Customer Mail</Text>
+            <Text style={{ color: theme.text }} className="text-sm font-bold mb-1">Customer Mail</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 text-gray-700"
+              style={{ color: theme.text, borderColor: theme.border }}
+              className="border rounded-lg px-3 py-2 text-sm mb-4"
               placeholder="Enter Customer Mail"
+              placeholderTextColor={theme.textMuted}
               value={newCustomerMail}
               onChangeText={setNewCustomerMail}
               keyboardType="email-address"
@@ -178,11 +190,12 @@ export default function VehiclesScreen() {
             />
 
             <TouchableOpacity
-              className="border border-gray-300 rounded-lg py-2 items-center self-end px-6 shadow-sm bg-white"
+              style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+              className="border rounded-lg py-2 items-center self-end px-6 shadow-sm"
               onPress={handleAddVehicle}
               disabled={submitting}
             >
-              <Text className="text-gray-900 font-medium text-xs">
+              <Text style={{ color: theme.text }} className="font-medium text-xs">
                 {submitting ? 'Adding...' : 'Add Vehicle'}
               </Text>
             </TouchableOpacity>
@@ -194,14 +207,15 @@ export default function VehiclesScreen() {
                 The View covering full screen can handle touch end to close. 
             */}
           <TouchableOpacity
-            className="absolute top-10 right-4 p-2 bg-white rounded-full"
+            style={{ backgroundColor: theme.surface }}
+            className="absolute top-10 right-4 p-2 rounded-full"
             onPress={() => setIsAddModalVisible(false)}
           >
-            <Ionicons name="close" size={24} color="#000" />
+            <Ionicons name="close" size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
       </Modal>
-    </View>
+    </View >
   );
 }
 

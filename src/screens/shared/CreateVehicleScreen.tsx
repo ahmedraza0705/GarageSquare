@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useTheme } from '@/context/ThemeContext';
 import { useRole } from '@/hooks/useRole';
 import { VehicleService } from '@/services/vehicle.service';
 import { CustomerService } from '@/services/customer.service';
@@ -13,11 +14,12 @@ import Button from '@/components/shared/Button';
 import Input from '@/components/shared/Input';
 
 export default function CreateVehicleScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { branchId } = useRole();
   const customerId = (route.params as { customerId?: string })?.customerId;
-  
+
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerId || '');
@@ -50,23 +52,23 @@ export default function CreateVehicleScreen() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!selectedCustomerId) {
       newErrors.customer = 'Customer is required';
     }
-    
+
     if (!formData.make.trim()) {
       newErrors.make = 'Make is required';
     }
-    
+
     if (!formData.model.trim()) {
       newErrors.model = 'Model is required';
     }
-    
+
     if (formData.year && (isNaN(Number(formData.year)) || Number(formData.year) < 1900 || Number(formData.year) > new Date().getFullYear() + 1)) {
       newErrors.year = 'Invalid year';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -87,7 +89,7 @@ export default function CreateVehicleScreen() {
         mileage: formData.mileage ? Number(formData.mileage) : undefined,
         notes: formData.notes || undefined,
       }, branchId);
-      
+
       Alert.alert('Success', 'Vehicle created successfully', [
         { text: 'OK', onPress: () => navigation.goBack() },
       ]);
@@ -101,18 +103,19 @@ export default function CreateVehicleScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className="flex-1 bg-gray-50"
+      style={{ flex: 1, backgroundColor: theme.background }}
     >
       <ScrollView
         contentContainerClassName="px-6 py-4"
+        style={{ flex: 1, backgroundColor: theme.background }}
         keyboardShouldPersistTaps="handled"
       >
         {!customerId && (
           <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-2">
+            <Text style={{ color: theme.text }} className="text-sm font-medium mb-2">
               Customer *
             </Text>
-            <Text className="text-gray-500 text-sm mb-2">
+            <Text style={{ color: theme.textMuted }} className="text-sm mb-2">
               Select customer (feature to be implemented)
             </Text>
             <Text className="text-red-500 text-sm">{errors.customer}</Text>

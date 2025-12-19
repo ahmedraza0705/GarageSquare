@@ -2,22 +2,24 @@
 // REPORTS SCREEN (Company Admin)
 // ============================================
 
-import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ReportsScreen() {
+  const { theme } = useTheme();
+
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView style={{ flex: 1, backgroundColor: theme.background }}>
       <View className="px-6 py-4">
-        <Text className="text-2xl font-bold text-gray-900 mb-6">
+        <Text style={{ color: theme.text }} className="text-2xl font-bold mb-6">
           Reports
         </Text>
-        
-        <View className="bg-white rounded-lg p-6 mb-4">
-          <Text className="text-lg font-semibold text-gray-900 mb-2">
+
+        <View style={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }} className="rounded-lg p-6 mb-4">
+          <Text style={{ color: theme.text }} className="text-lg font-semibold mb-2">
             Coming Soon
           </Text>
-          <Text className="text-gray-600">
+          <Text style={{ color: theme.textMuted }}>
             Reports and analytics will be available here.
           </Text>
         </View>

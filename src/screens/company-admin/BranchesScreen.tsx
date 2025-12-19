@@ -13,7 +13,6 @@ import { branchService } from '@/services/branchService';
 import { AuthService } from '@/services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
 
-
 export default function BranchesScreen() {
   // State - now fetched from Supabase
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -215,7 +214,7 @@ export default function BranchesScreen() {
     <View style={{ marginBottom: 16 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <Text style={{
-          color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+          color: theme.text,
           fontWeight: 'bold',
           fontSize: 14,
         }}>{label}*</Text>
@@ -228,19 +227,19 @@ export default function BranchesScreen() {
       </View>
       <View style={{
         borderWidth: 1,
-        borderColor: errors[errorKey] ? '#EF4444' : (themeName === 'dark' ? '#444444' : '#D1D5DB'),
+        borderColor: errors[errorKey] ? '#EF4444' : theme.border,
         borderRadius: 12,
         paddingHorizontal: 16,
         paddingVertical: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: themeName === 'dark' ? '#272727a0' : '#F9FAFB',
+        backgroundColor: theme.background,
       }}>
         <TextInput
           placeholder={placeholder}
           style={{
             flex: 1,
-            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+            color: theme.text,
             padding: 0,
           }}
           placeholderTextColor='#9CA3AF'
@@ -261,71 +260,9 @@ export default function BranchesScreen() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727a0' : '#F3F4F6' }}>
-      {/* Custom Header - Toggleable Dark Mode */}
-      <View style={{
-        backgroundColor: themeName === 'dark' ? '#333333' : '#E5E7EB',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottomWidth: 1,
-        borderBottomColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <TouchableOpacity onPress={() => (navigation as any).openDrawer()}>
-            <Ionicons name="menu" size={28} color={themeName === 'dark' ? '#F9FAFB' : '#111827'} />
-          </TouchableOpacity>
-          <Text style={{
-            fontSize: 20,
-            fontWeight: 'bold',
-            color: themeName === 'dark' ? '#F9FAFB' : '#111827',
-          }}>
-            Branch Management
-          </Text>
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          <TouchableOpacity
-            onPress={toggleTheme}
-            style={{
-              backgroundColor: themeName === 'dark' ? '#60A5FA' : '#DBEAFE',
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Ionicons
-              name={themeName === 'dark' ? 'sunny' : 'moon'}
-              size={18}
-              color={themeName === 'dark' ? '#1E3A8A' : '#1E40AF'}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              backgroundColor: themeName === 'dark' ? '#FCA5A5' : '#FECACA',
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text style={{
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: themeName === 'dark' ? '#7F1D1D' : '#991B1B',
-            }}>
-              A
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView
-        style={{ flex: 1, backgroundColor: themeName === 'dark' ? '#272727a0' : '#F3F4F6' }}
+        style={{ flex: 1, backgroundColor: theme.background }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={fetchBranches} />
         }
@@ -337,18 +274,18 @@ export default function BranchesScreen() {
               flex: 1,
               flexDirection: 'row',
               alignItems: 'center',
-              backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+              backgroundColor: theme.surface,
               borderRadius: 12,
               paddingHorizontal: 16,
               paddingVertical: 12,
               marginRight: 12,
               borderWidth: 1,
-              borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB'
+              borderColor: theme.border
             }}>
               <Ionicons name="search" size={20} color="#9CA3AF" />
               <TextInput
                 placeholder="Search Branch"
-                style={{ flex: 1, marginLeft: 8, color: themeName === 'dark' ? '#F9FAFB' : '#111827', fontWeight: '500' }}
+                style={{ flex: 1, marginLeft: 8, color: theme.text, fontWeight: '500' }}
                 placeholderTextColor="#9CA3AF"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -378,14 +315,12 @@ export default function BranchesScreen() {
               <TouchableOpacity
                 key={branch.id}
                 style={{
-                  backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                  backgroundColor: theme.surface,
                   borderRadius: 16,
                   padding: 16,
                   marginBottom: 16,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  borderWidth: 1,
-                  borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB'
                 }}
                 onPress={() => (navigation as any).navigate('BranchDetails', { branch, onDelete: handleDeleteBranch })}
               >
@@ -401,7 +336,7 @@ export default function BranchesScreen() {
                   <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }}>{getInitials(branch.name)}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: themeName === 'dark' ? '#F9FAFB' : '#111827', marginBottom: 2 }}>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text, marginBottom: 2 }}>
                     {branch.name}
                   </Text>
                   <Text style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
@@ -444,7 +379,7 @@ export default function BranchesScreen() {
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={{
-                backgroundColor: themeName === 'dark' ? '#333333' : '#FFFFFF',
+                backgroundColor: theme.surface,
                 width: '100%',
                 borderRadius: 20,
                 padding: 24,
@@ -458,7 +393,7 @@ export default function BranchesScreen() {
                   fontSize: 18,
                   fontWeight: 'bold',
                   marginBottom: 16,
-                  color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                  color: theme.text,
                 }}>Add New Branch</Text>
 
                 <View>
@@ -475,17 +410,17 @@ export default function BranchesScreen() {
                     style={{
                       flex: 1,
                       borderWidth: 1,
-                      borderColor: themeName === 'dark' ? '#272727a0' : '#35C56A',
+                      borderColor: themeName === 'dark' ? '#444444' : '#35C56A',
                       borderRadius: 12,
                       paddingVertical: 12,
                       alignItems: 'center',
-                      backgroundColor: themeName === 'dark' ? '#272727a0' : '#35c56a58',
+                      backgroundColor: themeName === 'dark' ? '#272727' : '#35c56a58',
                     }}
                     onPress={handleFinish}
                     disabled={loading}>
                     <Text style={{
                       fontWeight: 'bold',
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                      color: theme.text,
                     }}>Skip & Finish</Text>
                   </TouchableOpacity>
 
@@ -493,17 +428,17 @@ export default function BranchesScreen() {
                     style={{
                       flex: 1,
                       borderWidth: 1,
-                      borderColor: themeName === 'dark' ? '#444444' : '#D1D5DB',
+                      borderColor: theme.border,
                       borderRadius: 12,
                       paddingVertical: 12,
                       alignItems: 'center',
-                      backgroundColor: themeName === 'dark' ? '#272727a0' : '#F9FAFB',
+                      backgroundColor: theme.background,
                     }}
                     onPress={handleGoToUpload}
                   >
                     <Text style={{
                       fontWeight: 'bold',
-                      color: themeName === 'dark' ? '#F9FAFB' : '#111827',
+                      color: theme.text,
                     }}>Add File</Text>
                   </TouchableOpacity>
                 </View>

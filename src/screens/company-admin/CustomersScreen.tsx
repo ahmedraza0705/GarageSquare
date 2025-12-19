@@ -5,10 +5,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '@/context/ThemeContext';
 import { CustomerService } from '@/services/customer.service';
 import { Customer } from '@/types';
 
 export default function CustomersScreen() {
+  const { theme } = useTheme();
   const navigation = useNavigation();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,9 +33,9 @@ export default function CustomersScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
+      style={{ flex: 1, backgroundColor: theme.background }}
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={loadCustomers} />
+        <RefreshControl refreshing={loading} onRefresh={loadCustomers} tintColor={theme.primary} />
       }
     >
       <View className="px-6 py-4">
@@ -49,18 +51,19 @@ export default function CustomersScreen() {
         {customers.map((customer) => (
           <TouchableOpacity
             key={customer.id}
-            className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('CustomerDetail' as never, { customerId: customer.id } as never)}
+            style={{ backgroundColor: theme.surface }}
+            className="rounded-lg p-4 mb-4 shadow-sm"
+            onPress={() => (navigation.navigate as any)('CustomerDetail', { customerId: customer.id })}
           >
-            <Text className="text-lg font-semibold text-gray-900 mb-2">
+            <Text style={{ color: theme.text }} className="text-lg font-semibold mb-2">
               {customer.full_name}
             </Text>
             {customer.email && (
-              <Text className="text-gray-600 text-sm mb-1">
+              <Text style={{ color: theme.textMuted }} className="text-sm mb-1">
                 {customer.email}
               </Text>
             )}
-            <Text className="text-gray-600 text-sm">
+            <Text style={{ color: theme.textMuted }} className="text-sm">
               {customer.phone}
             </Text>
           </TouchableOpacity>
@@ -68,7 +71,7 @@ export default function CustomersScreen() {
 
         {customers.length === 0 && !loading && (
           <View className="items-center py-12">
-            <Text className="text-gray-500">No customers found</Text>
+            <Text style={{ color: theme.textMuted }}>No customers found</Text>
           </View>
         )}
       </View>
