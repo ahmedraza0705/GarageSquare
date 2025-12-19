@@ -181,7 +181,11 @@ export default function CompanyAdminDashboard() {
           {/* Second Row Cards */}
           <View style={styles.cardRow}>
             {/* Vehicle Card */}
-            <View style={[styles.largeCard, styles.whiteCard]}>
+            <TouchableOpacity
+              style={[styles.largeCard, styles.whiteCard]}
+              onPress={() => navigation.navigate('Vehicles' as never)}
+              activeOpacity={0.8}
+            >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={styles.cardTitle}>Vehicle</Text>
@@ -192,7 +196,7 @@ export default function CompanyAdminDashboard() {
                   <Text style={styles.iconEmoji}>🚗</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {/* Revenue Card */}
             <View style={[styles.largeCard, styles.revenueCard]}>
