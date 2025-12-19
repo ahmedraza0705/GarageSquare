@@ -120,13 +120,13 @@ export default function CompanyAdminDashboard() {
                   <View
                     style={[
                       styles.bar,
-                      { height: (item.branch1 / maxValue) * 120, backgroundColor: '#2563eb' },
+                      { height: (item.branch1 / maxValue) * 120, backgroundColor: '#4682B4' },
                     ]}
                   />
                   <View
                     style={[
                       styles.bar,
-                      { height: (item.branch2 / maxValue) * 120, backgroundColor: '#10b981' },
+                      { height: (item.branch2 / maxValue) * 120, backgroundColor: '#35C56A' },
                     ]}
                   />
                 </View>
@@ -289,14 +289,14 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   activeJobsCard: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#4682B4',
   },
   revenueCard: {
-    backgroundColor: '#d97706',
+    backgroundColor: '#C37125',
   },
   whiteCard: {
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
+    shadowColor: '#272727',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -313,13 +313,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#272727a0',
     marginBottom: 8,
   },
   cardValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
     marginBottom: 4,
   },
   revenueValue: {
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#272727',
   },
   chartContent: {
     flexDirection: 'row',
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   },
   yAxisLabel: {
     fontSize: 10,
-    color: '#6b7280',
+    color: '#272727',
     textAlign: 'right',
   },
   barsContainer: {
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   xAxisLabel: {
     fontSize: 10,
-    color: '#6b7280',
+    color: '#272727',
     marginTop: 4,
   },
   statusRow: {
@@ -426,13 +426,13 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#272727a0',
     marginBottom: 8,
   },
   statusValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
   },
   bottomRow: {
     flexDirection: 'row',
@@ -446,12 +446,12 @@ const styles = StyleSheet.create({
   bottomCardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
     marginBottom: 12,
   },
   bottomCardSubtitle: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#272727',
     marginBottom: 8,
   },
   staffList: {
@@ -464,17 +464,17 @@ const styles = StyleSheet.create({
   },
   staffLabel: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#272727a0',
   },
   staffValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
+    color: '#272727',
   },
   newCustomersValue: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
     marginTop: 8,
   },
 });
