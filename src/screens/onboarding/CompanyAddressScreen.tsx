@@ -16,7 +16,7 @@ export default function CompanyAddressScreen() {
     const [country, setCountry] = useState(user?.profile?.company?.country || '');
     const [state, setState] = useState(user?.profile?.company?.state || '');
     const [city, setCity] = useState(user?.profile?.company?.city || '');
-    const [zipCode, setZipCode] = useState(user?.profile?.company?.zip_code || '');
+    const [zipCode, setZipCode] = useState(user?.profile?.company?.postal_code || '');
     const [loading, setLoading] = useState(false);
 
     const handleNext = async () => {
@@ -32,7 +32,7 @@ export default function CompanyAddressScreen() {
                 country,
                 state,
                 city,
-                zip_code: zipCode,
+                postal_code: zipCode,
             });
             // Proceed to Data Upload instead of finishing directly
             navigation.navigate('DataUpload');

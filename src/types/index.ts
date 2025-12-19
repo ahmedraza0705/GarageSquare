@@ -29,9 +29,28 @@ export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'mobile_payment';
 
-// ============================================
+// = : ===========================================
 // DATABASE MODELS
 // ============================================
+
+export interface Company {
+  id: string;
+  name: string;
+  registry_number?: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+  logo_url?: string;
+  is_active: boolean;
+  onboarding_completed?: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface Role {
   id: string;
@@ -58,7 +77,9 @@ export interface Branch {
   address?: string;
   phone?: string;
   email?: string;
+  location?: string;
   manager_id?: string;
+  company_id?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -70,6 +91,7 @@ export interface UserProfile {
   full_name?: string;
   phone?: string;
   company_name?: string;
+  company_id?: string;
   city?: string;
   postal_code?: string;
   country?: string;
@@ -78,14 +100,13 @@ export interface UserProfile {
   avatar_url?: string;
   username?: string;
   address?: string;
-  city?: string;
   state?: string;
-  postal_code?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   role?: Role;
   branch?: Branch;
+  company?: Company;
 }
 
 export interface Customer {
@@ -242,6 +263,7 @@ export interface SignupData {
   phone?: string;
   role_id?: string;
   branch_id?: string;
+  company_id?: string;
 }
 
 // ============================================

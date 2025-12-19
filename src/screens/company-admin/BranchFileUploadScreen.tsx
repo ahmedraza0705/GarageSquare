@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { branchService } from '@/services/branchService';
 import { Branch } from '@/types';
 import { ActivityIndicator } from 'react-native';
+import { AuthService } from '@/services/auth.service';
 
 export default function BranchFileUploadScreen() {
     const navigation = useNavigation();
@@ -32,22 +33,45 @@ export default function BranchFileUploadScreen() {
             const newBranchData = {
                 name: branchData.name,
                 address: branchData.address,
-                // TODO: Manager ID should ideally refer to a valid user profile UUID
-                // For now, we are passing the name from the form, which might need adjustment 
-                // depending on your database constraints (if manager_id is UUID foreign key).
-                // If it fails, set to null or handle appropriately.
-                // manager_id: branchData.manager_id, 
-                // TEMPORARY FIX: If manager_id is just a name, don't send it if schema expects UUID
-                // or ensure your schema allows text or you have a valid UUID.
-                // Assuming for now we skip manager_id if it's just a name to avoid UUID error
                 manager_id: undefined,
                 phone: branchData.phone,
                 is_active: true,
-                email: branchData.email
+                email: branchData.email,
+                company_id: branchData.company_id
             };
 
             // Save to Supabase
             const createdBranch = await branchService.createBranch(newBranchData);
+
+            // 2. Create Manager Profile
+            if (branchData.manager_id && branchData.email) {
+                try {
+                    // Use a temporary password for new managers
+                    const tempPassword = 'Manager@' + Math.random().toString(36).slice(-8);
+
+                    const managerResult = await AuthService.createUserWithProfile({
+                        email: branchData.email,
+                        password: tempPassword,
+                        full_name: branchData.manager_id, // manager_id field in form holds the name
+                        phone: branchData.phone,
+                        role: 'manager',
+                        branch_id: createdBranch.id,
+                        company_id: branchData.company_id
+                    });
+
+                    if (managerResult.success) {
+                        // Updated branch with the new manager_id
+                        await branchService.updateBranch(createdBranch.id, {
+                            manager_id: managerResult.userId
+                        });
+                        // Update createdBranch object for navigation
+                        createdBranch.manager_id = managerResult.userId;
+                    }
+                } catch (mgrError) {
+                    console.error('Error creating manager profile:', mgrError);
+                    // Don't fail the whole branch creation
+                }
+            }
 
             // Navigate back to Branches with new data
             // @ts-ignore
