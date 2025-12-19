@@ -18,6 +18,7 @@ import {
   Building2,
   Users,
   FileBarChart,
+  FileText,
   Menu,
   Moon,
   Sun
@@ -28,6 +29,8 @@ import CompanyAdminDashboard from '@/screens/company-admin/DashboardScreen';
 import BranchesScreen from '@/screens/company-admin/BranchesScreen';
 import UsersScreen from '@/screens/company-admin/UsersScreen';
 import ReportsScreen from '@/screens/company-admin/ReportsScreen';
+import InvoiceScreen from '@/screens/company-admin/InvoiceScreen';
+import InvoiceDetailScreen from '@/screens/company-admin/InvoiceDetailScreen';
 import CustomersScreen from '@/screens/company-admin/CustomersScreen';
 import VehiclesScreen from '@/screens/company-admin/VehiclesScreen';
 import JobCardsScreen from '@/screens/company-admin/JobCardsScreen';
@@ -71,6 +74,21 @@ function CustomHeader({
   // Get current screen title
   const getScreenTitle = () => {
     const routeName = route?.name || 'Dashboard';
+
+    // If we're in MainTabs, check the active tab
+    if (routeName === 'MainTabs' && route?.state?.index !== undefined) {
+      const activeTabRoute = route.state.routes[route.state.index];
+      if (activeTabRoute?.name) {
+        const titleMap: Record<string, string> = {
+          DashboardTab: 'Dashboard',
+          BranchesTab: 'Branches',
+          UsersTab: 'User Management',
+          ReportsTab: 'Reports',
+        };
+        return titleMap[activeTabRoute.name] || 'Dashboard';
+      }
+    }
+
     const titleMap: Record<string, string> = {
       DashboardTab: 'Dashboard',
       MainTabs: 'Dashboard',
@@ -81,6 +99,10 @@ function CustomHeader({
       UserManagement: 'User Management',
       ReportsTab: 'Reports',
       Reports: 'Reports',
+      InvoiceTab: 'Estimate',
+      Invoice: 'Estimate',
+      InvoiceList: 'Estimate',
+      InvoiceDetail: 'Invoice Detail',
       ActiveJobs: 'Active Jobs',
       Vehicles: 'Vehicles',
       Customers: 'Customers',
@@ -95,6 +117,27 @@ function CustomHeader({
     return titleMap[routeName] || 'Dashboard';
   };
 
+  // Determine if we should show back button
+  const shouldShowBackButton = () => {
+    // If showBack prop is explicitly set, use it
+    if (showBack !== undefined) {
+      return showBack;
+    }
+
+    const routeName = route?.name || 'Dashboard';
+
+    // Main tab screens should show menu button, not back button
+    const mainScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab'];
+
+    // If we're on MainTabs, don't show back button
+    if (mainScreens.includes(routeName)) {
+      return false;
+    }
+
+    // All other screens (Invoice, Vehicles, Customers, JobCards, etc.) should show back button
+    return true;
+  };
+
   return (
     <>
       <View
@@ -104,7 +147,7 @@ function CustomHeader({
         ]}
       >
         <View style={styles.headerLeft}>
-          {showBack ? (
+          {shouldShowBackButton() ? (
             <TouchableOpacity
               onPress={() => navigation.goBack()}
               style={styles.headerButton}
@@ -241,6 +284,16 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
   );
 }
 
+// Invoice Stack Navigator (for Invoice and InvoiceDetail)
+function InvoiceStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="InvoiceList" component={InvoiceScreen} />
+      <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
 // Drawer Navigator (Wraps Tabs)
 function CompanyAdminDrawer({
   theme,
@@ -311,6 +364,13 @@ function CompanyAdminDrawer({
         options={{
           title: 'Reports',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
+      <Drawer.Screen
+        name="Invoice"
+        component={InvoiceStack}
+        options={{
+          title: 'Invoice',
         }}
       />
 

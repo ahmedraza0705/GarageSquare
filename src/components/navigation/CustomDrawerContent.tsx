@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { DrawerActions } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -18,7 +18,6 @@ interface MenuItem {
 }
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps) {
-  const navigation = useNavigation();
   const { user, signOut } = useAuth();
 
   // Provide default values to avoid undefined text rendering
@@ -60,10 +59,10 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     if (item.screenName) {
       if (item.tabScreen) {
         // @ts-ignore - navigating into nested tabs
-        navigation.navigate(item.screenName, { screen: item.tabScreen });
+        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
       } else {
         // @ts-ignore
-        navigation.navigate(item.screenName);
+        props.navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
@@ -73,11 +72,11 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
     { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'Tasks', isWorking: true },
+    { label: 'Job Tasks and Assignments', isWorking: false },
     { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
     { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
-    { label: 'Reports', screenName: 'Reports', isWorking: true },
-    { label: 'Invoice and Billing', isWorking: false },
+    { label: 'Reports', screenName: 'MainTabs', tabScreen: 'ReportsTab', isWorking: true },
+    { label: 'Invoice', screenName: 'Invoice', isWorking: true },
     { label: 'Customers', screenName: 'Customers', isWorking: true },
     { label: 'Inventory', isWorking: false },
     { label: 'Shop Timing', isWorking: false },
