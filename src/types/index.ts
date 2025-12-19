@@ -76,6 +76,11 @@ export interface UserProfile {
   role_id: string | null;
   branch_id?: string;
   avatar_url?: string;
+  username?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

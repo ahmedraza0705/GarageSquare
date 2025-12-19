@@ -3,7 +3,7 @@
 // ============================================
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Alert, Modal, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { Branch } from '@/types';
@@ -173,7 +173,7 @@ export default function BranchesScreen() {
     keyboardType: any = 'default',
     secureTextEntry: boolean = false
   ) => (
-    <View>
+    <View style={{ marginBottom: 16 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <Text style={{
           color: themeName === 'dark' ? '#F9FAFB' : '#111827',
@@ -317,14 +317,13 @@ export default function BranchesScreen() {
             </View>
             <TouchableOpacity
               style={{
-                // backgroundColor: '#35C56A',
                 backgroundColor: 'rgba(53, 197, 106, 0.4)',
                 padding: 12,
                 borderRadius: 12,
                 width: 48,
                 height: 48,
-                // alignItems: 'center',
                 justifyContent: 'center',
+                alignItems: 'center',
                 borderWidth: 1,
                 borderColor: '#35C56A'
               }}
@@ -418,7 +417,7 @@ export default function BranchesScreen() {
                   color: themeName === 'dark' ? '#F9FAFB' : '#111827',
                 }}>Add New Branch</Text>
 
-                <View className="space-y-4">
+                <View>
                   {renderInput('Branch Name', newBranchName, setNewBranchName, 'Enter Branch Name', 'name')}
                   {renderInput('Branch Address', newBranchAddress, setNewBranchAddress, 'Enter Branch Address', 'address')}
                   {renderInput('Branch Manager Name', newManagerName, setNewManagerName, 'Enter Manager Name', 'manager')}
@@ -471,7 +470,6 @@ export default function BranchesScreen() {
           </TouchableOpacity>
         </KeyboardAvoidingView>
       </Modal>
-    </View >
+    </View>
   );
 }
-

@@ -49,15 +49,16 @@ export const supabaseConfig = {
   hasUrl: Boolean(supabaseUrl),
   hasKey: Boolean(supabaseAnonKey),
   url: supabaseUrl || 'Not set',
+  key: supabaseAnonKey || 'Not set', // Export key for temp client usage
 };
 
 export const supabase: SupabaseClient | null = supabaseConfig.isConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        storage: ExpoSecureStoreAdapter,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false,
-      },
-    })
+    auth: {
+      storage: ExpoSecureStoreAdapter,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  })
   : null;
