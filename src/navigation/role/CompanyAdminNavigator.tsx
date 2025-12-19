@@ -103,27 +103,6 @@ function CustomHeader({
           { backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder },
         ]}
       >
-<<<<<<< HEAD
-        <Text style={[styles.menuIcon, { color: theme.headerIcon }]}>☰</Text>
-      </TouchableOpacity>
-
-      <Text style={[styles.headerTitle, { color: theme.headerText }]}>{getScreenTitle()}</Text>
-
-      <View style={styles.headerRight}>
-        <TouchableOpacity
-          onPress={onToggleTheme}
-          style={styles.headerButton}
-        >
-          <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.avatarButton}>
-          <View style={[styles.avatar, { backgroundColor: theme.avatarBg }]}>
-            <Text style={[styles.avatarText, { color: theme.avatarText }]}>
-              {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-            </Text>
-          </View>
-        </TouchableOpacity>
-=======
         <View style={styles.headerLeft}>
           {showBack ? (
             <TouchableOpacity
@@ -169,7 +148,6 @@ function CustomHeader({
             </View>
           </TouchableOpacity>
         </View>
->>>>>>> fd9c4a6b9143d6a40e87fffd53adedb918ffb134
       </View>
 
       <ProfilePopup
@@ -335,18 +313,6 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-<<<<<<< HEAD
-      <Drawer.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: 'Settings',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
-      />
-=======
-
->>>>>>> fd9c4a6b9143d6a40e87fffd53adedb918ffb134
     </Drawer.Navigator>
   );
 }
@@ -394,11 +360,7 @@ export default function CompanyAdminNavigator() {
         name="VehicleDetail"
         component={VehicleDetailScreen}
         options={{
-<<<<<<< HEAD
-          headerShown: false,
-=======
           headerShown: true,
->>>>>>> fd9c4a6b9143d6a40e87fffd53adedb918ffb134
           title: 'Vehicle Details',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',
