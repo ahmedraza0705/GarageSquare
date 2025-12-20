@@ -1,16 +1,16 @@
-// ============================================
-// VEHICLES SCREEN (Company Admin)
-// ============================================
-
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Modal } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, SafeAreaView, Platform, StatusBar, Modal } from 'react-native';
+import { useNavigation, DrawerActions, useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '@/hooks/useAuth';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Menu, Search, Plus, Moon, Car, User, Building2, X, SlidersHorizontal } from 'lucide-react-native';
+
+import { supabase } from '@/lib/supabase';
 
 export default function VehiclesScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,19 +22,41 @@ export default function VehiclesScreen() {
   const [newCustomerMail, setNewCustomerMail] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadVehicles();
-  }, [searchQuery]);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadVehicles(false);
+    }, [searchQuery])
+  );
 
-  const loadVehicles = async () => {
+  // Realtime subscription
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('vehicles-list-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'vehicles' },
+        () => {
+          loadVehicles(false);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [searchQuery]); // Re-subscribe if search query changes to keep refreshing with correct filter
+
+  const loadVehicles = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const data = await VehicleService.getAll({ search: searchQuery });
       setVehicles(data);
     } catch (error) {
       console.error('Error loading vehicles:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -46,12 +68,11 @@ export default function VehiclesScreen() {
 
     try {
       setSubmitting(true);
-      // Creating a new vehicle with minimum required fields + customer info
       await VehicleService.create({
         customer_id: newCustomerId,
         customer_name: newCustomerName,
         customer_email: newCustomerMail,
-        make: 'New Car', // Default for this quick add flow
+        make: 'New Car',
         model: 'Model',
         license_plate: 'NEW-PLATE',
         year: 2024
@@ -70,34 +91,39 @@ export default function VehiclesScreen() {
     }
   };
 
+  const initials = useMemo(() => {
+    const name = user?.profile?.full_name || user?.email || 'A';
+    return name.charAt(0).toUpperCase();
+  }, [user]);
+
   return (
-    <View className="flex-1 bg-gray-50">
-      <View className="px-4 py-4 bg-gray-50 border-b border-gray-200">
-        {/* Search Bar Row */}
-        <View className="flex-row items-center gap-2">
-          <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2 border border-gray-200">
-            <Ionicons name="search" size={20} color="#6b7280" />
-            <TextInput
-              className="flex-1 ml-2 text-base text-gray-900"
-              placeholder="Search User"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            <TouchableOpacity>
-              <Ionicons name="filter-outline" size={20} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            className="bg-green-200 p-2 rounded-lg items-center justify-center w-10 h-10 border border-green-300"
-            onPress={() => setIsAddModalVisible(true)}
-          >
-            <Ionicons name="add" size={24} color="#15803d" />
-          </TouchableOpacity>
+    <SafeAreaView className="flex-1 bg-white" style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+      {/* Header Removed - Using Navigation Header */}
+
+      {/* Search and Add Bar */}
+      <View className="px-5 py-4 flex-row items-center bg-gray-50 border-b border-gray-100">
+        <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-sm mr-3">
+          <Search size={20} color="#9CA3AF" />
+          <TextInput
+            placeholder="Search User"
+            placeholderTextColor="#9CA3AF"
+            className="flex-1 ml-2 text-base text-gray-900"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+
         </View>
+        <TouchableOpacity
+          className="bg-[#A7F3D0] p-2 rounded-lg items-center justify-center w-11 h-11 border border-[#6EE7B7]"
+          onPress={() => setIsAddModalVisible(true)}
+        >
+          <Plus size={28} color="#059669" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
-        className="flex-1 bg-gray-50 px-4 pt-2"
+        className="flex-1 bg-[#F9FAFB]"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 100 }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={loadVehicles} />
         }
@@ -105,41 +131,44 @@ export default function VehiclesScreen() {
         {vehicles.map((vehicle) => (
           <TouchableOpacity
             key={vehicle.id}
-            className="bg-white rounded-xl p-4 mb-4 border border-gray-200 shadow-sm"
-            onPress={() => navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never)}
+            className="bg-white rounded-xl p-5 mb-4 border border-gray-100"
+            onPress={() => (navigation.navigate as any)('VehicleDetail', {
+              vehicleId: vehicle.id,
+              onUpdate: (updatedVehicle: Vehicle) => {
+                setVehicles(currentVehicles =>
+                  currentVehicles.map(v => v.id === updatedVehicle.id ? { ...v, ...updatedVehicle } : v)
+                );
+              }
+            })}
+            style={{
+              elevation: 4,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+            }}
           >
-            <View className="flex-row justify-between mb-2">
-              <View className="flex-row items-center gap-2">
-                <Ionicons name="car-sport" size={20} color="#000" />
-                <Text className="text-base font-bold text-gray-900">{vehicle.make} {vehicle.model}</Text>
+            <View className="flex-row justify-between items-start">
+              <View>
+                <Text className="text-lg font-bold text-gray-900">
+                  {vehicle.make} {vehicle.model}
+                </Text>
+                <Text className="text-gray-600 text-sm mt-1">
+                  {vehicle.license_plate}
+                </Text>
               </View>
-              <Text className="text-sm font-bold text-gray-900">{vehicle.license_plate}</Text>
-            </View>
-
-            <View className="flex-row justify-between mt-1">
-              <View className="flex-row items-center gap-2">
-                <Ionicons name="person" size={16} color="#000" />
-                <Text className="text-xs font-bold text-gray-800 w-16">Customer : </Text>
-              </View>
-              <Text className="text-xs font-bold text-gray-900">{vehicle.customer?.full_name}</Text>
-            </View>
-
-            <View className="flex-row justify-between mt-2">
-              <View className="flex-row items-center gap-2">
-                <MaterialCommunityIcons name="office-building" size={16} color="#000" />
-                <Text className="text-xs font-bold text-gray-800 w-16">Branch : </Text>
-              </View>
-              <Text className="text-xs font-bold text-gray-900">Surat , Gujarat</Text>
+              <Text className="text-gray-600 text-sm mt-1">
+                {vehicle.branch_name}
+              </Text>
             </View>
           </TouchableOpacity>
         ))}
 
         {vehicles.length === 0 && !loading && (
           <View className="items-center py-12">
-            <Text className="text-gray-500">No vehicles found</Text>
+            <Text className="text-gray-500 text-lg">No vehicles found</Text>
           </View>
         )}
-        <View className="h-20" />
       </ScrollView>
 
       {/* Add Vehicle Modal */}
@@ -150,26 +179,33 @@ export default function VehiclesScreen() {
         onRequestClose={() => setIsAddModalVisible(false)}
       >
         <View className="flex-1 bg-black/50 justify-center items-center px-4">
-          <View className="bg-white rounded-2xl w-full max-w-sm p-4">
-            <Text className="text-sm font-bold text-gray-900 mb-1">Customer Name</Text>
+          <View className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-xl font-bold text-gray-900">Add New Vehicle</Text>
+              <TouchableOpacity onPress={() => setIsAddModalVisible(false)}>
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text className="text-sm font-bold text-gray-900 mb-2">Customer Name</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 text-gray-700"
+              className="border border-gray-200 rounded-xl px-4 py-3 text-base mb-4 text-gray-900 bg-gray-50"
               placeholder="Enter Customer Name"
               value={newCustomerName}
               onChangeText={setNewCustomerName}
             />
 
-            <Text className="text-sm font-bold text-gray-900 mb-1">Customer ID</Text>
+            <Text className="text-sm font-bold text-gray-900 mb-2">Customer ID</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-3 text-gray-700"
+              className="border border-gray-200 rounded-xl px-4 py-3 text-base mb-4 text-gray-900 bg-gray-50"
               placeholder="Enter Customer ID"
               value={newCustomerId}
               onChangeText={setNewCustomerId}
             />
 
-            <Text className="text-sm font-bold text-gray-900 mb-1">Customer Mail</Text>
+            <Text className="text-sm font-bold text-gray-900 mb-2">Customer Mail</Text>
             <TextInput
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm mb-4 text-gray-700"
+              className="border border-gray-200 rounded-xl px-4 py-3 text-base mb-6 text-gray-900 bg-gray-50"
               placeholder="Enter Customer Mail"
               value={newCustomerMail}
               onChangeText={setNewCustomerMail}
@@ -178,30 +214,18 @@ export default function VehiclesScreen() {
             />
 
             <TouchableOpacity
-              className="border border-gray-300 rounded-lg py-2 items-center self-end px-6 shadow-sm bg-white"
+              className="bg-blue-600 rounded-xl py-4 items-center shadow-md active:bg-blue-700"
               onPress={handleAddVehicle}
               disabled={submitting}
             >
-              <Text className="text-gray-900 font-medium text-xs">
+              <Text className="text-white font-bold text-base">
                 {submitting ? 'Adding...' : 'Add Vehicle'}
               </Text>
             </TouchableOpacity>
           </View>
-          {/* Close modal by tapping outside? Or maybe add a close button? User design didn't show one but it's good UX. 
-                I'll allow tapping background to close if needed, but for now rely on back button or restart if stuck? 
-                Actually, standard Modal 'onRequestClose' handles back button on Android. 
-                I'll add a tap listener on the background view if it wasn't overlapping the content. 
-                The View covering full screen can handle touch end to close. 
-            */}
-          <TouchableOpacity
-            className="absolute top-10 right-4 p-2 bg-white rounded-full"
-            onPress={() => setIsAddModalVisible(false)}
-          >
-            <Ionicons name="close" size={24} color="#000" />
-          </TouchableOpacity>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 

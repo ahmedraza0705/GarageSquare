@@ -109,6 +109,8 @@ export interface Vehicle {
   mileage?: number;
   notes?: string;
   branch_id?: string;
+  branch_name?: string;
+  last_visit?: string;
   created_at: string;
   updated_at: string;
   customer?: Customer;

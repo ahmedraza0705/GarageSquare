@@ -40,6 +40,7 @@ export function useRole() {
     isTechnician,
     isCustomer,
     isStaff,
+    userProfile: user?.profile,
     branchId: user?.profile?.branch_id,
   };
 }

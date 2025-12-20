@@ -14,6 +14,7 @@ interface MenuItem {
   label: string;
   screenName?: string;
   tabScreen?: string;
+  params?: any; // Added params support
   isWorking: boolean;
 }
 
@@ -59,11 +60,14 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
-        // @ts-ignore - navigating into nested tabs
-        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        // Handle nested tab navigation with params
+        props.navigation.navigate(item.screenName, {
+          screen: item.tabScreen,
+          params: item.params // Pass params if they exist (e.g. { screen: 'Vehicles' })
+        });
       } else {
         // @ts-ignore
-        props.navigation.navigate(item.screenName);
+        props.navigation.navigate(item.screenName, item.params);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
@@ -75,7 +79,14 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
     { label: 'Job Tasks and Assignments', screenName: 'Tasks', isWorking: true },
     { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
+    // Explicitly target the Vehicles screen inside the DashboardStack inside the DashboardTab
+    {
+      label: 'Vehicle Management',
+      screenName: 'MainTabs',
+      tabScreen: 'DashboardTab',
+      params: { screen: 'Vehicles' },
+      isWorking: true
+    },
     { label: 'Reports', screenName: 'Reports', isWorking: true },
     { label: 'Invoice and Billing', isWorking: false },
     { label: 'Customers', screenName: 'Customers', isWorking: true },

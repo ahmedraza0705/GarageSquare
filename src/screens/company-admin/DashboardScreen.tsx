@@ -2,12 +2,13 @@
 // COMPANY ADMIN DASHBOARD
 // ============================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import * as SecureStore from 'expo-secure-store';
+import { VehicleService } from '@/services/vehicle.service';
 
 export default function CompanyAdminDashboard() {
   const navigation = useNavigation();
@@ -15,7 +16,7 @@ export default function CompanyAdminDashboard() {
   const [stats, setStats] = useState({
     activeJobs: 56,
     customers: 156,
-    vehicles: 100,
+    vehicles: 0, // Initialize with 0
     revenue: 24.5, // in Lakhs
     checkIn: 12,
     processing: 20,
@@ -38,9 +39,32 @@ export default function CompanyAdminDashboard() {
     technician: 40,
   });
 
-  useEffect(() => {
-    loadStats();
-    showLoginCredentials();
+  // Use focus effect to reload stats whenever screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+      showLoginCredentials();
+    }, [])
+  );
+
+  // Realtime subscription for vehicle count
+  React.useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('dashboard-vehicles-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'vehicles' },
+        () => {
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const showLoginCredentials = async () => {
@@ -72,14 +96,14 @@ export default function CompanyAdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Check if Supabase is disabled
-      if (!supabase) {
-        console.warn('Supabase is disabled - using default stats');
-        return;
-      }
+      // Load vehicles count
+      const allVehicles = await VehicleService.getAll();
 
-      // Load actual stats from database
-      // For now, using default values
+      setStats(prev => ({
+        ...prev,
+        vehicles: allVehicles.length
+      }));
+
     } catch (error) {
       console.error('Error loading stats:', error);
     }
