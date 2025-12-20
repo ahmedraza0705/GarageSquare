@@ -4,10 +4,12 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image } from 'rea
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { signOut } = useAuth();
+  const { theme } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -20,27 +22,27 @@ export default function SettingsScreen() {
   const menuItems = [
     {
       title: 'Account Details',
-      icon: <Feather name="user" size={24} color="#000" />,
+      icon: <Feather name="user" size={24} color={theme.text} />,
       screen: 'AccountDetails'
     },
     {
       title: 'Notifications',
-      icon: <Feather name="bell" size={24} color="#000" />,
+      icon: <Feather name="bell" size={24} color={theme.text} />,
       screen: 'Notifications'
     },
     {
       title: 'Help and Support',
-      icon: <Feather name="headphones" size={24} color="#000" />,
+      icon: <Feather name="headphones" size={24} color={theme.text} />,
       screen: 'Support'
     },
     {
       title: 'Language',
-      icon: <Ionicons name="text" size={24} color="#000" />,
+      icon: <Ionicons name="text" size={24} color={theme.text} />,
       screen: 'Language'
     },
     {
       title: 'About GarageSquares',
-      icon: <Feather name="info" size={24} color="#000" />,
+      icon: <Feather name="info" size={24} color={theme.text} />,
       screen: 'About'
     },
   ];
@@ -56,28 +58,28 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#f3f4f6' }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.menuContainer}>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={styles.menuItemCard}
+              style={[styles.menuItemCard, { backgroundColor: theme.surface }]}
               onPress={() => handlePress(item)}
             >
               <View style={styles.menuLeft}>
                 <View style={styles.iconContainer}>
                   {item.icon}
                 </View>
-                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Text style={[styles.menuTitle, { color: theme.text }]}>{item.title}</Text>
               </View>
-              <Feather name="chevron-right" size={20} color="#000" />
+              <Feather name="chevron-right" size={20} color={theme.textMuted} />
             </TouchableOpacity>
           ))}
         </View>
 
         <TouchableOpacity
-          style={styles.logoutCard}
+          style={[styles.logoutCard, { backgroundColor: theme.surface }]}
           onPress={handleLogout}
         >
           <View style={styles.menuLeft}>
@@ -85,10 +87,10 @@ export default function SettingsScreen() {
               {/* Using Custom Logout Image */}
               <Image
                 source={require('../../assets/logout_icon_v2.png')}
-                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                style={{ width: 24, height: 24, resizeMode: 'contain', tintColor: theme.notification }}
               />
             </View>
-            <Text style={[styles.menuTitle, { color: '#FF4242' }]}>Log Out</Text>
+            <Text style={[styles.menuTitle, { color: theme.notification }]}>Log Out</Text>
           </View>
         </TouchableOpacity>
       </ScrollView>
@@ -110,7 +112,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -123,7 +124,6 @@ const styles = StyleSheet.create({
   logoutCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
     borderRadius: 16,
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -146,6 +146,5 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '700', // Bold as in the image
-    color: '#000',
   },
 });

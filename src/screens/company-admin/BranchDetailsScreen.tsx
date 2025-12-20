@@ -169,7 +169,7 @@ export default function BranchDetailsScreen() {
             }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Ionicons name="arrow-back" size={24} color={theme.headerText} />
+                        <Ionicons name="chevron-back" size={28} color={theme.headerText} />
                     </TouchableOpacity>
                     <Text style={{
                         fontSize: 20,

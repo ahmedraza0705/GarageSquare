@@ -33,7 +33,7 @@ export type ThemeColors = {
 
 export const themes: Record<ThemeName, ThemeColors> = {
   light: {
-    primary: '#2563eb',
+    primary: '#4682B4', // Updated to match distinct SteelBlue from Dashboard/Nav
     background: '#F3F4F6',
     surface: '#ffffff',
     surfaceAlt: '#f1f5f9',
@@ -48,9 +48,9 @@ export const themes: Record<ThemeName, ThemeColors> = {
     headerText: '#111827',
     headerBorder: '#D1D5DB',
     headerIcon: '#111827',
-    avatarBg: '#2563eb',
+    avatarBg: '#4682B4', // Match primary
     avatarText: '#ffffff',
-    tabBarBg: '#2563eb',
+    tabBarBg: '#4682B4', // Match primary
     tabBarBorder: 'transparent',
     tabIconBg: 'rgba(255, 255, 255, 0.2)',
     tabIconColor: '#ffffff',

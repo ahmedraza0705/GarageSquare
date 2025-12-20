@@ -1,25 +1,28 @@
 
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function AboutScreen() {
+    const { theme } = useTheme();
+
     return (
-        <View style={[styles.container, { backgroundColor: '#f3f4f6' }]}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.section}>
-                    <Text style={styles.title}>About us</Text>
-                    <Text style={styles.description}>
+                    <Text style={[styles.title, { color: theme.text }]}>About us</Text>
+                    <Text style={[styles.description, { color: theme.textMuted }]}>
                         GarageSquares is dedicated to providing organization solutions for various spaces.
                         We believe in maximizing the use of every square foot and transforming spaces into
                         Functional and efficient areas.
                     </Text>
                 </View>
 
-                <View style={styles.divider} />
+                <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
                 <View style={styles.section}>
-                    <Text style={styles.title}>Our goal</Text>
-                    <Text style={styles.description}>
+                    <Text style={[styles.title, { color: theme.text }]}>Our goal</Text>
+                    <Text style={[styles.description, { color: theme.textMuted }]}>
                         Our mission is to offer innovative and high-quality products that help our clients
                         achieve a clutter-free and organized space.
                     </Text>
@@ -42,18 +45,15 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#000000',
         marginBottom: 12,
     },
     description: {
         fontSize: 16,
         lineHeight: 24,
-        color: '#374151',
         textAlign: 'justify',
     },
     divider: {
         height: 1,
-        backgroundColor: '#d1d5db',
         marginVertical: 24,
         width: '100%',
     },

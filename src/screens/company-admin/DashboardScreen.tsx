@@ -163,7 +163,7 @@ export default function CompanyAdminDashboard() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={[styles.containerMain, { backgroundColor: theme.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -193,7 +193,15 @@ export default function CompanyAdminDashboard() {
 
             {/* Customers Card */}
             <TouchableOpacity
-              style={[styles.largeCard, styles.whiteCard]}
+              style={[
+                styles.largeCard,
+                styles.whiteCard,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  borderWidth: 0, // Added border for visibility
+                }
+              ]}
               onPress={() => navigation.navigate('Customers' as never)}
               activeOpacity={0.8}
             >
@@ -305,6 +313,9 @@ export default function CompanyAdminDashboard() {
 }
 
 const styles = StyleSheet.create({
+  containerMain: {
+    flex: 1,
+  },
   container: {
     padding: 16,
     paddingBottom: 100, // Space for bottom navigation
@@ -329,6 +340,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#C37125',
   },
   whiteCard: {
+    // Styling handled inline with theme
   },
   cardContent: {
     flexDirection: 'row',

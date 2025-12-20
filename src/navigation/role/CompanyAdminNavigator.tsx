@@ -95,14 +95,24 @@ function CustomHeader({
     return titleMap[routeName] || 'Dashboard';
   };
 
+  const screenTitle = getScreenTitle();
+  const isDashboard = screenTitle === 'Dashboard';
+
+  // Match Dashboard body background for seamless look in Light Mode
+  const headerBackgroundColor = (isDashboard && themeName === 'light')
+    ? 'rgba(54, 69, 79, 0.1)'
+    : theme.headerBg;
+
   return (
     <>
       <View
         style={[
           styles.header,
           {
-            backgroundColor: theme.headerBg,
-            borderBottomColor: theme.headerBorder
+            backgroundColor: headerBackgroundColor,
+            borderBottomColor: theme.headerBorder,
+            // Remove border for seamless dashboard look
+            borderBottomWidth: isDashboard ? 0 : 1,
           },
         ]}
       >
@@ -112,10 +122,7 @@ function CustomHeader({
               onPress={() => navigation.goBack()}
               style={styles.headerButton}
             >
-              <Image
-                source={require('../../assets/back_icon_v2.png')}
-                style={{ width: 30, height: 30, resizeMode: 'contain' }}
-              />
+              <Ionicons name="chevron-back" size={28} color={theme.headerIcon} />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -202,18 +209,12 @@ function DashboardStack() {
 }
 
 // Bottom Tab Navigator
-function CompanyAdminTabs({
-  theme,
-  themeName,
-  toggleTheme
-}: {
-  theme: ThemeColors;
-  themeName: ThemeName;
-  toggleTheme: () => void;
-}) {
-  const BAR_COLOR = '#4682B4';
-  const ACTIVE_COLOR = '#ffffff86';
-  const INACTIVE_COLOR = '#FFFFFF';
+function CompanyAdminTabs() {
+  const { theme, themeName, toggleTheme } = useTheme();
+  // Use theme colors instead of hardcoded values
+  const BAR_COLOR = theme.tabBarBg;
+  const ACTIVE_COLOR = theme.tabIconColor;
+  const INACTIVE_COLOR = themeName === 'dark' ? '#9CA3AF' : '#E5E7EB'; // Muted color for inactive
 
   return (
     <Tab.Navigator
@@ -245,6 +246,7 @@ function CompanyAdminTabs({
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 4,
+          borderTopColor: theme.tabBarBorder, // Add if needed
         },
         tabBarActiveTintColor: ACTIVE_COLOR,
         tabBarInactiveTintColor: INACTIVE_COLOR,
@@ -256,7 +258,10 @@ function CompanyAdminTabs({
         component={DashboardStack}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <View style={focused ? styles.activeTabIcon : null}>
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
               <LayoutDashboard color={color} size={24} />
             </View>
           ),
@@ -268,7 +273,10 @@ function CompanyAdminTabs({
         options={{
           headerShown: true, // Uses shared header
           tabBarIcon: ({ color, size, focused }) => (
-            <View style={focused ? styles.activeTabIcon : null}>
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
               <Building2 color={color} size={24} />
             </View>
           ),
@@ -279,7 +287,10 @@ function CompanyAdminTabs({
         component={UsersScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <View style={focused ? styles.activeTabIcon : null}>
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
               <Users color={color} size={24} />
             </View>
           ),
@@ -290,7 +301,10 @@ function CompanyAdminTabs({
         component={ReportsScreen}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
-            <View style={focused ? styles.activeTabIcon : null}>
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
               <FileBarChart color={color} size={24} />
             </View>
           ),
@@ -301,15 +315,8 @@ function CompanyAdminTabs({
 }
 
 // Drawer Navigator (Wraps Tabs)
-function CompanyAdminDrawer({
-  theme,
-  themeName,
-  onToggleTheme,
-}: {
-  theme: ThemeColors;
-  themeName: ThemeName;
-  onToggleTheme: () => void;
-}) {
+function CompanyAdminDrawer() {
+  const { theme, themeName, toggleTheme } = useTheme();
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
@@ -319,7 +326,7 @@ function CompanyAdminDrawer({
             route={route}
             theme={theme}
             themeName={themeName}
-            onToggleTheme={onToggleTheme}
+            onToggleTheme={toggleTheme}
           />
         ),
         drawerStyle: {
@@ -334,19 +341,12 @@ function CompanyAdminDrawer({
     >
       <Drawer.Screen
         name="MainTabs"
+        component={CompanyAdminTabs}
         options={{
           title: 'Dashboard',
           headerShown: false,
         }}
-      >
-        {() => (
-          <CompanyAdminTabs
-            theme={theme}
-            themeName={themeName}
-            toggleTheme={onToggleTheme}
-          />
-        )}
-      </Drawer.Screen>
+      />
       <Drawer.Screen
         name="Vehicles"
         component={VehiclesScreen}
@@ -398,15 +398,7 @@ export default function CompanyAdminNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main">
-        {() => (
-          <CompanyAdminDrawer
-            theme={theme}
-            themeName={themeName}
-            onToggleTheme={toggleTheme}
-          />
-        )}
-      </Stack.Screen>
+      <Stack.Screen name="Main" component={CompanyAdminDrawer} />
       <Stack.Screen
         name="ActiveJobs"
         component={ActiveJobsScreen}

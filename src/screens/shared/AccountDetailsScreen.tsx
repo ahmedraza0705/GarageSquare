@@ -4,10 +4,12 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert 
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthService } from '@/services/auth.service';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function AccountDetailsScreen() {
     const navigation = useNavigation();
     const { user } = useAuth();
+    const { theme } = useTheme();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -96,56 +98,68 @@ export default function AccountDetailsScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: '#f3f4f6' }]}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
                 {/* Profile Avatar Section */}
                 <View style={styles.avatarContainer}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{getInitials()}</Text>
+                    <View style={[styles.avatar, { backgroundColor: theme.primary, opacity: 0.8 }]}>
+                        <Text style={[styles.avatarText, { color: theme.white || '#fff' }]}>{getInitials()}</Text>
                     </View>
                     {isEditing && (
-                        <TouchableOpacity style={styles.editIconContainer}>
+                        <TouchableOpacity style={[styles.editIconContainer, { backgroundColor: theme.surface }]}>
                             <Text style={styles.editIcon}>✏️</Text>
                         </TouchableOpacity>
                     )}
                 </View>
 
                 {/* Form Card */}
-                <View style={styles.card}>
+                <View style={[styles.card, { backgroundColor: theme.surface }]}>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>First Name</Text>
+                        <Text style={[styles.label, { color: theme.text }]}>First Name</Text>
                         <TextInput
-                            style={[styles.input, !isEditing && styles.disabledInput]}
+                            style={[
+                                styles.input,
+                                { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                !isEditing && { color: theme.textMuted }
+                            ]}
                             value={formData.firstName}
                             onChangeText={(t) => handleChange('firstName', t)}
                             placeholder="Enter Your First Name"
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={theme.textMuted}
                             editable={isEditing}
                         />
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Last Name</Text>
+                        <Text style={[styles.label, { color: theme.text }]}>Last Name</Text>
                         <TextInput
-                            style={[styles.input, !isEditing && styles.disabledInput]}
+                            style={[
+                                styles.input,
+                                { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                !isEditing && { color: theme.textMuted }
+                            ]}
                             value={formData.lastName}
                             onChangeText={(t) => handleChange('lastName', t)}
                             placeholder="Enter Your Last Name"
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={theme.textMuted}
                             editable={isEditing}
                         />
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Gmail</Text>
+                        <Text style={[styles.label, { color: theme.text }]}>Gmail</Text>
                         <TextInput
-                            style={[styles.input, styles.disabledInput]} // Email always disabled typically
+                            style={[
+                                styles.input,
+                                styles.disabledInput,
+                                { color: theme.textMuted, backgroundColor: theme.disabledBg || theme.background, borderColor: theme.border }
+                            ]}
                             value={formData.email}
                             onChangeText={(t) => handleChange('email', t)}
                             placeholder="Enter Your Gmail"
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={theme.textMuted}
                             keyboardType="email-address"
                             autoCapitalize="none"
                             editable={false}
@@ -153,26 +167,35 @@ export default function AccountDetailsScreen() {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Phone No:</Text>
+                        <Text style={[styles.label, { color: theme.text }]}>Phone No:</Text>
                         <TextInput
-                            style={[styles.input, !isEditing && styles.disabledInput]}
+                            style={[
+                                styles.input,
+                                { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                !isEditing && { color: theme.textMuted }
+                            ]}
                             value={formData.phone}
                             onChangeText={(t) => handleChange('phone', t)}
                             placeholder="Enter Your Phone no."
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={theme.textMuted}
                             keyboardType="phone-pad"
                             editable={isEditing}
                         />
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Address</Text>
+                        <Text style={[styles.label, { color: theme.text }]}>Address</Text>
                         <TextInput
-                            style={[styles.input, styles.textArea, !isEditing && styles.disabledInput]}
+                            style={[
+                                styles.input,
+                                styles.textArea,
+                                { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                !isEditing && { color: theme.textMuted }
+                            ]}
                             value={formData.address}
                             onChangeText={(t) => handleChange('address', t)}
                             placeholder="Enter Your Address"
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={theme.textMuted}
                             multiline
                             numberOfLines={3}
                             textAlignVertical="top"
@@ -181,13 +204,17 @@ export default function AccountDetailsScreen() {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Pin Code:</Text>
+                        <Text style={[styles.label, { color: theme.text }]}>Pin Code:</Text>
                         <TextInput
-                            style={[styles.input, !isEditing && styles.disabledInput]}
+                            style={[
+                                styles.input,
+                                { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                !isEditing && { color: theme.textMuted }
+                            ]}
                             value={formData.pinCode}
                             onChangeText={(t) => handleChange('pinCode', t)}
                             placeholder="Enter Your Pin-Code"
-                            placeholderTextColor="#9ca3af"
+                            placeholderTextColor={theme.textMuted}
                             keyboardType="numeric"
                             editable={isEditing}
                         />
@@ -195,31 +222,43 @@ export default function AccountDetailsScreen() {
 
                     <View style={styles.row}>
                         <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                            <Text style={styles.label}>City</Text>
+                            <Text style={[styles.label, { color: theme.text }]}>City</Text>
                             <TextInput
-                                style={[styles.input, !isEditing && styles.disabledInput]}
+                                style={[
+                                    styles.input,
+                                    { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                    !isEditing && { color: theme.textMuted }
+                                ]}
                                 value={formData.city}
                                 onChangeText={(t) => handleChange('city', t)}
                                 placeholder="Enter Your City"
-                                placeholderTextColor="#9ca3af"
+                                placeholderTextColor={theme.textMuted}
                                 editable={isEditing}
                             />
                         </View>
                         <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                            <Text style={styles.label}>State</Text>
+                            <Text style={[styles.label, { color: theme.text }]}>State</Text>
                             <TextInput
-                                style={[styles.input, !isEditing && styles.disabledInput]}
+                                style={[
+                                    styles.input,
+                                    { color: theme.text, backgroundColor: theme.background, borderColor: theme.border },
+                                    !isEditing && { color: theme.textMuted }
+                                ]}
                                 value={formData.state}
                                 onChangeText={(t) => handleChange('state', t)}
                                 placeholder="Enter Your State"
-                                placeholderTextColor="#9ca3af"
+                                placeholderTextColor={theme.textMuted}
                                 editable={isEditing}
                             />
                         </View>
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.saveButton, !isEditing && styles.editButton, isLoading && styles.disabledButton]}
+                        style={[
+                            styles.saveButton,
+                            !isEditing && { backgroundColor: theme.primary }, // Default 'Edit' color from theme
+                            isLoading && styles.disabledButton
+                        ]}
                         onPress={toggleEdit}
                         disabled={isLoading}
                     >
@@ -233,7 +272,7 @@ export default function AccountDetailsScreen() {
                             style={styles.cancelButton}
                             onPress={() => setIsEditing(false)}
                         >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <Text style={[styles.cancelButtonText, { color: theme.notification }]}>Cancel</Text>
                         </TouchableOpacity>
                     )}
 
@@ -260,20 +299,17 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 20,
-        backgroundColor: '#fca5a5',
         justifyContent: 'center',
         alignItems: 'center',
     },
     avatarText: {
         fontSize: 48,
         fontWeight: 'bold',
-        color: '#7f1d1d',
     },
     editIconContainer: {
         position: 'absolute',
         top: -4,
         right: -4,
-        backgroundColor: 'white',
         borderRadius: 12,
         padding: 4,
     },
@@ -281,7 +317,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     card: {
-        backgroundColor: 'white',
         borderRadius: 16,
         padding: 16,
         width: '100%',
@@ -297,22 +332,16 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#000000',
         marginBottom: 6,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#d1d5db', // lighter border for clean look
         borderRadius: 8,
         padding: 10,
         fontSize: 14,
-        color: '#1f2937',
-        backgroundColor: '#ffffff',
     },
     disabledInput: {
-        backgroundColor: '#f9fafb', // Light grey for read-only
-        borderColor: 'transparent',
-        color: '#4b5563', // Slightly darker text for readability
+        // Additional disabled styling if needed
     },
     textArea: {
         height: 80,
@@ -327,9 +356,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 8,
     },
-    editButton: {
-        backgroundColor: '#2563eb', // Blue for Edit
-    },
     saveButtonText: {
         color: 'white',
         fontWeight: 'bold',
@@ -341,7 +367,6 @@ const styles = StyleSheet.create({
         padding: 8,
     },
     cancelButtonText: {
-        color: '#ef4444',
         fontSize: 14,
         fontWeight: '600',
     },
