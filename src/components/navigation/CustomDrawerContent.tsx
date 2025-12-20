@@ -80,7 +80,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Invoice and Billing', isWorking: false },
     { label: 'Customers', screenName: 'Customers', isWorking: true },
     { label: 'Inventory', isWorking: false },
-    { label: 'Shop Timing', isWorking: false },
+    { label: 'Shop Timing', screenName: 'ShopTiming', isWorking: true },
   ];
 
   const footerItems: MenuItem[] = [

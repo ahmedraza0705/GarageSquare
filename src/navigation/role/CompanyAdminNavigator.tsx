@@ -39,6 +39,7 @@ import VehicleDetailScreen from '@/screens/shared/VehicleDetailScreen';
 import CreateCustomerScreen from '@/screens/shared/CreateCustomerScreen';
 import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
+import ShopTimingScreen from '@/screens/company-admin/ShopTimingScreen';
 // New Imports
 import ChangePasswordScreen from '@/screens/shared/ChangePasswordScreen';
 import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
@@ -86,6 +87,7 @@ function CustomHeader({
       Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
+      ShopTiming: 'Shop Timing',
       // New titles
       ChangePassword: 'Change Password',
       AccountDetails: 'Account Details',
@@ -464,6 +466,22 @@ export default function CompanyAdminNavigator() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="ShopTiming"
+        component={ShopTimingScreen}
         options={{
           headerShown: true,
           header: ({ route }) => (

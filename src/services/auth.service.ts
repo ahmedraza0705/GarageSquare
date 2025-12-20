@@ -83,6 +83,32 @@ export class AuthService {
       console.warn('Unable to load profile after login:', profileError);
     }
 
+    // ============================================
+    // SHOP TIMING VALIDATION (DATABASE-BASED)
+    // ============================================
+    // Check if user is NOT a company admin
+    if (profile && profile.role && profile.role.name !== 'company_admin') {
+      const companyId = profile.company_id;
+
+      if (companyId) {
+        try {
+          const { CompanyService } = await import('./company.service');
+          const isWithinHours = await CompanyService.isWithinShopHours(companyId);
+
+          if (!isWithinHours) {
+            await client.auth.signOut();
+            throw new Error('Login is allowed only during shop working hours.');
+          }
+        } catch (timingError: any) {
+          if (timingError.message && timingError.message.includes('shop working hours')) {
+            throw timingError;
+          }
+          console.warn('Error checking shop timing, allowing login:', timingError);
+        }
+      }
+    }
+
+
     return {
       user: {
         id: user.id,
@@ -710,3 +736,4 @@ export class AuthService {
     });
   }
 }
+

@@ -52,6 +52,19 @@ export interface Permission {
   created_at: string;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  shop_opening_time: string; // TIME format: "HH:MM:SS"
+  shop_closing_time: string; // TIME format: "HH:MM:SS"
+  address?: string;
+  phone?: string;
+  email?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Branch {
   id: string;
   name: string;
@@ -71,6 +84,7 @@ export interface UserProfile {
   phone?: string;
   role_id: string | null;
   branch_id?: string;
+  company_id?: string;
   avatar_url?: string;
   address?: string;
   city?: string;
@@ -81,6 +95,7 @@ export interface UserProfile {
   updated_at: string;
   role?: Role;
   branch?: Branch;
+  company?: Company;
 }
 
 export interface Customer {
