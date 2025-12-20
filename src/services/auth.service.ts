@@ -283,6 +283,10 @@ export class AuthService {
     let profile: UserProfile | null = null;
     try {
       profile = await this.getUserProfile(data.user.id);
+      // Auto-repair profile if missing (common for manual Auth users)
+      if (!profile) {
+        profile = await this.repairMissingProfile(data.user.id, data.user.email || '');
+      }
     } catch (profileError) {
       console.warn('Unable to load profile for current user:', profileError);
     }
@@ -292,6 +296,46 @@ export class AuthService {
       email: data.user.email || '',
       profile: profile || undefined,
     };
+  }
+
+  /**
+   * Internal helper to create a basic profile if one is missing
+   */
+  private static async repairMissingProfile(userId: string, email: string): Promise<UserProfile | null> {
+    const client = ensureClient();
+    try {
+      // 1. Find a default role (e.g., manager or technician)
+      const { data: roleData } = await client
+        .from('roles')
+        .select('id')
+        .eq('name', 'manager') // Defaulting to manager for "staff" vibe
+        .maybeSingle();
+
+      if (!roleData) return null;
+
+      // 2. Create the profile
+      const { data, error } = await client
+        .from('user_profiles')
+        .insert({
+          id: userId,
+          email: email,
+          full_name: email.split('@')[0],
+          role_id: roleData.id,
+          is_active: true,
+        })
+        .select(PROFILE_SELECT)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Failed to repair missing profile:', error);
+        return null;
+      }
+
+      return data ? mapProfile(data) : null;
+    } catch (err) {
+      console.warn('Error in repairMissingProfile:', err);
+      return null;
+    }
   }
 
   /**
@@ -693,10 +737,8 @@ export class AuthService {
       let profile: UserProfile | null = null;
       try {
         profile = await this.getUserProfile(supabaseUser.id);
-
-        // Update last login on successful auth
-        if (profile) {
-          await this.updateLastLogin(supabaseUser.id);
+        if (!profile) {
+          profile = await this.repairMissingProfile(supabaseUser.id, supabaseUser.email || '');
         }
       } catch (profileError) {
         console.warn('Unable to load profile on auth change:', profileError);

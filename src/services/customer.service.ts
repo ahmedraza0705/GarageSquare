@@ -1,9 +1,8 @@
 // ============================================
-// CUSTOMER SERVICE
+// CUSTOMER SERVICE (SUPABASE)
 // ============================================
 
-// COMMENTED OUT - Supabase removed
-// import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Customer, CreateCustomerForm } from '@/types';
 
 export class CustomerService {
@@ -14,99 +13,148 @@ export class CustomerService {
     branch_id?: string;
     search?: string;
   }) {
-    // COMMENTED OUT - Supabase removed
-    // let query = supabase
-    //   .from('customers')
-    //   .select(`
-    //     *,
-    //     vehicles:vehicles(*)
-    //   `)
-    //   .order('created_at', { ascending: false });
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (filters?.branch_id) {
-    //   query = query.eq('branch_id', filters.branch_id);
-    // }
-    // if (filters?.search) {
-    //   query = query.or(`full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
-    // }
+    let query = supabase
+      .from('customers')
+      .select('*') // Simplified for debugging
+      .order('created_at', { ascending: false });
 
-    // const { data, error } = await query;
-    // if (error) throw error;
-    // return data as Customer[];
-    throw new Error('Supabase is disabled - customer service not available');
+    if (filters?.branch_id) {
+      query = query.eq('branch_id', filters.branch_id);
+    }
+
+    if (filters?.search) {
+      query = query.or(`full_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
+    }
+
+    return data as Customer[];
+  }
+
+  /**
+   * Get total customer count
+   */
+  static async getCount() {
+    if (!supabase) return 0;
+
+    const { count, error } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching customer count:', error);
+      return 0;
+    }
+
+    return count || 0;
   }
 
   /**
    * Get customer by ID
    */
   static async getById(id: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('customers')
-    //   .select(`
-    //     *,
-    //     vehicles:vehicles(*)
-    //   `)
-    //   .eq('id', id)
-    //   .single();
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    // return data as Customer;
-    throw new Error('Supabase is disabled - customer service not available');
+    const { data, error } = await supabase
+      .from('customers')
+      .select('*, vehicles(*)')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching customer by ID:', error);
+      throw error;
+    }
+
+    return data as Customer;
   }
 
   /**
    * Create new customer
    */
   static async create(formData: CreateCustomerForm, userId: string, branchId?: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('customers')
-    //   .insert({
-    //     ...formData,
-    //     branch_id: branchId,
-    //     created_by: userId,
-    //   })
-    //   .select()
-    //   .single();
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    // return data as Customer;
-    throw new Error('Supabase is disabled - customer service not available');
+    // Check if the user profile exists before setting it as created_by
+    // to avoid foreign key constraint violations if the user was manually created in Auth
+    // but not yet in user_profiles.
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const insertData: any = {
+      ...formData,
+      branch_id: branchId,
+    };
+
+    if (profile) {
+      insertData.created_by = userId;
+    }
+
+    const { data, error } = await supabase
+      .from('customers')
+      .insert([insertData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating customer:', error);
+      throw error;
+    }
+
+    return data as Customer;
   }
 
   /**
    * Update customer
    */
   static async update(id: string, updates: Partial<Customer>) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('customers')
-    //   .update({
-    //     ...updates,
-    //     updated_at: new Date().toISOString(),
-    //   })
-    //   .eq('id', id)
-    //   .select()
-    //   .single();
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    // return data as Customer;
-    throw new Error('Supabase is disabled - customer service not available');
+    // Remove relations/read-only fields before update
+    const { vehicles, id: _, created_at, updated_at, ...cleanUpdates } = updates as any;
+
+    const { data, error } = await supabase
+      .from('customers')
+      .update({
+        ...cleanUpdates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating customer:', error);
+      throw error;
+    }
+
+    return data as Customer;
   }
 
   /**
    * Delete customer
    */
   static async delete(id: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { error } = await supabase
-    //   .from('customers')
-    //   .delete()
-    //   .eq('id', id);
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    throw new Error('Supabase is disabled - customer service not available');
+    const { error } = await supabase
+      .from('customers')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting customer:', error);
+      throw error;
+    }
   }
 }
-

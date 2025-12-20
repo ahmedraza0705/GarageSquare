@@ -8,6 +8,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useRole } from '@/hooks/useRole';
 import { CustomerService } from '@/services/customer.service';
 import { Customer } from '@/types';
+import { getInitials } from '@/utils/string';
+import { ChevronRight } from 'lucide-react-native';
 
 export default function CustomersScreen() {
   const navigation = useNavigation();
@@ -51,20 +53,25 @@ export default function CustomersScreen() {
         {customers.map((customer) => (
           <TouchableOpacity
             key={customer.id}
-            className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('CustomerDetail' as never, { customerId: customer.id } as never)}
+            className="bg-white rounded-3xl p-5 mt-4 shadow-sm flex-row items-center border border-gray-50"
+            onPress={() => (navigation.navigate as any)('CustomerDetail', { customerId: customer.id })}
           >
-            <Text className="text-lg font-semibold text-gray-900 mb-2">
-              {customer.full_name}
-            </Text>
-            {customer.email && (
-              <Text className="text-gray-600 text-sm mb-1">
-                {customer.email}
+            <View className="w-14 h-14 rounded-full bg-[#4682B4] items-center justify-center mr-4 shadow-sm">
+              <Text className="text-white font-bold text-lg">
+                {getInitials(customer.full_name)}
               </Text>
-            )}
-            <Text className="text-gray-600 text-sm">
-              {customer.phone}
-            </Text>
+            </View>
+
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-gray-900 mb-1">
+                {customer.full_name}
+              </Text>
+              <Text className="text-gray-400 text-sm" numberOfLines={1}>
+                {customer.email || customer.phone}
+              </Text>
+            </View>
+
+            <ChevronRight color="#D1D5DB" size={24} />
           </TouchableOpacity>
         ))}
 
