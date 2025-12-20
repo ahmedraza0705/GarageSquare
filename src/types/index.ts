@@ -52,6 +52,14 @@ export interface Permission {
   created_at: string;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+
 export interface Branch {
   id: string;
   name: string;
@@ -278,3 +286,109 @@ export interface UpdateTaskForm {
   notes?: string;
 }
 
+// ============================================
+// INVENTORY MANAGEMENT TYPES
+// ============================================
+
+export interface InventoryCategory {
+  id: string;
+  company_id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  company_id: string;
+  category_id?: string;
+  name: string;
+  sku: string;
+  unit_price: number;
+  low_stock_threshold: number;
+  unit: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  category?: InventoryCategory;
+}
+
+export interface InventoryStock {
+  id: string;
+  item_id: string;
+  branch_id: string;
+  quantity: number;
+  updated_at: string;
+  item?: InventoryItem;
+  branch?: Branch;
+}
+
+export type TransactionType = 'IN' | 'OUT' | 'ADJUST';
+
+export interface InventoryTransaction {
+  id: string;
+  item_id: string;
+  branch_id: string;
+  type: TransactionType;
+  quantity: number;
+  reference?: string;
+  notes?: string;
+  created_by?: string;
+  created_at: string;
+  item?: InventoryItem;
+  branch?: Branch;
+}
+
+export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
+
+export interface InventoryItemWithStock extends InventoryItem {
+  stock_quantity: number;
+  total_value: number;
+  stock_status: StockStatus;
+  branch_id?: string;
+}
+
+export interface CreateInventoryItemData {
+  company_id: string;
+  category_id?: string;
+  name: string;
+  sku: string;
+  unit_price: number;
+  low_stock_threshold?: number;
+  unit: string;
+  description?: string;
+  initial_quantity?: number;
+  branch_id?: string;
+}
+
+export interface UpdateInventoryItemData {
+  category_id?: string;
+  name?: string;
+  sku?: string;
+  unit_price?: number;
+  low_stock_threshold?: number;
+  unit?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface CreateTransactionData {
+  item_id: string;
+  branch_id: string;
+  type: TransactionType;
+  quantity: number;
+  reference?: string;
+  notes?: string;
+}
+
+export interface InventoryValueBreakdown {
+  item_id: string;
+  item_name: string;
+  sku: string;
+  quantity: number;
+  unit_price: number;
+  total_value: number;
+  unit: string;
+}

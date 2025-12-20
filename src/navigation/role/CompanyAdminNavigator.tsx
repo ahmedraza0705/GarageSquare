@@ -18,6 +18,7 @@ import {
   Building2,
   Users,
   FileBarChart,
+  Package,
   Menu,
   Moon,
   Sun
@@ -32,6 +33,7 @@ import CustomersScreen from '@/screens/company-admin/CustomersScreen';
 import VehiclesScreen from '@/screens/company-admin/VehiclesScreen';
 import JobCardsScreen from '@/screens/company-admin/JobCardsScreen';
 import ActiveJobsScreen from '@/screens/company-admin/ActiveJobsScreen';
+import InventoryScreen from '@/screens/company-admin/InventoryScreen';
 import JobCardDetailScreen from '@/screens/shared/JobCardDetailScreen';
 import SettingsScreen from '@/screens/shared/SettingsScreen';
 import CustomerDetailScreen from '@/screens/shared/CustomerDetailScreen';
@@ -81,6 +83,8 @@ function CustomHeader({
       UserManagement: 'User Management',
       ReportsTab: 'Reports',
       Reports: 'Reports',
+      InventoryTab: 'Inventory Management',
+      Inventory: 'Inventory Management',
       ActiveJobs: 'Active Jobs',
       Vehicles: 'Vehicles',
       Customers: 'Customers',
@@ -237,6 +241,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
           ),
         }}
       />
+
     </Tab.Navigator>
   );
 }
@@ -281,6 +286,14 @@ function CompanyAdminDrawer({
       >
         {() => <CompanyAdminTabs theme={theme} />}
       </Drawer.Screen>
+      <Drawer.Screen
+        name="Inventory"
+        component={InventoryScreen}
+        options={{
+          title: 'Inventory',
+          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
       <Drawer.Screen
         name="Vehicles"
         component={VehiclesScreen}

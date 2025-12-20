@@ -59,11 +59,13 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
+        // Navigate to nested tab screens
         // @ts-ignore - navigating into nested tabs
-        navigation.navigate(item.screenName, { screen: item.tabScreen });
+        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
       } else {
+        // Navigate to drawer screens directly
         // @ts-ignore
-        navigation.navigate(item.screenName);
+        props.navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
@@ -79,7 +81,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Reports', screenName: 'Reports', isWorking: true },
     { label: 'Invoice and Billing', isWorking: false },
     { label: 'Customers', screenName: 'Customers', isWorking: true },
-    { label: 'Inventory', isWorking: false },
+    { label: 'Inventory', screenName: 'Inventory', isWorking: true },
     { label: 'Shop Timing', isWorking: false },
   ];
 
