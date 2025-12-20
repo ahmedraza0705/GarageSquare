@@ -393,7 +393,7 @@ export default function CompanyAdminNavigator() {
         name="CreateCustomer"
         component={CreateCustomerScreen}
         options={{
-          headerShown: true,
+          headerShown: false,
           title: 'Add Customer',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',

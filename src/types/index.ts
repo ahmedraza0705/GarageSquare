@@ -107,7 +107,6 @@ export interface Vehicle {
   license_plate?: string;
   color?: string;
   mileage?: number;
-  notes?: string;
   branch_id?: string;
   created_at: string;
   updated_at: string;
@@ -259,7 +258,6 @@ export interface CreateVehicleForm {
   license_plate?: string;
   color?: string;
   mileage?: number;
-  notes?: string;
 }
 
 export interface CreateJobCardForm {
