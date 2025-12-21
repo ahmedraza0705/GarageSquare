@@ -3,7 +3,7 @@
 // ============================================
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
@@ -51,8 +51,6 @@ export default function VehiclesScreen() {
       // Creating a new vehicle with minimum required fields + customer info
       await VehicleService.create({
         customer_id: newCustomerId,
-        customer_name: newCustomerName,
-        customer_email: newCustomerMail,
         make: 'New Car', // Default for this quick add flow
         model: 'Model',
         license_plate: 'NEW-PLATE',
@@ -74,78 +72,109 @@ export default function VehiclesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      <View style={{ backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder }} className="px-4 py-4 border-b">
-        {/* Search Bar Row */}
-        <View className="flex-row items-center gap-2">
-          <View style={{ backgroundColor: theme.surface }} className="flex-1 flex-row items-center rounded-lg px-3 py-2">
-            <Ionicons name="search" size={20} color={theme.textMuted} />
-            <TextInput
-              style={{ color: theme.text }}
-              className="flex-1 ml-2 text-base"
-              placeholder="Search User"
-              placeholderTextColor={theme.textMuted}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            <TouchableOpacity>
-              <Ionicons name="filter-outline" size={20} color={theme.textMuted} />
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            className="bg-green-200 p-2 rounded-lg items-center justify-center w-10 h-10 border border-green-300"
-            onPress={() => setIsAddModalVisible(true)}
-          >
-            <Ionicons name="add" size={24} color="#15803d" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView
-        style={{ flex: 1, backgroundColor: theme.background }}
-        className="px-4 pt-2"
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={loadVehicles} tintColor={theme.primary} />
         }
       >
-        {vehicles.map((vehicle) => (
-          <TouchableOpacity
-            key={vehicle.id}
-            style={{ backgroundColor: theme.surface }}
-            className="rounded-xl p-4 mb-4 shadow-sm"
-            onPress={() => (navigation.navigate as any)('VehicleDetail', { vehicleId: vehicle.id })}
-          >
-            <View className="flex-row justify-between mb-2">
-              <View className="flex-row items-center gap-2">
-                <Ionicons name="car-sport" size={20} color={theme.text} />
-                <Text style={{ color: theme.text }} className="text-base font-bold">{vehicle.make} {vehicle.model}</Text>
-              </View>
-              <Text style={{ color: theme.text }} className="text-sm font-bold">{vehicle.license_plate}</Text>
+        <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
+          {/* Search Bar and Add Button */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <View style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginRight: 12,
+              borderWidth: 1,
+              borderColor: theme.border
+            }}>
+              <Ionicons name="search" size={20} color="#9CA3AF" />
+              <TextInput
+                placeholder="Search Vehicle"
+                style={{ flex: 1, marginLeft: 8, color: theme.text, fontWeight: '500' }}
+                placeholderTextColor="#9CA3AF"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCorrect={false}
+              />
             </View>
-
-            <View className="flex-row justify-between mt-1">
-              <View className="flex-row items-center gap-2">
-                <Ionicons name="person" size={16} color={theme.textMuted} />
-                <Text style={{ color: theme.textMuted }} className="text-xs font-bold w-16">Customer : </Text>
-              </View>
-              <Text style={{ color: theme.text }} className="text-xs font-bold">{vehicle.customer?.full_name}</Text>
-            </View>
-
-            <View className="flex-row justify-between mt-2">
-              <View className="flex-row items-center gap-2">
-                <MaterialCommunityIcons name="office-building" size={16} color={theme.textMuted} />
-                <Text style={{ color: theme.textMuted }} className="text-xs font-bold w-16">Branch : </Text>
-              </View>
-              <Text style={{ color: theme.text }} className="text-xs font-bold">Surat , Gujarat</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-
-        {vehicles.length === 0 && !loading && (
-          <View className="items-center py-12">
-            <Text style={{ color: theme.textMuted }}>No vehicles found</Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'rgba(53, 197, 106, 0.4)',
+                padding: 12,
+                borderRadius: 12,
+                width: 48,
+                height: 48,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#35C56A'
+              }}
+              onPress={() => setIsAddModalVisible(true)}
+            >
+              <Ionicons name="add" size={24} color="#000000" />
+            </TouchableOpacity>
           </View>
-        )}
-        <View className="h-20" />
+
+          {loading && (
+            <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          )}
+
+          {!loading && vehicles.map((vehicle) => (
+            <TouchableOpacity
+              key={vehicle.id}
+              style={{
+                backgroundColor: theme.surface,
+                borderRadius: 16,
+                padding: 16,
+                marginBottom: 16,
+                borderWidth: 1,
+                borderColor: theme.border
+              }}
+              onPress={() => (navigation.navigate as any)('VehicleDetail', { vehicleId: vehicle.id })}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="car-sport" size={24} color={theme.primary} />
+                  <Text style={{ color: theme.text, fontSize: 18, fontWeight: 'bold' }}>{vehicle.make} {vehicle.model}</Text>
+                </View>
+                <View style={{ backgroundColor: theme.primary + '20', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                  <Text style={{ color: theme.text, fontSize: 13, fontWeight: 'bold' }}>{vehicle.license_plate}</Text>
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="person" size={16} color={theme.textMuted} />
+                  <Text style={{ color: theme.textMuted, fontSize: 13 }}>Customer : </Text>
+                </View>
+                <Text style={{ color: theme.text, fontSize: 13, fontWeight: 'bold' }}>{vehicle.customer?.full_name}</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <MaterialCommunityIcons name="office-building" size={16} color={theme.textMuted} />
+                  <Text style={{ color: theme.textMuted, fontSize: 13 }}>Branch : </Text>
+                </View>
+                <Text style={{ color: theme.text, fontSize: 13, fontWeight: 'bold' }}>Surat , Gujarat</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+
+          {vehicles.length === 0 && !loading && (
+            <View style={{ alignItems: 'center', paddingVertical: 48 }}>
+              <Text style={{ color: theme.textMuted }}>No vehicles found</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       {/* Add Vehicle Modal */}

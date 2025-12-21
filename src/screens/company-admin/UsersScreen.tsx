@@ -3,12 +3,13 @@
 // ============================================
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, TextInput, Modal, Platform, Switch } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, TextInput, Modal, Platform, Switch, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserProfile, RoleName } from '@/types';
 import { AuthService } from '@/services/auth.service';
 import { supabase } from '@/lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
 // Icons
 import {
   Users,
@@ -259,98 +260,132 @@ export default function UsersScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: theme.background }}>
-      {/* Search Bar */}
-      <View className="px-4 py-3">
-        <View className="flex-row items-center gap-2">
-          {/* Search Input */}
-          <View style={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1 }} className="flex-1 flex-row items-center rounded-lg px-3 py-2.5">
-            <Search size={20} color="#9CA3AF" />
-            <TextInput
-              style={{ color: theme.text }}
-              className="flex-1 ml-2 text-base"
-              placeholder="Search User"
-              placeholderTextColor="#9CA3AF"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-            <TouchableOpacity className="p-1">
-              <Filter size={20} color="#000000" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Add Button */}
-          <TouchableOpacity
-            onPress={openAddModal}
-            className="w-11 h-11 rounded-lg items-center justify-center"
-            style={{ backgroundColor: '#4CAF50' }}
-          >
-            <UserPlus size={22} color="white" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-
-
-      {/* User List */}
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={initialize} />}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={initialize} tintColor={theme.primary} />}
+        showsVerticalScrollIndicator={false}
       >
-        {filteredUsers.map(user => {
-          const roleConfig = AVAILABLE_ROLES.find(r => r.value === user.role?.name);
-          const branchName = branches.find(b => b.id === user.branch_id)?.name;
-
-          return (
+        <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
+          {/* Search Bar and Add Button */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <View style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginRight: 12,
+              borderWidth: 1,
+              borderColor: theme.border
+            }}>
+              <Ionicons name="search" size={20} color="#9CA3AF" />
+              <TextInput
+                placeholder="Search User"
+                style={{ flex: 1, marginLeft: 8, color: theme.text, fontWeight: '500' }}
+                placeholderTextColor="#9CA3AF"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoCorrect={false}
+              />
+            </View>
             <TouchableOpacity
-              key={user.id}
-              onPress={() => openEditModal(user)}
-              className="rounded-xl p-4 mb-3 flex-row items-center justify-between"
-              style={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}
+              style={{
+                backgroundColor: 'rgba(53, 197, 106, 0.4)',
+                padding: 12,
+                borderRadius: 12,
+                width: 48,
+                height: 48,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#35C56A'
+              }}
+              onPress={openAddModal}
             >
-              {/* Left: Avatar + Info */}
-              <View className="flex-row items-center flex-1">
-                {/* Circular Avatar */}
-                <View
-                  className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: '#4A90E2' }}
-                >
-                  <Text className="text-white font-bold text-base">
-                    {getInitials(user.full_name || user.email)}
-                  </Text>
-                </View>
-
-                {/* User Info */}
-                <View className="flex-1">
-                  <Text className="font-semibold text-base" style={{ color: theme.text }} numberOfLines={1}>
-                    {user.full_name || 'Unknown User'}
-                  </Text>
-                  <Text className="text-sm" style={{ color: theme.textMuted }} numberOfLines={1}>
-                    {branchName || 'No Branch'} , {roleConfig?.label || user.role?.name || 'No Role'}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Right: Chevron */}
-              <ChevronRight size={20} color={theme.textMuted} />
+              <Ionicons name="person-add" size={22} color="#000000" />
             </TouchableOpacity>
-          );
-        })}
-
-        {/* Empty State */}
-        {!loading && filteredUsers.length === 0 && (
-          <View className="items-center py-12">
-            <Users size={48} color="#E5E7EB" />
-            <Text className="text-gray-400 mt-4 text-center">
-              {searchQuery ? 'No matching users found' : 'No team members yet'}
-            </Text>
-            {searchQuery && (
-              <TouchableOpacity onPress={clearSearch} className="mt-3">
-                <Text className="text-blue-600 font-medium">Clear search</Text>
-              </TouchableOpacity>
-            )}
           </View>
-        )}
+
+          {loading && (
+            <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          )}
+
+          {!loading && filteredUsers.map(user => {
+            const roleConfig = AVAILABLE_ROLES.find(r => r.value === user.role?.name);
+            const branchName = branches.find(b => b.id === user.branch_id)?.name;
+
+            return (
+              <TouchableOpacity
+                key={user.id}
+                onPress={() => openEditModal(user)}
+                style={{
+                  backgroundColor: theme.surface,
+                  borderRadius: 16,
+                  padding: 16,
+                  marginBottom: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderWidth: 1,
+                  borderColor: theme.border
+                }}
+              >
+                {/* Left: Avatar + Info */}
+                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                  {/* Circular Avatar */}
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      backgroundColor: '#3B82F6',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 16
+                    }}
+                  >
+                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }}>
+                      {getInitials(user.full_name || user.email)}
+                    </Text>
+                  </View>
+
+                  {/* User Info */}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text, marginBottom: 2 }} numberOfLines={1}>
+                      {user.full_name || 'Unknown User'}
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
+                      {branchName || 'No Branch'} • {roleConfig?.label || user.role?.name || 'No Role'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Right: Chevron */}
+                <Text style={{ fontSize: 20, fontWeight: '300', color: theme.border, marginLeft: 8 }}>›</Text>
+              </TouchableOpacity>
+            );
+          })}
+
+          {/* Empty State */}
+          {!loading && filteredUsers.length === 0 && (
+            <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+              <Ionicons name="people-outline" size={48} color={theme.border} />
+              <Text style={{ color: theme.textMuted, marginTop: 16, textAlign: 'center' }}>
+                {searchQuery ? 'No matching users found' : 'No team members yet'}
+              </Text>
+              {searchQuery && (
+                <TouchableOpacity onPress={clearSearch} style={{ marginTop: 12 }}>
+                  <Text style={{ color: theme.primary, fontWeight: '600' }}>Clear search</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+        </View>
       </ScrollView>
 
 
@@ -522,6 +557,6 @@ export default function UsersScreen() {
           </View>
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }

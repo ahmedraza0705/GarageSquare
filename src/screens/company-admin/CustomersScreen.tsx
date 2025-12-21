@@ -10,6 +10,8 @@ import { CustomerService } from '@/services/customer.service';
 import { Customer } from '@/types';
 import { getInitials } from '@/utils/string';
 
+import { Ionicons } from '@expo/vector-icons';
+
 export default function CustomersScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -43,7 +45,6 @@ export default function CustomersScreen() {
     }
   };
 
-  // Reload data whenever the screen comes into focus - Silent reload
   useFocusEffect(
     useCallback(() => {
       loadCustomers(false);
@@ -66,40 +67,9 @@ export default function CustomersScreen() {
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: theme.background }}>
-      {/* Search Header */}
-      <View
-        className="px-6 pt-2 pb-1 border-b"
-        style={{ backgroundColor: theme.surface, borderBottomColor: theme.border }}
-      >
-        <View className="flex-row items-center gap-3">
-          <View
-            className="flex-1 flex-row items-center rounded-2xl px-4 py-3 border"
-            style={{ backgroundColor: theme.background, borderColor: theme.border }}
-          >
-            <Text style={{ color: theme.textMuted }} className="mr-2 text-lg">🔍</Text>
-            <TextInput
-              className="flex-1 text-gray-900 text-base"
-              placeholder="Search Customer"
-              placeholderTextColor="#9CA3AF"
-              value={searchQuery}
-              onChangeText={handleSearch}
-              autoCorrect={false}
-            />
-          </View>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('CreateCustomer' as never)}
-            className="w-12 h-12 rounded-2xl items-center justify-center"
-            style={{ backgroundColor: theme.primary + '20' }} // 20% opacity primary
-          >
-            <Text style={{ color: theme.primary }} className="text-2xl font-bold">+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView
-        className="flex-1 px-6"
+        style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -110,57 +80,116 @@ export default function CustomersScreen() {
           />
         }
       >
-        <View className="pt-0 pb-4">
+        <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
+          {/* Search Bar and Add Button */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <View style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: theme.surface,
+              borderRadius: 12,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginRight: 12,
+              borderWidth: 1,
+              borderColor: theme.border
+            }}>
+              <Ionicons name="search" size={20} color="#9CA3AF" />
+              <TextInput
+                placeholder="Search Customer"
+                style={{ flex: 1, marginLeft: 8, color: theme.text, fontWeight: '500' }}
+                placeholderTextColor="#9CA3AF"
+                value={searchQuery}
+                onChangeText={handleSearch}
+                autoCorrect={false}
+              />
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: 'rgba(53, 197, 106, 0.4)',
+                padding: 12,
+                borderRadius: 12,
+                width: 48,
+                height: 48,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#35C56A'
+              }}
+              onPress={() => navigation.navigate('CreateCustomer' as never)}
+            >
+              <Ionicons name="add" size={24} color="#000000" />
+            </TouchableOpacity>
+          </View>
+
           {loading && !refreshing && (
-            <View className="py-20 items-center justify-center">
+            <View style={{ paddingVertical: 48, alignItems: 'center', justifyContent: 'center' }}>
               <ActivityIndicator size="large" color={theme.primary} />
-              <Text style={{ color: theme.textMuted }} className="mt-4 text-lg">Loading customers...</Text>
+              <Text style={{ color: theme.textMuted, marginTop: 16, fontSize: 16 }}>Loading customers...</Text>
             </View>
           )}
 
           {error && !loading && (
-            <View className="py-20 items-center justify-center px-6">
-              <Text className="text-center text-lg mb-6" style={{ color: theme.notification }}>{error}</Text>
+            <View style={{ paddingVertical: 48, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
+              <Text style={{ textAlign: 'center', fontSize: 16, marginBottom: 24, color: theme.notification }}>{error}</Text>
               <TouchableOpacity
                 onPress={() => loadCustomers(false)}
-                className="px-8 py-3 rounded-2xl shadow-sm"
-                style={{ backgroundColor: theme.primary }}
+                style={{ backgroundColor: theme.primary, paddingHorizontal: 32, paddingVertical: 12, borderRadius: 12 }}
               >
-                <Text style={{ color: theme.onPrimary }} className="font-bold text-lg">Retry</Text>
+                <Text style={{ color: theme.onPrimary, fontWeight: 'bold', fontSize: 16 }}>Retry</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {!loading && !error && filteredCustomers.length === 0 ? (
-            <View className="py-20 items-center justify-center">
-              <Text style={{ color: theme.textMuted }} className="text-lg">No customers found</Text>
+            <View style={{ paddingVertical: 48, alignItems: 'center', justifyContent: 'center' }}>
+              <Text style={{ color: theme.textMuted, fontSize: 16 }}>No customers found</Text>
             </View>
           ) : (
-            filteredCustomers.map((customer) => (
-              <TouchableOpacity
-                key={customer.id}
-                className="rounded-3xl p-5 mt-4 shadow-sm flex-row items-center border"
-                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
-                onPress={() => (navigation.navigate as any)('CustomerDetail', { customerId: customer.id })}
-              >
-                <View className="w-14 h-14 rounded-full items-center justify-center mr-4 shadow-sm" style={{ backgroundColor: theme.avatarBg }}>
-                  <Text style={{ color: theme.avatarText }} className="font-bold text-lg">
-                    {getInitials(customer.full_name)}
-                  </Text>
-                </View>
+            <View>
+              {filteredCustomers.map((customer) => (
+                <TouchableOpacity
+                  key={customer.id}
+                  style={{
+                    backgroundColor: theme.surface,
+                    borderRadius: 16,
+                    padding: 16,
+                    marginBottom: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: theme.border
+                  }}
+                  onPress={() => (navigation.navigate as any)('CustomerDetail', { customerId: customer.id })}
+                >
+                  <View style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: '#3B82F6',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 16
+                  }}>
+                    <Text style={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: 14 }}>
+                      {getInitials(customer.full_name)}
+                    </Text>
+                  </View>
 
-                <View className="flex-1">
-                  <Text className="text-lg font-bold mb-1" style={{ color: theme.text }}>
-                    {customer.full_name}
-                  </Text>
-                  <Text className="text-sm" style={{ color: theme.textMuted }} numberOfLines={1}>
-                    {customer.address || 'No address provided'}
-                  </Text>
-                </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text, marginBottom: 2 }}>
+                      {customer.full_name}
+                    </Text>
+                    <Text style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
+                      {customer.address || 'No address provided'}
+                    </Text>
+                  </View>
 
-                <Text className="text-xl font-light ml-2" style={{ color: theme.border }}>›</Text>
-              </TouchableOpacity>
-            ))
+                  <Text style={{ fontSize: 20, fontWeight: '300', color: theme.border, marginLeft: 8 }}>›</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           )}
         </View>
       </ScrollView>

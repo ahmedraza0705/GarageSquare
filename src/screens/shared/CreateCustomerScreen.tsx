@@ -8,7 +8,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import { useTheme } from '@/context/ThemeContext';
 import { CustomerService } from '@/services/customer.service';
 import { VehicleService } from '@/services/vehicle.service';
 
@@ -26,7 +25,6 @@ export default function CreateCustomerScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { branchId } = useRole();
-  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [showSuccessModal, setShowSuccessModal] = useState(false);

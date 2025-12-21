@@ -33,7 +33,7 @@ export type ThemeColors = {
 
 export const themes: Record<ThemeName, ThemeColors> = {
   light: {
-    primary: '#4682B4', // Steel Blue from palette
+    primary: '#35C56A', // Steel Blue from palette
     background: '#F3F4F6', // Lighter gray for background
     surface: '#FFFFFF',
     surfaceAlt: '#E5E7EB',
