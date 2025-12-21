@@ -107,7 +107,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Reports', screenName: 'MainTabs', tabScreen: 'ReportsTab', isWorking: true },
     { label: 'Invoice', screenName: 'Invoice', isWorking: true },
     { label: 'Customers', screenName: 'Customers', isWorking: true },
-    { label: 'Inventory', isWorking: false },
+    { label: 'Inventory', screenName: 'Inventory', isWorking: true },
     { label: 'Shop Timing', isWorking: false },
   ];
 
