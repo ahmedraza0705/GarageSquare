@@ -230,6 +230,7 @@ function DashboardStack() {
       }}
     >
       <Stack.Screen name="Dashboard" component={CompanyAdminDashboard} />
+      <Stack.Screen name="Vehicles" component={VehiclesScreen} />
       <Stack.Screen name="Customers" component={CustomersScreen} />
     </Stack.Navigator>
   );

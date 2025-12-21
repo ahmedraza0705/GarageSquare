@@ -15,7 +15,7 @@ interface MenuItem {
   label: string;
   screenName?: string;
   tabScreen?: string;
-  nestedScreen?: string;
+  params?: any; // Added params support
   isWorking: boolean;
 }
 
@@ -145,8 +145,8 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     const allItems = [...menuItems, ...footerItems];
 
     // Priority 1: Match specifically for known detail/sub-screens to their parent category
-    if (activeRoute === 'CustomerDetail' || activeRoute === 'CreateCustomer') return 'Customers';
-    if (activeRoute === 'VehicleDetail' || activeRoute === 'CreateVehicle') return 'Vehicle Management';
+    if (activeRoute === 'CustomerDetail' || activeRoute === 'CreateCustomer' || activeRoute === 'Customers') return 'Customers';
+    if (activeRoute === 'VehicleDetail' || activeRoute === 'CreateVehicle' || activeRoute === 'Vehicles') return 'Vehicle Management';
     if (activeRoute === 'JobCardDetail' || activeRoute === 'CreateJobCard' || activeRoute === 'ActiveJobs') return 'Job Cards';
     if (activeRoute === 'BranchDetails' || activeRoute === 'BranchFileUpload') return 'Branches';
     if (activeRoute === 'AccountDetails' || activeRoute === 'ChangePassword' || activeRoute === 'Notifications' || activeRoute === 'About') return 'Settings';
@@ -155,7 +155,6 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     const activeItem = allItems.find(item =>
       item.screenName === activeRoute ||
       item.tabScreen === activeRoute ||
-      item.nestedScreen === activeRoute ||
       (item.screenName === 'MainTabs' && item.tabScreen === activeRoute)
     );
 
