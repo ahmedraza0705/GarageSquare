@@ -4,6 +4,8 @@
 
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -72,6 +74,7 @@ function CustomHeader({
   showBack?: boolean;
 }) {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
@@ -180,6 +183,9 @@ function CustomHeader({
             borderBottomColor: theme.headerBorder,
             // Remove border for seamless dashboard look
             borderBottomWidth: isDashboard ? 0 : 1,
+            paddingTop: insets.top,
+            paddingBottom: 16,
+            height: 75 + insets.top, // Adjust height based on notch
           },
         ]}
       >
