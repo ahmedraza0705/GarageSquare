@@ -13,7 +13,6 @@ export default function AccountDetailsScreen() {
 
     // Initial state setup
     const [formData, setFormData] = useState({
-        username: '',
         firstName: '',
         lastName: '',
         email: '',
@@ -37,7 +36,6 @@ export default function AccountDetailsScreen() {
             }
 
             setFormData({
-                username: profile?.username || '',
                 firstName: first,
                 lastName: last,
                 email: user.email || '',
@@ -63,7 +61,6 @@ export default function AccountDetailsScreen() {
             const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
             const updates = {
-                username: formData.username,
                 full_name: fullName,
                 phone: formData.phone,
                 address: formData.address,
@@ -116,17 +113,6 @@ export default function AccountDetailsScreen() {
 
                 {/* Form Card */}
                 <View style={styles.card}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Username</Text>
-                        <TextInput
-                            style={[styles.input, !isEditing && styles.disabledInput]}
-                            value={formData.username}
-                            onChangeText={(t) => handleChange('username', t)}
-                            placeholder="Enter Your Username"
-                            placeholderTextColor="#9ca3af"
-                            editable={isEditing}
-                        />
-                    </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>First Name</Text>

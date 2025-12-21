@@ -1,9 +1,9 @@
 // ============================================
-// USER MANAGEMENT SCREEN (Company Admin)
+// ENHANCED USER MANAGEMENT SCREEN (Company Admin)
 // ============================================
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, TextInput, Modal, Platform } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, TextInput, Modal, Platform, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserProfile, RoleName } from '@/types';
 import { AuthService } from '@/services/auth.service';
@@ -13,7 +13,6 @@ import {
   Users,
   UserPlus,
   Search,
-  MapPin,
   Phone,
   Mail,
   Shield,
@@ -21,7 +20,18 @@ import {
   X,
   Check,
   Building2,
-  ChevronDown
+  Filter,
+  Trash2,
+  UserX,
+  UserCheck,
+  MoreVertical,
+  CheckSquare,
+  Square,
+  Clock,
+  AlertCircle,
+  Menu,
+  Moon,
+  ChevronRight,
 } from 'lucide-react-native';
 
 // Constants
@@ -32,6 +42,12 @@ const AVAILABLE_ROLES: { value: RoleName; label: string; color: string }[] = [
   { value: 'technician', label: 'Technician', color: '#D97706' },
   { value: 'customer', label: 'Customer', color: '#4B5563' },
 ];
+
+type FilterType = {
+  role: RoleName | '';
+  branch: string;
+  status: 'all' | 'active' | 'inactive';
+};
 
 export default function UsersScreen() {
   // State
@@ -54,7 +70,7 @@ export default function UsersScreen() {
     branch_id: '',
   });
 
-  // Search/Filter State (Bonus UX)
+  // Search/Filter State
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -89,10 +105,14 @@ export default function UsersScreen() {
 
   // Filtered Users
   const filteredUsers = useMemo(() => {
-    return users.filter(u =>
-      u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return users.filter(u => {
+      // Search filter
+      const matchesSearch =
+        u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesSearch;
+    });
   }, [users, searchQuery]);
 
   // Handlers
@@ -157,6 +177,61 @@ export default function UsersScreen() {
     }
   };
 
+  const handleToggleStatus = async (user: UserProfile) => {
+    const action = user.is_active ? 'deactivate' : 'reactivate';
+    Alert.alert(
+      `${action === 'deactivate' ? 'Deactivate' : 'Reactivate'} User`,
+      `Are you sure you want to ${action} ${user.full_name || user.email}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: action === 'deactivate' ? 'Deactivate' : 'Reactivate',
+          style: action === 'deactivate' ? 'destructive' : 'default',
+          onPress: async () => {
+            try {
+              if (action === 'deactivate') {
+                await AuthService.deactivateUser(user.id);
+              } else {
+                await AuthService.reactivateUser(user.id);
+              }
+              Alert.alert('Success', `User ${action}d successfully.`);
+              loadUsers();
+            } catch (error: any) {
+              Alert.alert('Error', error.message || `Failed to ${action} user.`);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteUser = async (user: UserProfile) => {
+    Alert.alert(
+      'Delete User',
+      `Are you sure you want to permanently delete ${user.full_name || user.email}? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AuthService.deleteUser(user.id);
+              Alert.alert('Success', 'User deleted successfully.');
+              loadUsers();
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to delete user.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
   const getInitials = (name?: string) => {
     if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -167,37 +242,56 @@ export default function UsersScreen() {
     return found ? found.color : '#6B7280';
   };
 
+  const formatLastLogin = (timestamp?: string) => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="px-6 py-4 bg-white border-b border-gray-100 flex-row justify-between items-center">
-        <View>
-          <Text className="text-2xl font-bold text-gray-900">User Management</Text>
-          <Text className="text-gray-500 text-sm">
-            {users.length} {users.length === 1 ? 'user' : 'users'} total
-          </Text>
-        </View>
-        <View className="bg-blue-50 p-2 rounded-full">
-          <Users size={24} color="#2563EB" />
+    <SafeAreaView className="flex-1" style={{ backgroundColor: '#F5F5F5' }}>
+      {/* Search Bar */}
+      <View className="px-4 py-3">
+        <View className="flex-row items-center gap-2">
+          {/* Search Input */}
+          <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2.5">
+            <Search size={20} color="#9CA3AF" />
+            <TextInput
+              className="flex-1 ml-2 text-base"
+              placeholder="Search User"
+              placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            <TouchableOpacity className="p-1">
+              <Filter size={20} color="#000000" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Add Button */}
+          <TouchableOpacity
+            onPress={openAddModal}
+            className="w-11 h-11 rounded-lg items-center justify-center"
+            style={{ backgroundColor: '#4CAF50' }}
+          >
+            <UserPlus size={22} color="white" />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Search Bar */}
-      <View className="px-6 py-4">
-        <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
-          <Search size={20} color="#9CA3AF" />
-          <TextInput
-            className="flex-1 ml-3 text-base text-gray-900"
-            placeholder="Search by name or email..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-      </View>
+
 
       {/* User List */}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={initialize} />}
       >
         {filteredUsers.map(user => {
@@ -205,72 +299,38 @@ export default function UsersScreen() {
           const branchName = branches.find(b => b.id === user.branch_id)?.name;
 
           return (
-            <View key={user.id} className="bg-white rounded-xl p-4 mb-4 shadow-sm border border-gray-100">
-              {/* Card Header */}
-              <View className="flex-row items-start justify-between mb-4">
-                <View className="flex-row items-center flex-1">
-                  {/* Avatar */}
-                  <View
-                    className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                    style={{ backgroundColor: `${roleConfig?.color || '#6B7280'}20` }}
-                  >
-                    <Text className="text-lg font-bold" style={{ color: roleConfig?.color || '#6B7280' }}>
-                      {getInitials(user.full_name || user.email)}
-                    </Text>
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-lg font-bold text-gray-900" numberOfLines={1}>
-                      {user.full_name || 'Unknown User'}
-                    </Text>
-                    <View className="flex-row items-center mt-1">
-                      <View
-                        className="px-2 py-0.5 rounded-md mr-2"
-                        style={{ backgroundColor: `${roleConfig?.color || '#6B7280'}15` }}
-                      >
-                        <Text
-                          className="text-xs font-semibold capitalize"
-                          style={{ color: roleConfig?.color || '#6B7280' }}
-                        >
-                          {roleConfig?.label || user.role?.name || 'No Role'}
-                        </Text>
-                      </View>
-                      {/* Status Dot */}
-                      {/* <Virew className={`w-2 h-2 rounded-full ${user.role?.name ? 'bg-green-500' : 'bg-yellow-400'}`} /> */}
-                    </View>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => openEditModal(user)}
-                  className="p-2 bg-gray-50 rounded-lg"
+            <TouchableOpacity
+              key={user.id}
+              onPress={() => openEditModal(user)}
+              className="bg-white rounded-xl p-4 mb-3 flex-row items-center justify-between"
+              style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }}
+            >
+              {/* Left: Avatar + Info */}
+              <View className="flex-row items-center flex-1">
+                {/* Circular Avatar */}
+                <View
+                  className="w-12 h-12 rounded-full items-center justify-center mr-3"
+                  style={{ backgroundColor: '#4A90E2' }}
                 >
-                  <Edit2 size={18} color="#4B5563" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Card Body */}
-              <View className="space-y-2">
-                <View className="flex-row items-center">
-                  <Mail size={16} color="#9CA3AF" className="mr-2" />
-                  <Text className="text-gray-600 text-sm ml-2">{user.email}</Text>
+                  <Text className="text-white font-bold text-base">
+                    {getInitials(user.full_name || user.email)}
+                  </Text>
                 </View>
 
-                {user.phone && (
-                  <View className="flex-row items-center">
-                    <Phone size={16} color="#9CA3AF" className="mr-2" />
-                    <Text className="text-gray-600 text-sm ml-2">{user.phone}</Text>
-                  </View>
-                )}
-
-                <View className="flex-row items-center">
-                  <Building2 size={16} color="#9CA3AF" className="mr-2" />
-                  <Text className={`text-sm ml-2 ${branchName ? 'text-gray-600' : 'text-gray-400 italic'}`}>
-                    {branchName || 'No Branch Assigned'}
+                {/* User Info */}
+                <View className="flex-1">
+                  <Text className="font-semibold text-base" style={{ color: '#000000' }} numberOfLines={1}>
+                    {user.full_name || 'Unknown User'}
+                  </Text>
+                  <Text className="text-sm" style={{ color: '#757575' }} numberOfLines={1}>
+                    {branchName || 'No Branch'} , {roleConfig?.label || user.role?.name || 'No Role'}
                   </Text>
                 </View>
               </View>
-            </View>
+
+              {/* Right: Chevron */}
+              <ChevronRight size={20} color="#757575" />
+            </TouchableOpacity>
           );
         })}
 
@@ -281,17 +341,16 @@ export default function UsersScreen() {
             <Text className="text-gray-400 mt-4 text-center">
               {searchQuery ? 'No matching users found' : 'No team members yet'}
             </Text>
+            {searchQuery && (
+              <TouchableOpacity onPress={clearSearch} className="mt-3">
+                <Text className="text-blue-600 font-medium">Clear search</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
       </ScrollView>
 
-      {/* FAB */}
-      <TouchableOpacity
-        onPress={openAddModal}
-        className="absolute bottom-6 right-6 w-14 h-14 bg-[#4682B4] rounded-full items-center justify-center shadow-lg mb-16"
-      >
-        <UserPlus size={24} color="white" />
-      </TouchableOpacity>
+
 
       {/* Modal */}
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
@@ -309,7 +368,7 @@ export default function UsersScreen() {
             {/* Full Name */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1.5">Full Name</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 focus:border-blue-500 focus:bg-white text-gray-700 font-bold">
+              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
                 <Users size={20} color="#9CA3AF" />
                 <TextInput
                   value={form.full_name}
@@ -323,7 +382,7 @@ export default function UsersScreen() {
             {/* Email */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1.5">Email Address</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-700 font-bold">
+              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
                 <Mail size={20} color="#9CA3AF" />
                 <TextInput
                   value={form.email}
@@ -339,7 +398,7 @@ export default function UsersScreen() {
             {/* Phone */}
             <View className="mb-4">
               <Text className="text-sm font-medium text-gray-700 mb-1.5">Phone (Optional)</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-700 font-bold">
+              <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
                 <Phone size={20} color="#9CA3AF" />
                 <TextInput
                   value={form.phone}
@@ -355,7 +414,7 @@ export default function UsersScreen() {
             {!editingUser && (
               <View className="mb-6">
                 <Text className="text-sm font-medium text-gray-700 mb-1.5">Temporary Password</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50 text-gray-700 font-bold">
+                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
                   <Shield size={20} color="#9CA3AF" />
                   <TextInput
                     value={form.password}
@@ -378,10 +437,7 @@ export default function UsersScreen() {
                     <TouchableOpacity
                       key={role.value}
                       onPress={() => setForm({ ...form, role: role.value })}
-                      className={`mr-2 mb-2 px-4 py-2 rounded-full border ${isSelected
-                        ? `bg-[${role.color}] border-[${role.color}]`
-                        : 'bg-white border-gray-200'
-                        }`}
+                      className="mr-2 mb-2 px-4 py-2 rounded-full border"
                       style={{
                         backgroundColor: isSelected ? role.color : 'white',
                         borderColor: isSelected ? role.color : '#E5E7EB'

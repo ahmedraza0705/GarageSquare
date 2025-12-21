@@ -15,7 +15,6 @@ const PROFILE_SELECT = `
   email,
   full_name,
   phone,
-  username,
   address,
   city,
   state,
@@ -42,7 +41,6 @@ const mapProfile = (row: any): UserProfile => ({
   email: row.email,
   full_name: row.full_name ?? undefined,
   phone: row.phone ?? undefined,
-  username: row.username ?? undefined,
   address: row.address ?? undefined,
   city: row.city ?? undefined,
   state: row.state ?? undefined,
@@ -154,7 +152,22 @@ export class AuthService {
       throw new Error('Supabase is not configured.');
     }
 
-    // 2. Create a temporary client for the new user signup
+    const email = (userData.email || '').trim().toLowerCase();
+    const password = (userData.password || '').trim();
+
+    // 2. Get Role ID first
+    const mainClient = ensureClient();
+    const { data: roleData, error: roleError } = await mainClient
+      .from('roles')
+      .select('id')
+      .eq('name', userData.role)
+      .single();
+
+    if (roleError || !roleData) {
+      throw new Error(`Invalid role: ${userData.role}`);
+    }
+
+    // 3. Create a temporary client for the new user signup
     // This isolates the session so the admin stays logged in
     const tempClient = createClient(supabaseConfig.url, supabaseConfig.key, {
       auth: {
@@ -163,10 +176,9 @@ export class AuthService {
       },
     });
 
-    const email = (userData.email || '').trim().toLowerCase();
-    const password = (userData.password || '').trim();
-
-    // 3. Create the user in Auth
+    // 4. Create the user in Auth
+    // Note: This will trigger handle_new_user(), but the trigger now checks
+    // if profile exists first, so it won't conflict with our manual insert
     const { data: authData, error: authError } = await tempClient.auth.signUp({
       email,
       password,
@@ -187,22 +199,8 @@ export class AuthService {
       throw new Error('Failed to create user: No user data returned.');
     }
 
-    // 4. Get Role ID
-    const mainClient = ensureClient();
-    const { data: roleData, error: roleError } = await mainClient
-      .from('roles')
-      .select('id')
-      .eq('name', userData.role)
-      .single();
-
-    if (roleError || !roleData) {
-      // Ideally rollback auth user here if possible, but requires Service Role key.
-      // For client-side, we just throw, leaving a "zombie" auth user (better than inconsistent state).
-      // In prod with edge functions, this is transactional.
-      throw new Error(`Invalid role: ${userData.role}`);
-    }
-
     // 5. Insert into user_profiles using Main Client (Admin privileges via RLS)
+    // The trigger will skip this if it already exists
     const { error: profileError } = await mainClient
       .from('user_profiles')
       .insert({
@@ -216,7 +214,25 @@ export class AuthService {
       });
 
     if (profileError) {
-      throw new Error(`Failed to create profile: ${profileError.message}`);
+      // Check if error is due to duplicate key (profile already created by trigger)
+      if (profileError.code === '23505') {
+        // Duplicate key, update instead
+        const { error: updateError } = await mainClient
+          .from('user_profiles')
+          .update({
+            full_name: userData.full_name,
+            phone: userData.phone,
+            role_id: roleData.id,
+            branch_id: userData.branch_id || null,
+          })
+          .eq('id', newUser.id);
+
+        if (updateError) {
+          throw new Error(`Failed to update profile: ${updateError.message}`);
+        }
+      } else {
+        throw new Error(`Failed to create profile: ${profileError.message}`);
+      }
     }
 
     return { success: true, userId: newUser.id };
@@ -459,6 +475,208 @@ export class AuthService {
   }
 
   /**
+   * Deactivate user (soft delete)
+   */
+  static async deactivateUser(userId: string) {
+    const client = ensureClient();
+    const { data, error } = await client.rpc('deactivate_user', {
+      p_user_id: userId,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
+   * Reactivate user
+   */
+  static async reactivateUser(userId: string) {
+    const client = ensureClient();
+    const { data, error } = await client.rpc('reactivate_user', {
+      p_user_id: userId,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
+   * Delete user permanently (hard delete)
+   * Only available to company admins
+   */
+  static async deleteUser(userId: string) {
+    const client = ensureClient();
+
+    // First, log the activity
+    await this.logUserActivity(userId, 'user_deleted', { deleted_by: (await this.getCurrentUser())?.id });
+
+    // Delete the user profile (will cascade to auth.users via trigger)
+    const { error } = await client
+      .from('user_profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (error) {
+      throw error;
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Update last login timestamp
+   */
+  static async updateLastLogin(userId: string) {
+    const client = ensureClient();
+    const { error } = await client
+      .from('user_profiles')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    if (error) {
+      console.warn('Failed to update last login:', error);
+    }
+  }
+
+  /**
+   * Log user activity
+   */
+  static async logUserActivity(userId: string, action: string, details?: any) {
+    const client = ensureClient();
+    const { error } = await client.rpc('log_user_activity', {
+      p_user_id: userId,
+      p_action: action,
+      p_details: details || null,
+    });
+
+    if (error) {
+      console.warn('Failed to log activity:', error);
+    }
+  }
+
+  /**
+   * Get user activity log
+   */
+  static async getUserActivityLog(userId: string, limit: number = 50) {
+    const client = ensureClient();
+    const { data, error } = await client
+      .from('user_activity_log')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw error;
+    }
+
+    return data || [];
+  }
+
+  /**
+   * Bulk update users
+   */
+  static async bulkUpdateUsers(userIds: string[], updates: {
+    role?: RoleName;
+    branch_id?: string | null;
+    is_active?: boolean;
+  }) {
+    const client = ensureClient();
+    const dbUpdates: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    // Handle Role Name -> ID conversion
+    if (updates.role) {
+      const { data: roleData, error: roleError } = await client
+        .from('roles')
+        .select('id')
+        .eq('name', updates.role)
+        .single();
+
+      if (roleError || !roleData) throw new Error(`Invalid role: ${updates.role}`);
+      dbUpdates.role_id = roleData.id;
+    }
+
+    if (updates.branch_id !== undefined) dbUpdates.branch_id = updates.branch_id;
+    if (updates.is_active !== undefined) dbUpdates.is_active = updates.is_active;
+
+    const { error } = await client
+      .from('user_profiles')
+      .update(dbUpdates)
+      .in('id', userIds);
+
+    if (error) throw error;
+
+    // Log bulk activity
+    for (const userId of userIds) {
+      await this.logUserActivity(userId, 'bulk_update', updates);
+    }
+
+    return { success: true, updated: userIds.length };
+  }
+
+  /**
+   * Get users by role
+   */
+  static async getUsersByRole(roleName: RoleName): Promise<UserProfile[]> {
+    const client = ensureClient();
+    const { data, error } = await client
+      .from('user_profiles')
+      .select(PROFILE_SELECT)
+      .eq('role.name', roleName)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map(mapProfile);
+  }
+
+  /**
+   * Get users by branch
+   */
+  static async getUsersByBranch(branchId: string): Promise<UserProfile[]> {
+    const client = ensureClient();
+    const { data, error } = await client
+      .from('user_profiles')
+      .select(PROFILE_SELECT)
+      .eq('branch_id', branchId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map(mapProfile);
+  }
+
+  /**
+   * Get users by status (active/inactive)
+   */
+  static async getUsersByStatus(isActive: boolean): Promise<UserProfile[]> {
+    const client = ensureClient();
+    const { data, error } = await client
+      .from('user_profiles')
+      .select(PROFILE_SELECT)
+      .eq('is_active', isActive)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    return (data || []).map(mapProfile);
+  }
+
+  /**
    * Listen to auth state changes
    */
   static onAuthStateChange(callback: (user: AuthUser | null) => void) {
@@ -477,6 +695,11 @@ export class AuthService {
       let profile: UserProfile | null = null;
       try {
         profile = await this.getUserProfile(supabaseUser.id);
+
+        // Update last login on successful auth
+        if (profile) {
+          await this.updateLastLogin(supabaseUser.id);
+        }
       } catch (profileError) {
         console.warn('Unable to load profile on auth change:', profileError);
       }
