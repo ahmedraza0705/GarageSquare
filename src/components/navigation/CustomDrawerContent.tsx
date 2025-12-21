@@ -116,7 +116,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   };
 
   const menuItems: MenuItem[] = [
-    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
+    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', params: { screen: 'Dashboard' }, isWorking: true },
     { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
     { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
