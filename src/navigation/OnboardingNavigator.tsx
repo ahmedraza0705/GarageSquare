@@ -1,13 +1,20 @@
-
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import WelcomeScreen from '@/screens/onboarding/WelcomeScreen';
-import PersonalDetailsScreen from '@/screens/onboarding/PersonalDetailsScreen';
-import CompanyDetailsScreen from '@/screens/onboarding/CompanyDetailsScreen';
-import CompanyAddressScreen from '@/screens/onboarding/CompanyAddressScreen';
-import DataUploadScreen from '@/screens/onboarding/DataUploadScreen';
+import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
+import PersonalDetailsScreen from '../screens/onboarding/PersonalDetailsScreen';
+import CompanyDetailsScreen from '../screens/onboarding/CompanyDetailsScreen';
+import CompanyAddressScreen from '../screens/onboarding/CompanyAddressScreen';
+import DataUploadScreen from '../screens/onboarding/DataUploadScreen';
 
-const Stack = createNativeStackNavigator();
+export type OnboardingStackParamList = {
+    Welcome: undefined;
+    PersonalDetails: undefined;
+    CompanyDetails: undefined;
+    CompanyAddress: undefined;
+    DataUpload: undefined;
+};
+
+const Stack = createNativeStackNavigator<OnboardingStackParamList>();
 
 export default function OnboardingNavigator() {
     return (
