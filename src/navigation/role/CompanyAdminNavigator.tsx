@@ -7,7 +7,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { DrawerActions, useNavigation, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeColors, ThemeName } from '@/context/ThemeContext';
 import CustomDrawerContent from '@/components/navigation/CustomDrawerContent';
@@ -71,7 +71,7 @@ function CustomHeader({
 
   // Get current screen title
   const getScreenTitle = () => {
-    const routeName = route?.name || 'Dashboard';
+    // 1. Check if the screen name has a direct mapping
     const titleMap: Record<string, string> = {
       DashboardTab: 'Dashboard',
       MainTabs: 'Dashboard',
@@ -92,7 +92,27 @@ function CustomHeader({
       Notifications: 'Notifications',
       About: 'About GarageSquares',
     };
-    return titleMap[routeName] || 'Dashboard';
+
+    // 2. Try to get the deepest focused route name
+    const getDeepestRouteName = (r: any): string => {
+      const name = getFocusedRouteNameFromRoute(r);
+      if (name) {
+        // If we found a name, check if it's a tab or stack container that might have more nesting
+        if (name === 'DashboardTab' || name === 'MainTabs') {
+          // This is a bit of a hack since we don't have the state object here directly,
+          // but we can check if it exists in the route object's state
+          const state = r.state;
+          if (state && state.routes && state.index !== undefined) {
+            return getDeepestRouteName(state.routes[state.index]);
+          }
+        }
+        return name;
+      }
+      return r.name;
+    };
+
+    const routeName = getDeepestRouteName(route);
+    return titleMap[routeName] || routeName || 'Dashboard';
   };
 
   const screenTitle = getScreenTitle();
@@ -434,7 +454,7 @@ export default function CompanyAdminNavigator() {
         name="CreateCustomer"
         component={CreateCustomerScreen}
         options={{
-          headerShown: true,
+          headerShown: false,
           title: 'Add Customer',
           headerStyle: { backgroundColor: theme.headerBg },
           headerTintColor: theme.headerText,

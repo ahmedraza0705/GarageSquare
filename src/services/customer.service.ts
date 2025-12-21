@@ -93,8 +93,11 @@ export class CustomerService {
 
     const insertData: any = {
       ...formData,
+      user_id: userId, // Link to the user who created it
       branch_id: branchId,
     };
+
+    console.log('Final Customer Insert Data:', insertData);
 
     if (profile) {
       insertData.created_by = userId;

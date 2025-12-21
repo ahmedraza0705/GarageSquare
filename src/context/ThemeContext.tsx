@@ -33,31 +33,31 @@ export type ThemeColors = {
 
 export const themes: Record<ThemeName, ThemeColors> = {
   light: {
-    primary: '#4682B4', // Updated to match distinct SteelBlue from Dashboard/Nav
-    background: '#F3F4F6',
-    surface: '#ffffff',
-    surfaceAlt: '#f1f5f9',
-    text: '#111827',
-    textMuted: '#475569',
+    primary: '#4682B4', // Steel Blue from palette
+    background: '#F3F4F6', // Lighter gray for background
+    surface: '#FFFFFF',
+    surfaceAlt: '#E5E7EB',
+    text: '#1F2937',
+    textMuted: '#6B7280',
     border: '#D1D5DB',
-    notification: '#ef4444',
-    onPrimary: '#ffffff',
+    notification: '#EF4444',
+    onPrimary: '#FFFFFF',
     statusBarStyle: 'dark-content',
-    statusBarBg: '#ffffff',
-    headerBg: '#E5E7EB',
-    headerText: '#111827',
-    headerBorder: '#D1D5DB',
-    headerIcon: '#111827',
-    avatarBg: '#4682B4', // Match primary
-    avatarText: '#ffffff',
-    tabBarBg: '#4682B4', // Match primary
+    statusBarBg: '#FFFFFF',
+    headerBg: '#FFFFFF',
+    headerText: '#1F2937',
+    headerBorder: '#E5E7EB',
+    headerIcon: '#1F2937',
+    avatarBg: '#4682B4',
+    avatarText: '#FFFFFF',
+    tabBarBg: '#4682B4',
     tabBarBorder: 'transparent',
     tabIconBg: 'rgba(255, 255, 255, 0.2)',
-    tabIconColor: '#ffffff',
+    tabIconColor: '#FFFFFF',
     tabIconInactiveOpacity: 0.7,
-    drawerBackground: '#eef2ff',
+    drawerBackground: '#F0F9FF',
     overlay: 'rgba(0, 0, 0, 0.35)',
-    disabledBg: '#e2e8f0',
+    disabledBg: '#D1D5DB',
   },
   dark: {
     primary: '#60a5fa',

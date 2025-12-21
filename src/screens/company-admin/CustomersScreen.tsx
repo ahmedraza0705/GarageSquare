@@ -79,10 +79,9 @@ export default function CustomersScreen() {
           >
             <Text style={{ color: theme.textMuted }} className="mr-2 text-lg">🔍</Text>
             <TextInput
-              className="flex-1 text-base"
-              style={{ color: theme.text }}
-              placeholder="Search User"
-              placeholderTextColor={theme.textMuted}
+              className="flex-1 text-gray-900 text-base"
+              placeholder="Search Customer"
+              placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={handleSearch}
               autoCorrect={false}
