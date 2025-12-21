@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
-import { useNavigation, DrawerActions, useNavigationState, getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { DrawerActions, useNavigationState, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,23 +20,8 @@ interface MenuItem {
 }
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps) {
-  const navigation = useNavigation();
   const { user, signOut } = useAuth();
   const [_, forceUpdate] = useState(0);
-
-  // Use a listener on the root navigation to force re-render on any app-wide state change.
-  // This ensures the drawer updates even if only a child navigator (like tabs) changes.
-  useEffect(() => {
-    let root = navigation;
-    while (root.getParent()) {
-      root = root.getParent();
-    }
-
-    const unsubscribe = root.addListener('state', () => {
-      forceUpdate(c => c + 1);
-    });
-    return unsubscribe;
-  }, [navigation]);
 
   // Provide default values to avoid undefined text rendering
   const language = 'English';
@@ -102,14 +87,11 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
-        // Handle nested tab navigation with params
-        props.navigation.navigate(item.screenName, {
-          screen: item.tabScreen,
-          params: item.params // Pass params if they exist (e.g. { screen: 'Vehicles' })
-        });
+        // @ts-ignore - navigating into nested tabs
+        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
       } else {
         // @ts-ignore
-        props.navigation.navigate(item.screenName, item.params);
+        props.navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
@@ -119,20 +101,13 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', params: { screen: 'Dashboard' }, isWorking: true },
     { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
+    { label: 'Job Tasks and Assignments', isWorking: false },
     { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    // Explicitly target the Vehicles screen inside the DashboardStack inside the DashboardTab
-    {
-      label: 'Vehicle Management',
-      screenName: 'MainTabs',
-      tabScreen: 'DashboardTab',
-      params: { screen: 'Vehicles' },
-      isWorking: true
-    },
+    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
     { label: 'Reports', screenName: 'MainTabs', tabScreen: 'ReportsTab', isWorking: true },
-    { label: 'Invoice and Billing', isWorking: false },
-    { label: 'Customers', screenName: 'MainTabs', tabScreen: 'DashboardTab', params: { screen: 'Customers' }, isWorking: true },
-    { label: 'Inventory', screenName: 'Inventory', isWorking: true },
+    { label: 'Invoice', screenName: 'Invoice', isWorking: true },
+    { label: 'Customers', screenName: 'Customers', isWorking: true },
+    { label: 'Inventory', isWorking: false },
     { label: 'Shop Timing', isWorking: false },
   ];
 

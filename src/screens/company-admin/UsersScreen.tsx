@@ -171,8 +171,10 @@ export default function UsersScreen() {
         });
         Alert.alert('Success', 'User created.');
       }
+
+      // Refresh the user list BEFORE closing the modal
+      await loadUsers();
       setShowModal(false);
-      loadUsers();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Failed to save.');
     } finally {
