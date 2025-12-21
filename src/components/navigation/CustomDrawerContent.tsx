@@ -68,23 +68,6 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   const activeRoute = getActiveRouteName(navState);
   const currentParentRoute = navState.routes[navState.index].name;
 
-
-  const menuItems: MenuItem[] = [
-    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
-    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
-    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
-    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
-    { label: 'Reports', screenName: 'MainTabs', tabScreen: 'ReportsTab', isWorking: true },
-    { label: 'Invoice and Billing', isWorking: false },
-    { label: 'Customers', screenName: 'MainTabs', tabScreen: 'DashboardTab', nestedScreen: 'Customers', isWorking: true },
-    { label: 'Inventory', isWorking: false },
-    { label: 'Shop Timing', isWorking: false },
-    { label: 'Privacy Policy', isWorking: false },
-    { label: 'Settings', screenName: 'Settings', isWorking: true },
-  ];
-
   const handleLogout = () => {
     Alert.alert(
       'Logout',
@@ -119,24 +102,39 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
-        if (item.nestedScreen) {
-          // @ts-ignore
-          props.navigation.navigate(item.screenName, {
-            screen: item.tabScreen,
-            params: { screen: item.nestedScreen }
-          });
-        } else {
-          // @ts-ignore
-          props.navigation.navigate(item.screenName, { screen: item.tabScreen });
-        }
+        // Handle nested tab navigation with params
+        props.navigation.navigate(item.screenName, {
+          screen: item.tabScreen,
+          params: item.params // Pass params if they exist (e.g. { screen: 'Vehicles' })
+        });
       } else {
         // @ts-ignore
-        props.navigation.navigate(item.screenName);
+        props.navigation.navigate(item.screenName, item.params);
       }
-      // props.navigation.closeDrawer() is better but dispatch works too
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
   };
+
+  const menuItems: MenuItem[] = [
+    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
+    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
+    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
+    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
+    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
+    // Explicitly target the Vehicles screen inside the DashboardStack inside the DashboardTab
+    {
+      label: 'Vehicle Management',
+      screenName: 'MainTabs',
+      tabScreen: 'DashboardTab',
+      params: { screen: 'Vehicles' },
+      isWorking: true
+    },
+    { label: 'Reports', screenName: 'MainTabs', tabScreen: 'ReportsTab', isWorking: true },
+    { label: 'Invoice and Billing', isWorking: false },
+    { label: 'Customers', screenName: 'MainTabs', tabScreen: 'DashboardTab', params: { screen: 'Customers' }, isWorking: true },
+    { label: 'Inventory', screenName: 'Inventory', isWorking: true },
+    { label: 'Shop Timing', isWorking: false },
+  ];
 
   const footerItems: MenuItem[] = [
     { label: 'Privacy Policy', isWorking: false },
