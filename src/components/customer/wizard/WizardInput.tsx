@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { TextInput, View, Text, TextInputProps, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { TextInput, View, Text, TextInputProps, Platform } from 'react-native';
+import { AlertCircle } from 'lucide-react-native';
 
 interface WizardInputProps extends TextInputProps {
     label: string;
@@ -17,23 +18,29 @@ export default function WizardInput({
     containerClassName = '',
     ...props
 }: WizardInputProps) {
-    const hasValue = value && value.length > 0;
     const isError = !!error;
-    const isSuccess = touched && !error && hasValue;
+    const [isFocused, setIsFocused] = React.useState(false);
 
     return (
-        <View className={`mb-3 ${containerClassName}`}>
-            <Text className="text-sm font-semibold text-gray-900 mb-1.5">
+        <View className={`mb-4 ${containerClassName}`}>
+            <Text className="text-sm font-bold text-gray-900 mb-1.5">
                 {label}
             </Text>
             <View className="relative">
                 <TextInput
-                    className={`px-4 py-3.5 border rounded-lg text-base ${isError
-                        ? 'border-red-400 bg-red-50'
-                        : isSuccess
-                            ? 'border-green-400 bg-green-50'
-                            : 'border-gray-200 bg-gray-50'
-                        } text-gray-900`}
+                    className={`px-4 border rounded-2xl text-base ${isError
+                        ? 'border-red-500 bg-white'
+                        : isFocused
+                            ? 'border-[#4682B4] bg-white'
+                            : 'border-gray-200 bg-white'
+                        } text-gray-900 shadow-sm`}
+                    style={{
+                        height: 56,
+                        textAlignVertical: 'center',
+                        ...(Platform.OS === 'ios' ? { paddingTop: 0, paddingBottom: 0 } : {})
+                    }}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     placeholderTextColor="#9ca3af"
                     value={value}
                     {...props}
@@ -42,14 +49,7 @@ export default function WizardInput({
                 {/* Right Icon */}
                 <View className="absolute right-3 top-0 bottom-0 justify-center">
                     {isError && (
-                        <View className="w-5 h-5 rounded-full bg-red-500 items-center justify-center">
-                            <Text className="text-white text-xs font-bold">!</Text>
-                        </View>
-                    )}
-                    {isSuccess && (
-                        <View className="w-5 h-5 rounded-full bg-green-500 items-center justify-center">
-                            <Text className="text-white text-xs font-bold">✓</Text>
-                        </View>
+                        <AlertCircle size={20} color="#EF4444" />
                     )}
                 </View>
             </View>

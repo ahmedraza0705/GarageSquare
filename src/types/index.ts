@@ -64,6 +64,21 @@ export interface Branch {
   updated_at: string;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  registry_number?: string;
+  description?: string;
+  address?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  zip_code?: string;
+  onboarding_completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -75,6 +90,7 @@ export interface UserProfile {
   address?: string;
   city?: string;
   state?: string;
+  country?: string;
   postal_code?: string;
   is_active: boolean;
   created_at: string;

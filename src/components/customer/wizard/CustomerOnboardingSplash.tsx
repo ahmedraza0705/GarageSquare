@@ -12,9 +12,12 @@ export default function CustomerOnboardingSplash({ onNext }: CustomerOnboardingS
             <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 100 }}>
                 {/* Illustration */}
                 <View className="items-center mt-12 mb-8">
-                    <View className="w-48 h-48 bg-blue-100 rounded-full items-center justify-center mb-6">
-                        <Text className="text-6xl">👨‍🔧</Text>
-                        <Text className="text-4xl">🚗</Text>
+                    <View className="w-64 h-64 items-center justify-center mb-6">
+                        <Image
+                            source={require('@/assets/onboarding_splash.png')}
+                            style={{ width: '100%', height: '100%' }}
+                            resizeMode="contain"
+                        />
                     </View>
 
                     <Text className="text-2xl font-bold text-gray-900 text-center mb-3">

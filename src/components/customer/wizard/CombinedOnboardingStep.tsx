@@ -6,6 +6,7 @@ import Button from '@/components/shared/Button';
 interface CombinedOnboardingStepProps {
     data: {
         full_name: string;
+        email: string;
         phone: string;
         address: string;
         country: string;
@@ -30,16 +31,18 @@ export default function CombinedOnboardingStep({ data, onUpdate, onNext, errors 
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 150}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 80}
             >
                 <ScrollView
                     className="flex-1 px-6 pt-4"
-                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
                     keyboardShouldPersistTaps="handled"
                     bounces={false}
+                    showsVerticalScrollIndicator={false}
+                    automaticallyAdjustKeyboardInsets={true}
                 >
                     <WizardInput
-                        label="Full Name"
+                        label="Your Name"
                         placeholder="Enter Your Name"
                         value={data.full_name}
                         onChangeText={(text) => onUpdate({ ...data, full_name: text })}
@@ -49,10 +52,22 @@ export default function CombinedOnboardingStep({ data, onUpdate, onNext, errors 
                     />
 
                     <WizardInput
+                        label="Gmail"
+                        placeholder="yourmail@gmail.com"
+                        value={data.email}
+                        onChangeText={(text) => onUpdate({ ...data, email: text })}
+                        onBlur={() => handleBlur('email')}
+                        error={errors.email}
+                        touched={touched.email}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+
+                    <WizardInput
                         label="Phone Number"
-                        placeholder="9820756577"
+                        placeholder="Enter Your Number"
                         value={data.phone}
-                        onChangeText={(text) => onUpdate({ ...data, phone: text })}
+                        onChangeText={(text) => onUpdate({ ...data, phone: text.slice(0, 10).replace(/\D/g, '') })}
                         onBlur={() => handleBlur('phone')}
                         keyboardType="phone-pad"
                         error={errors.phone}
@@ -60,8 +75,8 @@ export default function CombinedOnboardingStep({ data, onUpdate, onNext, errors 
                     />
 
                     <WizardInput
-                        label="Your Address"
-                        placeholder="Enter your Address"
+                        label="Address"
+                        placeholder="Enter Your Address"
                         value={data.address}
                         onChangeText={(text) => onUpdate({ ...data, address: text })}
                         onBlur={() => handleBlur('address')}
@@ -69,39 +84,32 @@ export default function CombinedOnboardingStep({ data, onUpdate, onNext, errors 
                         touched={touched.address}
                     />
 
-                    <WizardInput
-                        label="Country"
-                        placeholder="Enter Country"
-                        value={data.country}
-                        onChangeText={(text) => onUpdate({ ...data, country: text })}
-                        onBlur={() => handleBlur('country')}
-                        error={errors.country}
-                        touched={touched.country}
-                    />
-
-                    <WizardInput
-                        label="State"
-                        placeholder="Enter State"
-                        value={data.state}
-                        onChangeText={(text) => onUpdate({ ...data, state: text })}
-                        onBlur={() => handleBlur('state')}
-                        error={errors.state}
-                        touched={touched.state}
-                    />
-
                     <View className="flex-row gap-4">
                         <View className="flex-1">
                             <WizardInput
-                                label="ZIP Code"
-                                placeholder="Enter ZIP Code"
-                                value={data.zip_code}
-                                onChangeText={(text) => onUpdate({ ...data, zip_code: text })}
-                                onBlur={() => handleBlur('zip_code')}
-                                keyboardType="numeric"
-                                error={errors.zip_code}
-                                touched={touched.zip_code}
+                                label="Country"
+                                placeholder="Enter Country"
+                                value={data.country}
+                                onChangeText={(text) => onUpdate({ ...data, country: text })}
+                                onBlur={() => handleBlur('country')}
+                                error={errors.country}
+                                touched={touched.country}
                             />
                         </View>
+                        <View className="flex-1">
+                            <WizardInput
+                                label="State"
+                                placeholder="Enter State"
+                                value={data.state}
+                                onChangeText={(text) => onUpdate({ ...data, state: text })}
+                                onBlur={() => handleBlur('state')}
+                                error={errors.state}
+                                touched={touched.state}
+                            />
+                        </View>
+                    </View>
+
+                    <View className="flex-row gap-4 mt-1">
                         <View className="flex-1">
                             <WizardInput
                                 label="City"
@@ -111,6 +119,18 @@ export default function CombinedOnboardingStep({ data, onUpdate, onNext, errors 
                                 onBlur={() => handleBlur('city')}
                                 error={errors.city}
                                 touched={touched.city}
+                            />
+                        </View>
+                        <View className="flex-1">
+                            <WizardInput
+                                label="ZIP Code"
+                                placeholder="Enter Zip Code"
+                                value={data.zip_code}
+                                onChangeText={(text) => onUpdate({ ...data, zip_code: text })}
+                                onBlur={() => handleBlur('zip_code')}
+                                keyboardType="numeric"
+                                error={errors.zip_code}
+                                touched={touched.zip_code}
                             />
                         </View>
                     </View>

@@ -1,35 +1,42 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { AlertCircle } from 'lucide-react-native';
 import Button from '@/components/shared/Button';
-import { CAR_MODELS, FUEL_TYPES, YEARS_OF_MANUFACTURE } from '@/constants/vehicleData';
+import { CAR_MODELS, FUEL_TYPES } from '@/constants/vehicleData';
 
 interface ModelSelectionStepProps {
     selectedBrand: string;
     selectedModel: string;
     selectedFuelType: string;
-    selectedYear: string;
+    selectedLicensePlate: string;
     onSelectModel: (model: string) => void;
     onSelectFuelType: (fuelType: string) => void;
-    onSelectYear: (year: string) => void;
+    onSelectLicensePlate: (licensePlate: string) => void;
     onNext: () => void;
+    errors?: Record<string, string>;
 }
 
 export default function ModelSelectionStep({
     selectedBrand,
     selectedModel,
     selectedFuelType,
-    selectedYear,
+    selectedLicensePlate,
     onSelectModel,
     onSelectFuelType,
-    onSelectYear,
-    onNext
+    onSelectLicensePlate,
+    onNext,
+    errors = {}
 }: ModelSelectionStepProps) {
-    const [showCustomInput, setShowCustomInput] = useState(false);
-    const [customModel, setCustomModel] = useState('');
-    const [showCustomYear, setShowCustomYear] = useState(false);
-    const [customYear, setCustomYear] = useState('');
+    const models = CAR_MODELS[selectedBrand] || CAR_MODELS['Other'];
 
-    const models = CAR_MODELS[selectedBrand] || [];
+    // Determine if custom model input was active based on selectedModel value
+    const [showCustomInput, setShowCustomInput] = useState(
+        selectedModel === 'Other' ||
+        (selectedModel !== '' && !models.includes(selectedModel))
+    );
+    const [customModel, setCustomModel] = useState(
+        (selectedModel === 'Other' || selectedModel === 'NaN') ? '' : selectedModel
+    );
 
     const handleModelSelect = (model: string) => {
         onSelectModel(model);
@@ -39,28 +46,40 @@ export default function ModelSelectionStep({
 
     const handleOthersClick = () => {
         setShowCustomInput(true);
-        onSelectModel('');
+        onSelectModel('Other');
     };
 
     const handleCustomModelChange = (text: string) => {
         setCustomModel(text);
-        onSelectModel(text);
+        onSelectModel(text || 'Other');
     };
 
-    const handleYearOthersClick = () => {
-        setShowCustomYear(true);
-        onSelectYear('');
+    const formatLicensePlate = (text: string) => {
+        // Strip everything except alphanumeric
+        const clean = text.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 10);
+
+        let formatted = clean;
+        if (clean.length > 2) {
+            formatted = clean.slice(0, 2) + '-' + clean.slice(2);
+        }
+        if (clean.length > 4) {
+            formatted = formatted.slice(0, 5) + '-' + formatted.slice(5);
+        }
+        if (clean.length > 6) {
+            formatted = formatted.slice(0, 8) + '-' + formatted.slice(8);
+        }
+
+        return formatted;
     };
 
-    const handleCustomYearChange = (text: string) => {
-        setCustomYear(text);
-        onSelectYear(text);
-    };
+    const handleLicensePlateChange = (text: string) => {
+        // If the user deleted a character and we ended up with a trailing hyphen,
+        // it means they deleted the character after a hyphen. We should delete the hyphen too.
+        // Actually, the stripping logic handles most cases, but we want to make sure 
+        // backspacing works intuitively.
 
-    const handleYearSelect = (year: string) => {
-        onSelectYear(year);
-        setShowCustomYear(false);
-        setCustomYear('');
+        const formatted = formatLicensePlate(text);
+        onSelectLicensePlate(formatted);
     };
 
     return (
@@ -68,34 +87,38 @@ export default function ModelSelectionStep({
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 150}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 80}
             >
                 <ScrollView
                     className="flex-1 px-6 py-4"
                     contentContainerStyle={{ paddingBottom: 100 }}
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
+                    automaticallyAdjustKeyboardInsets={true}
                 >
                     <Text className="text-xl font-bold text-gray-900 mb-4">Car Model</Text>
 
                     {/* Car Models Grid - 3 columns */}
-                    <View className="flex-row flex-wrap justify-between mb-6">
-                        {models.map((model: string) => (
-                            <TouchableOpacity
-                                key={model}
-                                onPress={() => handleModelSelect(model)}
-                                className={`w-[31%] py-3 mb-3 rounded-xl border items-center justify-center ${selectedModel === model ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-200'}`}
-                            >
-                                <Text className={`font-medium text-sm ${selectedModel === model ? 'text-white' : 'text-gray-900'}`}>
-                                    {model}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                    <View className="flex-row flex-wrap justify-between mb-2">
+                        {models.map((model: string) => {
+                            const isSelected = selectedModel === model && !showCustomInput;
+                            return (
+                                <TouchableOpacity
+                                    key={model}
+                                    onPress={() => handleModelSelect(model)}
+                                    className={`w-[31%] py-3 mb-3 rounded-xl border items-center justify-center ${isSelected ? 'bg-[#4682B4] border-[#4682B4]' : 'bg-white border-gray-200'}`}
+                                >
+                                    <Text className={`font-medium text-sm ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                                        {model}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
 
                         {/* Others Button */}
                         <TouchableOpacity
                             onPress={handleOthersClick}
-                            className={`w-[31%] py-3 mb-3 rounded-xl border items-center justify-center ${showCustomInput ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-200'}`}
+                            className={`w-[31%] py-3 mb-3 rounded-xl border items-center justify-center ${showCustomInput ? 'bg-[#4682B4] border-[#4682B4]' : 'bg-white border-gray-200'} ${errors.model && selectedModel === 'Other' ? 'border-red-500' : ''}`}
                         >
                             <Text className={`font-medium text-sm ${showCustomInput ? 'text-white' : 'text-gray-900'}`}>
                                 Others
@@ -103,29 +126,44 @@ export default function ModelSelectionStep({
                         </TouchableOpacity>
                     </View>
 
-                    {/* Custom Model Input - Shows when Others is clicked */}
+                    {/* Custom Model Input */}
                     {showCustomInput && (
-                        <View className="bg-gray-100 rounded-xl px-4 py-3 mb-6">
-                            <TextInput
-                                placeholder="Type Model Name"
-                                value={customModel}
-                                onChangeText={handleCustomModelChange}
-                                className="text-gray-900 text-base"
-                                placeholderTextColor="#9CA3AF"
-                                autoFocus
-                            />
+                        <View className="mb-6">
+                            <View className={`flex-row items-center border rounded-2xl px-4 py-3 bg-white ${errors.model ? 'border-red-500' : 'border-gray-200'}`}>
+                                <TextInput
+                                    placeholder="Type Model Name"
+                                    value={customModel === 'Other' ? '' : customModel}
+                                    onChangeText={handleCustomModelChange}
+                                    className="flex-1 text-gray-900 text-base"
+                                    placeholderTextColor="#9CA3AF"
+                                    autoFocus
+                                />
+                                {errors.model && (
+                                    <AlertCircle size={20} color="#EF4444" />
+                                )}
+                            </View>
+                            {errors.model && (
+                                <Text className="text-red-500 text-xs mt-1 ml-2">Mandatory field</Text>
+                            )}
+                        </View>
+                    )}
+
+                    {!showCustomInput && errors.model && (
+                        <View className="flex-row items-center mb-6 px-2">
+                            <AlertCircle size={16} color="#EF4444" />
+                            <Text className="text-red-500 text-sm ml-2">Please select a model</Text>
                         </View>
                     )}
 
                     {/* Fuel Type Section */}
                     <Text className="text-lg font-bold text-gray-900 mb-3">Fuel type</Text>
-                    <View className="flex-row flex-wrap mb-6" style={{ gap: 12 }}>
+                    <View className="flex-row flex-wrap mb-4" style={{ gap: 12 }}>
                         {FUEL_TYPES.map((fuelType: string) => (
                             <TouchableOpacity
                                 key={fuelType}
                                 onPress={() => onSelectFuelType(fuelType)}
                                 style={{ width: '30%' }}
-                                className={`py-3 rounded-xl border items-center justify-center ${selectedFuelType === fuelType ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-200'}`}
+                                className={`py-3 rounded-xl border items-center justify-center ${selectedFuelType === fuelType ? 'bg-[#4682B4] border-[#4682B4]' : 'bg-white border-gray-200'} ${errors.fuel_type && !selectedFuelType ? 'border-red-500' : ''}`}
                             >
                                 <Text className={`font-medium text-sm ${selectedFuelType === fuelType ? 'text-white' : 'text-gray-900'}`}>
                                     {fuelType}
@@ -133,50 +171,34 @@ export default function ModelSelectionStep({
                             </TouchableOpacity>
                         ))}
                     </View>
-
-                    {/* Year of Manufacture Section */}
-                    <Text className="text-lg font-bold text-gray-900 mb-3">Year of Manufacture</Text>
-                    <View className="flex-row flex-wrap mb-6" style={{ gap: 12 }}>
-                        {YEARS_OF_MANUFACTURE.slice(0, 3).map((year: string) => (
-                            <TouchableOpacity
-                                key={year}
-                                onPress={() => handleYearSelect(year)}
-                                style={{ width: '30%' }}
-                                className={`py-3 rounded-xl border items-center justify-center ${selectedYear === year ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-200'}`}
-                            >
-                                <Text className={`font-medium text-sm ${selectedYear === year ? 'text-white' : 'text-gray-900'}`}>
-                                    {year}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-
-                        {/* Others Button for Year */}
-                        <TouchableOpacity
-                            onPress={handleYearOthersClick}
-                            style={{ width: '30%' }}
-                            className={`py-3 rounded-xl border items-center justify-center ${showCustomYear ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-200'}`}
-                        >
-                            <Text className={`font-medium text-sm ${showCustomYear ? 'text-white' : 'text-gray-900'}`}>
-                                Others
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Custom Year Input - Shows when Others is clicked */}
-                    {showCustomYear && (
-                        <View className="bg-gray-100 rounded-xl px-4 py-3 mb-6">
-                            <TextInput
-                                placeholder="Type Year"
-                                value={customYear}
-                                onChangeText={handleCustomYearChange}
-                                className="text-gray-900 text-base"
-                                placeholderTextColor="#9CA3AF"
-                                keyboardType="numeric"
-                                maxLength={4}
-                                autoFocus
-                            />
+                    {errors.fuel_type && !selectedFuelType && (
+                        <View className="flex-row items-center mb-6 px-2">
+                            <AlertCircle size={16} color="#EF4444" />
+                            <Text className="text-red-500 text-sm ml-2">Please select fuel type</Text>
                         </View>
                     )}
+
+                    {/* Vehicle Number  Section */}
+                    <Text className="text-lg font-bold text-gray-900 mb-3">License Plate No.</Text>
+                    <View className="mb-6">
+                        <View className={`flex-row items-center border rounded-2xl px-4 py-3 bg-white ${errors.license_plate ? 'border-red-500' : 'border-gray-200'}`}>
+                            <TextInput
+                                placeholder="GJ-05-AA-1234"
+                                value={selectedLicensePlate}
+                                onChangeText={handleLicensePlateChange}
+                                className="flex-1 text-gray-900 text-base"
+                                placeholderTextColor="#9CA3AF"
+                                autoCapitalize="characters"
+                                maxLength={13} // 10 chars + 3 hyphens
+                            />
+                            {errors.license_plate && (
+                                <AlertCircle size={20} color="#EF4444" />
+                            )}
+                        </View>
+                        {errors.license_plate && (
+                            <Text className="text-red-500 text-xs mt-1 ml-2">{errors.license_plate}</Text>
+                        )}
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
 
@@ -184,7 +206,14 @@ export default function ModelSelectionStep({
                 <Button
                     title="Next"
                     onPress={onNext}
-                    disabled={!selectedModel || !selectedFuelType || !selectedYear}
+                    disabled={
+                        !selectedModel ||
+                        selectedModel === 'Other' ||
+                        selectedModel === 'NaN' ||
+                        selectedModel.trim() === '' ||
+                        !selectedFuelType ||
+                        !selectedLicensePlate?.trim()
+                    }
                 />
             </View>
         </View>

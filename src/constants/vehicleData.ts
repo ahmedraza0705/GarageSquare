@@ -13,7 +13,7 @@ export const CAR_MODELS: Record<string, string[]> = {
     'Maruti Suzuki': ['Swift', 'Baleno', 'Brezza', 'Ertiga', 'Dzire', 'Alto'],
     'Mahindra': ['XUV700', 'Thar', 'Scorpio-N', 'Bolero', 'XUV300', 'Scorpio'],
     'Volkswagen': ['Virtus', 'Taigun', 'Tiguan', 'Polo', 'Vento', 'Passat'],
-    'Mercedes': ['C-Class', 'E-Class', 'S-Class', 'GLA', 'GLC', 'GLE'],
+    'Mercedes': ['A200', 'C200', 'E200', 'GLA-220', 'GLC-220', 'GLE-220'],
     'Tata': ['Nexon', 'Harrier', 'Safari', 'Punch', 'Tiago', 'Altroz'],
     'Other': ['Verna', 'Urus', 'Fortuner', '530', 'X5', 'Seltos'],
 };
