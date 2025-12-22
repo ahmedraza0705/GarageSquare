@@ -19,8 +19,7 @@ export default function RoleBasedNavigator() {
   // Hard-coded company admin emails – these ALWAYS see the admin panel,
   // even if role detection fails or profile/role_id is missing.
   const adminEmails = [
-    'solutionsquares@gmail.com',
-    'ahmedraza.solutionsquares@gmail.com',
+    'test@gmail.com',
   ];
 
   const email = user?.email?.toLowerCase() || '';
