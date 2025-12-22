@@ -97,6 +97,8 @@ export interface UserProfile {
   updated_at: string;
   role?: Role;
   branch?: Branch;
+  company_id?: string;
+  company?: Company;
 }
 
 export interface Customer {
@@ -107,6 +109,7 @@ export interface Customer {
   phone: string;
   address?: string;
   branch_id?: string;
+  branch?: { name: string };
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -123,11 +126,15 @@ export interface Vehicle {
   license_plate?: string;
   color?: string;
   mileage?: number;
+  fuel_type?: string;
+  year_purchase?: number;
+  delivery_type?: string;
   branch_id?: string;
   branch_name?: string;
   last_visit?: string;
   created_at: string;
   updated_at: string;
+  branch?: { name: string };
   customer?: Customer;
   services?: VehicleServiceItem[];
 }
@@ -167,7 +174,7 @@ export interface JobCard {
   vehicle?: Vehicle;
   assigned_user?: UserProfile;
   supervisor?: UserProfile;
-  services?: JobCardService[];
+  services?: JobCardServiceItem[];
   tasks?: Task[];
 }
 
@@ -183,7 +190,7 @@ export interface Service {
   updated_at: string;
 }
 
-export interface JobCardService {
+export interface JobCardServiceItem {
   id: string;
   job_card_id: string;
   service_id: string;
@@ -288,6 +295,10 @@ export interface CreateVehicleForm {
   license_plate?: string;
   color?: string;
   mileage?: number;
+  fuel_type?: string;
+  year_purchase?: number;
+  delivery_type?: string;
+  notes?: string;
 }
 
 export interface CreateJobCardForm {

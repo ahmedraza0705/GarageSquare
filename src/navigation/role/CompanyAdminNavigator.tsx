@@ -116,7 +116,7 @@ function CustomHeader({
 
       // Screens
       DashboardHome: 'Dashboard',
-      Vehicles: 'Vehicle Management', // Target Title
+      Vehicles: 'Vehicles Management', // Plural to match Pic 2
       Customers: 'Customers',
 
       // Tabs

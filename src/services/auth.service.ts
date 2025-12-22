@@ -64,7 +64,7 @@ export class AuthService {
     console.log('Signing in with credentials:', credentials,);
     const { data, error } = await client.auth.signInWithPassword({
       email: (credentials.email || '').trim().toLowerCase(),
-      password: (credentials.password || '').trim(),
+      password: credentials.password || '',
     });
 
     if (error) {
@@ -102,7 +102,7 @@ export class AuthService {
     const client = ensureClient();
 
     const email = (signupData.email || '').trim().toLowerCase();
-    const password = (signupData.password || '').trim();
+    const password = signupData.password || '';
 
     const { data, error } = await client.auth.signUp({
       email,
@@ -153,7 +153,7 @@ export class AuthService {
     }
 
     const email = (userData.email || '').trim().toLowerCase();
-    const password = (userData.password || '').trim();
+    const password = userData.password || '';
 
     // 2. Get Role ID first
     const mainClient = ensureClient();

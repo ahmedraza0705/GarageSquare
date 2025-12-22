@@ -11,7 +11,7 @@ export class JobCardService {
    */
   static async getAll(filters?: {
     branch_id?: string;
-    status?: JobCardStatus;
+    status?: JobCardStatus | JobCardStatus[];
     assigned_to?: string;
     customer_id?: string;
   }) {
@@ -34,7 +34,11 @@ export class JobCardService {
       query = query.eq('branch_id', filters.branch_id);
     }
     if (filters?.status) {
-      query = query.eq('status', filters.status);
+      if (Array.isArray(filters.status)) {
+        query = query.in('status', filters.status);
+      } else {
+        query = query.eq('status', filters.status);
+      }
     }
     if (filters?.assigned_to) {
       query = query.eq('assigned_to', filters.assigned_to);

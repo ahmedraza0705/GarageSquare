@@ -20,7 +20,7 @@ export class VehicleService {
       .from('vehicles')
       .select(`
         *,
-        customer:customers(*)
+        customer:customers(*, branch:branches(name))
       `)
       .order('created_at', { ascending: false });
 
@@ -84,7 +84,7 @@ export class VehicleService {
       .from('vehicles')
       .select(`
         *,
-        customer:customers(*)
+        customer:customers(*, branch:branches(name))
       `)
       .eq('id', id)
       .single();
@@ -102,10 +102,13 @@ export class VehicleService {
   static async create(formData: CreateVehicleForm, branchId?: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
+    // Filter out fields that don't exist in the database schema
+    const { vin, ...validFields } = formData;
+
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
-        ...formData,
+        ...validFields,
         branch_id: branchId,
       })
       .select()
@@ -124,8 +127,19 @@ export class VehicleService {
   static async update(id: string, updates: Partial<Vehicle>) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
-    // Remove relations/read-only fields before update
-    const { customer, services, id: _, created_at, updated_at, ...cleanUpdates } = updates as any;
+    // Remove relations/read-only fields AND fields that don't exist in schema
+    const {
+      customer,
+      services,
+      branch,
+      id: _,
+      created_at,
+      updated_at,
+      branch_name,  // Not in DB schema
+      last_visit,   // Not in DB schema
+      vin,          // Not in DB schema
+      ...cleanUpdates
+    } = updates as any;
 
     const { data, error } = await supabase
       .from('vehicles')

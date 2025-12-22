@@ -10,7 +10,7 @@ import { Customer } from '@/types';
 import { getInitials } from '@/utils/string';
 
 export default function CustomersScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +81,7 @@ export default function CustomersScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={() => navigation.navigate('CreateCustomer' as never)}
+            onPress={() => navigation.navigate('CreateCustomer')}
             className="w-12 h-12 bg-green-100 rounded-2xl items-center justify-center"
           >
             <Text className="text-green-600 text-2xl font-bold">+</Text>
@@ -130,7 +130,7 @@ export default function CustomersScreen() {
               <TouchableOpacity
                 key={customer.id}
                 className="bg-white rounded-3xl p-5 mt-4 shadow-sm flex-row items-center border border-gray-50"
-                onPress={() => (navigation.navigate as any)('CustomerDetail', { customerId: customer.id })}
+                onPress={() => navigation.navigate('CustomerDetail', { customerId: customer.id })}
               >
                 <View className="w-14 h-14 rounded-full bg-[#4682B4] items-center justify-center mr-4 shadow-sm">
                   <Text className="text-white font-bold text-lg">

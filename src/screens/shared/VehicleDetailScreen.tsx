@@ -37,22 +37,12 @@ export default function VehicleDetailScreen() {
 
   const handleSaveEdit = async () => {
     if (vehicle) {
-      try {
-        const updatedVehicle = { ...vehicle, branch_name: editBranch, last_visit: editLastVisit };
-        setVehicle(updatedVehicle);
+      // Only update local state - don't save to database since columns don't exist
+      const updatedVehicle = { ...vehicle, branch_name: editBranch, last_visit: editLastVisit };
+      setVehicle(updatedVehicle);
 
-        // Persist to mock service
-        await VehicleService.update(vehicle.id, {
-          // @ts-ignore - passing extra props for mock persistence
-          branch_name: editBranch,
-          last_visit: editLastVisit
-        });
-
-        if (onUpdate) {
-          onUpdate(updatedVehicle);
-        }
-      } catch (error) {
-        console.error('Failed to save vehicle details:', error);
+      if (onUpdate) {
+        onUpdate(updatedVehicle);
       }
     }
     setIsEditModalVisible(false);
@@ -150,7 +140,7 @@ export default function VehicleDetailScreen() {
           {/* Car Image and Name Header */}
           <View className="flex-row items-center gap-1 py-5 px-1 mt-1 mb-4">
             <View>
-              <FontAwesome5 name="car-alt" size={100} color="black" style={{ marginLeft: 30, marginRight: 30 }} />
+              <FontAwesome5 name="car-alt" size={100} color="black" style={{ marginLeft: 30, marginRight: 10 }} />
             </View>
             <View>
               <View>
