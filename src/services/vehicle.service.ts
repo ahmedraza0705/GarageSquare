@@ -140,5 +140,72 @@ export class VehicleService {
       throw error;
     }
   }
+
+  /**
+   * Add service to vehicle
+   */
+  static async addService(vehicleId: string, serviceName: string, estimatedTime: string) {
+    if (!supabase) throw new Error('Supabase client not initialized');
+
+    // This is a simplified version - in a real app, you might have a services table
+    // For now, we'll fetch the vehicle, update its services array, and save it back
+    // Or if the services are stored as a JSONB column, we can update it directly
+    const { data: vehicle, error: fetchError } = await supabase
+      .from('vehicles')
+      .select('services')
+      .eq('id', vehicleId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentServices = (vehicle.services as any[]) || [];
+    const newService = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: serviceName,
+      status: 'pending',
+      estimate: estimatedTime,
+      created_at: new Date().toISOString()
+    };
+
+    const { error: updateError } = await supabase
+      .from('vehicles')
+      .update({
+        services: [...currentServices, newService],
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', vehicleId);
+
+    if (updateError) throw updateError;
+  }
+
+  /**
+   * Update service status
+   */
+  static async updateServiceStatus(vehicleId: string, serviceId: string, status: string) {
+    if (!supabase) throw new Error('Supabase client not initialized');
+
+    const { data: vehicle, error: fetchError } = await supabase
+      .from('vehicles')
+      .select('services')
+      .eq('id', vehicleId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentServices = (vehicle.services as any[]) || [];
+    const updatedServices = currentServices.map((s: any) =>
+      s.id === serviceId ? { ...s, status } : s
+    );
+
+    const { error: updateError } = await supabase
+      .from('vehicles')
+      .update({
+        services: updatedServices,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', vehicleId);
+
+    if (updateError) throw updateError;
+  }
 }
 

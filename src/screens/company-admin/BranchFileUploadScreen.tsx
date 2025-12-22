@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { branchService } from '@/services/branchService';
+import { BranchService } from '@/services/branch.service';
 import { Branch } from '@/types';
 import { ActivityIndicator } from 'react-native';
 import { AuthService } from '@/services/auth.service';
@@ -10,6 +11,7 @@ import { AuthService } from '@/services/auth.service';
 export default function BranchFileUploadScreen() {
     const navigation = useNavigation();
     const route = useRoute();
+    const { theme } = useTheme();
     const { branchData } = route.params as { branchData: any };
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [uploads, setUploads] = useState({
@@ -41,7 +43,8 @@ export default function BranchFileUploadScreen() {
             };
 
             // Save to Supabase
-            const createdBranch = await branchService.createBranch(newBranchData);
+            const createdBranch = await BranchService.createBranch(newBranchData);
+
 
             // 2. Create Manager Profile
             if (branchData.manager_id && branchData.email) {
@@ -61,7 +64,7 @@ export default function BranchFileUploadScreen() {
 
                     if (managerResult.success) {
                         // Updated branch with the new manager_id
-                        await branchService.updateBranch(createdBranch.id, {
+                        await BranchService.updateBranch(createdBranch.id, {
                             manager_id: managerResult.userId
                         });
                         // Update createdBranch object for navigation
@@ -106,11 +109,12 @@ export default function BranchFileUploadScreen() {
                     <>
                         <Text className="text-gray-500 mb-4">{subtitle}</Text>
                         <TouchableOpacity
-                            className="bg-blue-50 px-6 py-2 rounded-lg flex-row items-center"
+                            style={{ backgroundColor: theme.tabIconBg }}
+                            className="px-6 py-2 rounded-lg flex-row items-center"
                             onPress={() => handleUpload(type)}
                         >
-                            <Ionicons name="cloud-upload-outline" size={20} color="#3B82F6" />
-                            <Text className="text-blue-500 font-bold ml-2">Upload</Text>
+                            <Ionicons name="cloud-upload-outline" size={20} color={theme.primary} />
+                            <Text style={{ color: theme.primary }} className="font-bold ml-2">Upload</Text>
                         </TouchableOpacity>
                     </>
                 )}
@@ -119,9 +123,9 @@ export default function BranchFileUploadScreen() {
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <View className="px-4 py-3 border-b border-gray-100">
-                <Text className="text-lg font-bold">Branch Setup</Text>
+        <View className="flex-1" style={{ backgroundColor: theme.background }}>
+            <View style={{ borderBottomColor: theme.border }} className="px-4 py-3 border-b">
+                <Text style={{ color: theme.text }} className="text-lg font-bold">Branch Setup</Text>
             </View>
 
             <ScrollView className="flex-1 px-5 pt-6">
@@ -170,6 +174,6 @@ export default function BranchFileUploadScreen() {
                 </TouchableOpacity>
             </View>
 
-        </SafeAreaView>
+        </View>
     );
 }

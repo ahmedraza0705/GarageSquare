@@ -74,7 +74,7 @@ export default function VehiclesScreen() {
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={loadVehicles} tintColor={theme.primary} />
         }

@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
-import { branchService } from '@/services/branchService';
+import { BranchService } from '@/services/branch.service';
 import { AuthService } from '@/services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -38,7 +38,7 @@ export default function BranchesScreen() {
   const fetchBranches = async () => {
     try {
       setLoading(true);
-      const data = await branchService.getAllBranches();
+      const data = await BranchService.getAllBranches();
       setBranches(data);
     } catch (error) {
       console.error('Error loading branches:', error);
@@ -67,7 +67,7 @@ export default function BranchesScreen() {
 
   const handleDeleteBranch = async (id: string) => {
     try {
-      await branchService.deleteBranch(id);
+      await BranchService.deleteBranch(id);
       setBranches(prev => prev.filter(b => b.id !== id));
       Alert.alert('Success', 'Branch deleted successfully');
     } catch (error) {
@@ -131,7 +131,7 @@ export default function BranchesScreen() {
         manager_id: undefined
       };
 
-      const createdBranch = await branchService.createBranch(newBranchData);
+      const createdBranch = await BranchService.createBranch(newBranchData);
 
       // 2. Create Manager Profile
       if (newManagerName && newEmail) {
@@ -151,7 +151,7 @@ export default function BranchesScreen() {
 
           if (managerResult.success) {
             // Updated branch with the new manager_id
-            await branchService.updateBranch(createdBranch.id, {
+            await BranchService.updateBranch(createdBranch.id, {
               manager_id: managerResult.userId
             });
           }
@@ -267,7 +267,7 @@ export default function BranchesScreen() {
           <RefreshControl refreshing={loading} onRefresh={fetchBranches} />
         }
       >
-        <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
+        <View style={{ paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 }}>
           {/* Search Bar and Add Button */}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <View style={{
@@ -328,7 +328,7 @@ export default function BranchesScreen() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: '#3B82F6',
+                  backgroundColor: theme.primary,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 16

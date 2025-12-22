@@ -25,29 +25,29 @@ export default function SignupScreen() {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     if (!agreedToTerms) {
       newErrors.terms = 'You must agree to Terms & Conditions';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -56,7 +56,7 @@ export default function SignupScreen() {
     const emailValid = formData.email.trim() && /\S+@\S+\.\S+/.test(formData.email);
     const passwordValid = formData.password.length >= 6;
     const confirmPasswordValid = formData.confirmPassword && formData.password === formData.confirmPassword;
-    
+
     return emailValid && passwordValid && confirmPasswordValid && agreedToTerms;
   };
 
@@ -80,7 +80,7 @@ export default function SignupScreen() {
       // RootNavigator will automatically switch from Auth flow to the App flow.
       // Just inform the user – no need to navigate back to Login.
       Alert.alert(
-        'Account Created', 
+        'Account Created',
         result.session
           ? 'Your account has been created and you are now logged in.'
           : 'Account created successfully! If required, please check your email to confirm your account.',
@@ -183,9 +183,8 @@ export default function SignupScreen() {
           }}
           className="flex-row items-center mb-6"
         >
-          <View className={`w-5 h-5 border-2 rounded mr-2 items-center justify-center ${
-            agreedToTerms ? 'bg-blue-500 border-blue-500' : 'border-gray-400'
-          }`}>
+          <View className={`w-5 h-5 border-2 rounded mr-2 items-center justify-center ${agreedToTerms ? 'bg-blue-500 border-blue-500' : 'border-gray-400'
+            }`}>
             {agreedToTerms && (
               <Text className="text-white text-xs">✓</Text>
             )}
@@ -203,11 +202,10 @@ export default function SignupScreen() {
         <TouchableOpacity
           onPress={handleSignup}
           disabled={!isFormValid() || loading}
-          className={`py-4 rounded-lg items-center justify-center mb-4 ${
-            isFormValid() && !loading
-              ? 'bg-[#4682B4]'
-              : 'bg-[#4682B4]'
-          }`}
+          className={`py-4 rounded-lg items-center justify-center mb-4 ${isFormValid() && !loading
+            ? 'bg-[#4682B4]'
+            : 'bg-[#4682B4]'
+            }`}
         >
           {loading ? (
             <Text className="text-white font-semibold">Creating...</Text>

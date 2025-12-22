@@ -4,7 +4,8 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, Alert, TextInput, Modal, Platform, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/context/ThemeContext';
+// Removed SafeAreaView import
 import {
   Package,
   Search,
@@ -31,6 +32,7 @@ type CategoryFilter = 'all' | string;
 type StockFilter = 'all' | 'low' | 'out';
 
 export default function InventoryScreen() {
+  const { theme } = useTheme();
   // State
   const [inventory, setInventory] = useState<InventoryItemWithStock[]>([]);
   const [categories, setCategories] = useState<InventoryCategory[]>([]);
@@ -395,35 +397,36 @@ export default function InventoryScreen() {
       ...categories.map(cat => ({
         value: cat.id,
         label: cat.name,
-        color: '#3B82F6',
+        color: theme.primary,
       })),
     ];
   }, [categories]);
 
   if (loading && inventory.length === 0) {
     return (
-      <SafeAreaView className="flex-1" style={{ backgroundColor: '#F5F5F5' }}>
+      <View className="flex-1" style={{ backgroundColor: theme.background }}>
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4CAF50" />
-          <Text className="mt-4 text-gray-600">Loading inventory...</Text>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text className="mt-4" style={{ color: theme.textMuted }}>Loading inventory...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
     <TouchableWithoutFeedback onPress={() => setShowAddMenu(false)}>
-      <SafeAreaView className="flex-1" style={{ backgroundColor: '#F5F5F5' }}>
+      <View className="flex-1" style={{ backgroundColor: theme.background }}>
         {/* Search Bar */}
         <View className="px-4 py-2">
           <View className="flex-row items-center gap-2.5">
             {/* Search Input */}
-            <View className="flex-1 flex-row items-center bg-white rounded-lg px-3">
-              <Search size={18} color="#9CA3AF" />
+            <View className="flex-1 flex-row items-center rounded-lg px-3" style={{ backgroundColor: theme.surface }}>
+              <Search size={18} color={theme.textMuted} />
               <TextInput
                 className="flex-1 ml-2.5 text-base"
                 placeholder="Search inventory..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={theme.textMuted}
+                style={{ color: theme.text }}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -434,7 +437,7 @@ export default function InventoryScreen() {
               <TouchableOpacity
                 onPress={() => setShowAddMenu(!showAddMenu)}
                 className="w-10 h-10 rounded-lg items-center justify-center"
-                style={{ backgroundColor: '#4CAF50' }}
+                style={{ backgroundColor: theme.primary }}
               >
                 <Plus size={20} color="white" />
               </TouchableOpacity>
@@ -442,9 +445,10 @@ export default function InventoryScreen() {
               {/* Dropdown Menu */}
               {showAddMenu && (
                 <View
-                  className="absolute top-12 right-0 bg-white rounded-lg shadow-lg z-50"
+                  className="absolute top-12 right-0 rounded-lg shadow-lg z-50"
                   style={{
                     minWidth: 180,
+                    backgroundColor: theme.surface,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 2 },
                     shadowOpacity: 0.15,
@@ -457,18 +461,19 @@ export default function InventoryScreen() {
                       openAddModal();
                       setShowAddMenu(false);
                     }}
-                    className="flex-row items-center px-4 py-3 border-b border-gray-100"
+                    className="flex-row items-center px-4 py-3 border-b"
+                    style={{ borderBottomColor: theme.border }}
                   >
-                    <Package size={18} color="#4CAF50" />
-                    <Text className="ml-3 text-base text-gray-800">Add Item</Text>
+                    <Package size={18} color={theme.primary} />
+                    <Text className="ml-3 text-base" style={{ color: theme.text }}>Add Item</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={openCategoryModal}
                     className="flex-row items-center px-4 py-3"
                   >
-                    <Layers size={18} color="#3B82F6" />
-                    <Text className="ml-3 text-base text-gray-800">Add Category</Text>
+                    <Layers size={18} color={theme.primary} />
+                    <Text className="ml-3 text-base" style={{ color: theme.text }}>Add Category</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -482,30 +487,32 @@ export default function InventoryScreen() {
             {/* Total Items Card */}
             <TouchableOpacity
               onPress={() => setStockFilter('all')}
-              className="bg-white rounded-xl p-4 min-w-[140px]"
+              className="rounded-xl p-4 min-w-[140px]"
               style={{
-                borderWidth: stockFilter === 'all' ? 2 : 0,
-                borderColor: stockFilter === 'all' ? '#3B82F6' : 'transparent',
+                backgroundColor: theme.surface,
+                borderWidth: 2,
+                borderColor: stockFilter === 'all' ? theme.primary : 'transparent',
               }}
             >
               <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-sm" style={{ color: '#757575' }}>Total Items</Text>
-                <Package size={18} color="#3B82F6" />
+                <Text className="text-sm" style={{ color: theme.textMuted }}>Total Items</Text>
+                <Package size={18} color={theme.primary} />
               </View>
-              <Text className="text-2xl font-bold" style={{ color: '#000000' }}>{stats.totalItems}</Text>
+              <Text className="text-2xl font-bold" style={{ color: theme.text }}>{stats.totalItems}</Text>
             </TouchableOpacity>
 
             {/* Low Stock Card */}
             <TouchableOpacity
               onPress={() => setStockFilter('low')}
-              className="bg-white rounded-xl p-4 min-w-[140px]"
+              className="rounded-xl p-4 min-w-[140px]"
               style={{
-                borderWidth: stockFilter === 'low' ? 2 : 0,
+                backgroundColor: theme.surface,
+                borderWidth: 2,
                 borderColor: stockFilter === 'low' ? '#F59E0B' : 'transparent',
               }}
             >
               <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-sm" style={{ color: '#757575' }}>Low Stock</Text>
+                <Text className="text-sm" style={{ color: theme.textMuted }}>Low Stock</Text>
                 <TrendingDown size={18} color="#F59E0B" />
               </View>
               <Text className="text-2xl font-bold" style={{ color: '#F59E0B' }}>{stats.lowStock}</Text>
@@ -514,14 +521,15 @@ export default function InventoryScreen() {
             {/* Out of Stock Card */}
             <TouchableOpacity
               onPress={() => setStockFilter('out')}
-              className="bg-white rounded-xl p-4 min-w-[140px]"
+              className="rounded-xl p-4 min-w-[140px]"
               style={{
-                borderWidth: stockFilter === 'out' ? 2 : 0,
+                backgroundColor: theme.surface,
+                borderWidth: 2,
                 borderColor: stockFilter === 'out' ? '#EF4444' : 'transparent',
               }}
             >
               <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-sm" style={{ color: '#757575' }}>Out of Stock</Text>
+                <Text className="text-sm" style={{ color: theme.textMuted }}>Out of Stock</Text>
                 <AlertCircle size={18} color="#EF4444" />
               </View>
               <Text className="text-2xl font-bold" style={{ color: '#EF4444' }}>{stats.outOfStock}</Text>
@@ -530,10 +538,11 @@ export default function InventoryScreen() {
             {/* Total Value Card */}
             <TouchableOpacity
               onPress={() => setShowValueModal(true)}
-              className="bg-white rounded-xl p-4 min-w-[140px]"
+              className="rounded-xl p-4 min-w-[140px]"
+              style={{ backgroundColor: theme.surface }}
             >
               <View className="flex-row items-center justify-between mb-1">
-                <Text className="text-sm" style={{ color: '#757575' }}>Total Value</Text>
+                <Text className="text-sm" style={{ color: theme.textMuted }}>Total Value</Text>
                 <DollarSign size={18} color="#10B981" />
               </View>
               <Text className="text-2xl font-bold" style={{ color: '#10B981' }}>₹{stats.totalValue.toFixed(0)}</Text>
@@ -552,12 +561,13 @@ export default function InventoryScreen() {
                   onPress={() => setSelectedCategory(cat.value)}
                   className="px-4 py-2 rounded-full border"
                   style={{
-                    backgroundColor: isSelected ? cat.color : 'white',
-                    borderColor: isSelected ? cat.color : '#E5E7EB',
+                    backgroundColor: isSelected ? cat.color : theme.surface,
+                    borderColor: isSelected ? cat.color : theme.border,
                   }}
                 >
                   <Text
-                    className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-700'}`}
+                    className={`text-sm font-medium ${isSelected ? 'text-white' : ''}`}
+                    style={{ color: isSelected ? '#FFFFFF' : theme.text }}
                   >
                     {cat.label}
                   </Text>
@@ -579,13 +589,16 @@ export default function InventoryScreen() {
               <TouchableOpacity
                 key={item.id}
                 onPress={() => openEditModal(item)}
-                className="bg-white rounded-xl p-4 mb-3 flex-row items-center justify-between"
+                className="rounded-xl p-4 mb-3 flex-row items-center justify-between"
                 style={{
+                  backgroundColor: theme.surface,
                   shadowColor: '#000',
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.05,
                   shadowRadius: 2,
                   elevation: 1,
+                  borderWidth: 1,
+                  borderColor: theme.border,
                 }}
               >
                 {/* Left: Category Icon + Info */}
@@ -593,17 +606,17 @@ export default function InventoryScreen() {
                   {/* Category Icon */}
                   <View
                     className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                    style={{ backgroundColor: '#3B82F6' + '20' }}
+                    style={{ backgroundColor: theme.tabIconBg }}
                   >
-                    <Package size={24} color="#3B82F6" />
+                    <Package size={24} color={theme.primary} />
                   </View>
 
                   {/* Info */}
                   <View className="flex-1">
-                    <Text className="font-semibold text-base" style={{ color: '#000000' }} numberOfLines={1}>
+                    <Text className="font-semibold text-base" style={{ color: theme.text }} numberOfLines={1}>
                       {item.name}
                     </Text>
-                    <Text className="text-sm" style={{ color: '#757575' }} numberOfLines={1}>
+                    <Text className="text-sm" style={{ color: theme.textMuted }} numberOfLines={1}>
                       SKU: {item.sku} • {item.stock_quantity} {item.unit}
                     </Text>
                   </View>
@@ -632,7 +645,7 @@ export default function InventoryScreen() {
           {!loading && filteredInventory.length === 0 && (
             <View className="items-center py-12">
               <Package size={48} color="#E5E7EB" />
-              <Text className="text-gray-400 mt-4 text-center">
+              <Text className="mt-4 text-center" style={{ color: theme.textMuted }}>
                 {searchQuery || selectedCategory !== 'all' ? 'No matching items found' : 'No inventory items yet'}
               </Text>
               {(searchQuery || selectedCategory !== 'all') && (
@@ -652,11 +665,11 @@ export default function InventoryScreen() {
 
         {/* Value Breakdown Modal */}
         <Modal visible={showValueModal} animationType="slide" presentationStyle="pageSheet">
-          <SafeAreaView className="flex-1 bg-white">
-            <View className="px-6 py-4 border-b border-gray-100 flex-row justify-between items-center">
-              <Text className="text-xl font-bold text-gray-900">Inventory Value Breakdown</Text>
-              <TouchableOpacity onPress={() => setShowValueModal(false)} className="p-2 bg-gray-100 rounded-full">
-                <X size={20} color="#374151" />
+          <View className="flex-1" style={{ backgroundColor: theme.background }}>
+            <View className="px-6 py-4 border-b flex-row justify-between items-center" style={{ borderBottomColor: theme.border }}>
+              <Text className="text-xl font-bold" style={{ color: theme.text }}>Inventory Value Breakdown</Text>
+              <TouchableOpacity onPress={() => setShowValueModal(false)} className="p-2 rounded-full" style={{ backgroundColor: theme.surfaceAlt }}>
+                <X size={20} color={theme.text} />
               </TouchableOpacity>
             </View>
 
@@ -671,39 +684,40 @@ export default function InventoryScreen() {
 
             {/* Item List */}
             <ScrollView className="flex-1 px-6">
-              <Text className="text-sm font-semibold mb-3" style={{ color: '#6B7280' }}>Item Breakdown</Text>
+              <Text className="text-sm font-semibold mb-3" style={{ color: theme.textMuted }}>Item Breakdown</Text>
               {inventory.map((item) => {
                 const itemTotal = item.total_value;
                 return (
                   <View
                     key={item.id}
-                    className="bg-white rounded-xl p-4 mb-3"
+                    className="rounded-xl p-4 mb-3"
                     style={{
+                      backgroundColor: theme.surface,
                       shadowColor: '#000',
                       shadowOffset: { width: 0, height: 1 },
                       shadowOpacity: 0.05,
                       shadowRadius: 2,
                       elevation: 1,
                       borderWidth: 1,
-                      borderColor: '#F3F4F6',
+                      borderColor: theme.border,
                     }}
                   >
                     <View className="flex-row justify-between items-start mb-2">
                       <View className="flex-1">
-                        <Text className="font-semibold text-base" style={{ color: '#000000' }}>{item.name}</Text>
-                        <Text className="text-xs" style={{ color: '#9CA3AF' }}>SKU: {item.sku}</Text>
+                        <Text className="font-semibold text-base" style={{ color: theme.text }}>{item.name}</Text>
+                        <Text className="text-xs" style={{ color: theme.textMuted }}>SKU: {item.sku}</Text>
                       </View>
                       <Text className="text-lg font-bold" style={{ color: '#10B981' }}>₹{itemTotal.toFixed(2)}</Text>
                     </View>
-                    <View className="flex-row justify-between items-center pt-2 border-t" style={{ borderTopColor: '#F3F4F6' }}>
+                    <View className="flex-row justify-between items-center pt-2 border-t" style={{ borderTopColor: theme.border }}>
                       <View className="flex-row gap-4">
                         <View>
-                          <Text className="text-xs" style={{ color: '#6B7280' }}>Quantity</Text>
-                          <Text className="text-sm font-semibold" style={{ color: '#374151' }}>{item.stock_quantity} {item.unit}</Text>
+                          <Text className="text-xs" style={{ color: theme.textMuted }}>Quantity</Text>
+                          <Text className="text-sm font-semibold" style={{ color: theme.text }}>{item.stock_quantity} {item.unit}</Text>
                         </View>
                         <View>
-                          <Text className="text-xs" style={{ color: '#6B7280' }}>Price/Unit</Text>
-                          <Text className="text-sm font-semibold" style={{ color: '#374151' }}>₹{item.unit_price.toFixed(2)}</Text>
+                          <Text className="text-xs" style={{ color: theme.textMuted }}>Price/Unit</Text>
+                          <Text className="text-sm font-semibold" style={{ color: theme.text }}>₹{item.unit_price.toFixed(2)}</Text>
                         </View>
                       </View>
                     </View>
@@ -712,30 +726,32 @@ export default function InventoryScreen() {
               })}
               <View className="h-6" />
             </ScrollView>
-          </SafeAreaView>
+          </View>
         </Modal>
 
         {/* Add/Edit Modal */}
         <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
-          <SafeAreaView className="flex-1 bg-white">
-            <View className="px-6 py-4 border-b border-gray-100 flex-row justify-between items-center">
-              <Text className="text-xl font-bold text-gray-900">
+          <View className="flex-1" style={{ backgroundColor: theme.background }}>
+            <View className="px-6 py-4 border-b flex-row justify-between items-center" style={{ borderBottomColor: theme.border }}>
+              <Text className="text-xl font-bold" style={{ color: theme.text }}>
                 {editingItem ? 'Edit Item' : 'Add New Item'}
               </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)} className="p-2 bg-gray-100 rounded-full">
-                <X size={20} color="#374151" />
+              <TouchableOpacity onPress={() => setShowModal(false)} className="p-2 rounded-full" style={{ backgroundColor: theme.surfaceAlt }}>
+                <X size={20} color={theme.text} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 px-6 py-6">
+            <ScrollView className="flex-1 px-6 py-6" keyboardShouldPersistTaps="handled">
               {/* Item Name */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Item Name *</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
-                  <Package size={20} color="#9CA3AF" />
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Item Name *</Text>
+                <View className="flex-row items-center border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+                  <Package size={20} color={theme.textMuted} />
                   <TextInput
                     className="flex-1 ml-2.5 text-base"
                     placeholder="e.g., Engine Oil (5W-30)"
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     value={form.name}
                     onChangeText={(text) => setForm({ ...form, name: text })}
                   />
@@ -744,12 +760,14 @@ export default function InventoryScreen() {
 
               {/* SKU */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">SKU *</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
-                  <Layers size={20} color="#9CA3AF" />
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>SKU *</Text>
+                <View className="flex-row items-center border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+                  <Layers size={20} color={theme.textMuted} />
                   <TextInput
                     className="flex-1 ml-2.5 text-base"
                     placeholder="e.g., OIL-5W30-001"
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     value={form.sku}
                     onChangeText={(text) => setForm({ ...form, sku: text })}
                   />
@@ -758,8 +776,8 @@ export default function InventoryScreen() {
 
               {/* Category */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Category</Text>
-                <View className="border border-gray-300 rounded-xl bg-gray-50">
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Category</Text>
+                <View className="border rounded-xl" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-2 py-2">
                     {categories.map(cat => (
                       <TouchableOpacity
@@ -767,10 +785,10 @@ export default function InventoryScreen() {
                         onPress={() => setForm({ ...form, category_id: cat.id })}
                         className="px-4 py-2 rounded-full mr-2"
                         style={{
-                          backgroundColor: form.category_id === cat.id ? '#3B82F6' : '#E5E7EB',
+                          backgroundColor: form.category_id === cat.id ? theme.primary : theme.surfaceAlt,
                         }}
                       >
-                        <Text style={{ color: form.category_id === cat.id ? 'white' : '#374151' }}>
+                        <Text style={{ color: form.category_id === cat.id ? 'white' : theme.text }}>
                           {cat.name}
                         </Text>
                       </TouchableOpacity>
@@ -781,11 +799,13 @@ export default function InventoryScreen() {
 
               {/* Quantity */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Quantity</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Quantity</Text>
+                <View className="flex-row items-center border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
                   <TextInput
                     className="flex-1 text-base"
                     placeholder="0"
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     keyboardType="numeric"
                     value={form.quantity}
                     onChangeText={(text) => setForm({ ...form, quantity: text })}
@@ -795,12 +815,14 @@ export default function InventoryScreen() {
 
               {/* Unit Price */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Unit Price (₹) *</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
-                  <DollarSign size={20} color="#9CA3AF" />
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Unit Price (₹) *</Text>
+                <View className="flex-row items-center border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+                  <DollarSign size={20} color={theme.textMuted} />
                   <TextInput
                     className="flex-1 ml-2.5 text-base"
                     placeholder="0.00"
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     keyboardType="decimal-pad"
                     value={form.unit_price}
                     onChangeText={(text) => setForm({ ...form, unit_price: text })}
@@ -810,8 +832,8 @@ export default function InventoryScreen() {
 
               {/* Unit */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Unit</Text>
-                <View className="border border-gray-300 rounded-xl bg-gray-50">
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Unit</Text>
+                <View className="border rounded-xl" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-2 py-2">
                     {['piece', 'liter', 'set', 'bottle', 'can', 'tube', 'pair'].map(unit => (
                       <TouchableOpacity
@@ -819,10 +841,10 @@ export default function InventoryScreen() {
                         onPress={() => setForm({ ...form, unit })}
                         className="px-4 py-2 rounded-full mr-2"
                         style={{
-                          backgroundColor: form.unit === unit ? '#3B82F6' : '#E5E7EB',
+                          backgroundColor: form.unit === unit ? theme.primary : theme.surfaceAlt,
                         }}
                       >
-                        <Text style={{ color: form.unit === unit ? 'white' : '#374151' }}>
+                        <Text style={{ color: form.unit === unit ? 'white' : theme.text }}>
                           {unit}
                         </Text>
                       </TouchableOpacity>
@@ -833,12 +855,14 @@ export default function InventoryScreen() {
 
               {/* Low Stock Threshold */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Low Stock Threshold</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
-                  <AlertTriangle size={20} color="#9CA3AF" />
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Low Stock Threshold</Text>
+                <View className="flex-row items-center border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+                  <AlertTriangle size={20} color={theme.textMuted} />
                   <TextInput
                     className="flex-1 ml-2.5 text-base"
                     placeholder="10"
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     keyboardType="numeric"
                     value={form.low_stock_threshold}
                     onChangeText={(text) => setForm({ ...form, low_stock_threshold: text })}
@@ -848,11 +872,13 @@ export default function InventoryScreen() {
 
               {/* Description */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Description</Text>
-                <View className="border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Description</Text>
+                <View className="border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
                   <TextInput
                     className="text-base"
                     placeholder="Optional description..."
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     multiline
                     numberOfLines={3}
                     value={form.description}
@@ -868,7 +894,7 @@ export default function InventoryScreen() {
                 onPress={handleSave}
                 disabled={saving}
                 className="rounded-xl py-4 items-center"
-                style={{ backgroundColor: saving ? '#9CA3AF' : '#4CAF50' }}
+                style={{ backgroundColor: saving ? theme.textMuted : theme.primary }}
               >
                 {saving ? (
                   <ActivityIndicator color="white" />
@@ -879,28 +905,30 @@ export default function InventoryScreen() {
                 )}
               </TouchableOpacity>
             </View>
-          </SafeAreaView>
+          </View>
         </Modal>
 
         {/* Add Category Modal */}
         <Modal visible={showCategoryModal} animationType="slide" presentationStyle="pageSheet">
-          <SafeAreaView className="flex-1 bg-white">
-            <View className="px-6 py-4 border-b border-gray-100 flex-row justify-between items-center">
-              <Text className="text-xl font-bold text-gray-900">Add New Category</Text>
-              <TouchableOpacity onPress={() => setShowCategoryModal(false)} className="p-2 bg-gray-100 rounded-full">
-                <X size={20} color="#374151" />
+          <View className="flex-1" style={{ backgroundColor: theme.background }}>
+            <View className="px-6 py-4 border-b flex-row justify-between items-center" style={{ borderBottomColor: theme.border }}>
+              <Text className="text-xl font-bold" style={{ color: theme.text }}>Add New Category</Text>
+              <TouchableOpacity onPress={() => setShowCategoryModal(false)} className="p-2 rounded-full" style={{ backgroundColor: theme.surfaceAlt }}>
+                <X size={20} color={theme.text} />
               </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 px-6 py-6">
+            <ScrollView className="flex-1 px-6 py-6" keyboardShouldPersistTaps="handled">
               {/* Category Name */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Category Name *</Text>
-                <View className="flex-row items-center border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
-                  <Layers size={20} color="#9CA3AF" />
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Category Name *</Text>
+                <View className="flex-row items-center border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+                  <Layers size={20} color={theme.textMuted} />
                   <TextInput
                     className="flex-1 ml-2.5 text-base"
                     placeholder="e.g., Engine Parts"
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     value={categoryForm.name}
                     onChangeText={(text) => setCategoryForm({ ...categoryForm, name: text })}
                   />
@@ -909,11 +937,13 @@ export default function InventoryScreen() {
 
               {/* Description */}
               <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1.5">Description</Text>
-                <View className="border border-gray-300 rounded-xl px-4 py-3 bg-gray-50">
+                <Text className="text-sm font-medium mb-1.5" style={{ color: theme.text }}>Description</Text>
+                <View className="border rounded-xl px-4 py-3" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
                   <TextInput
                     className="text-base"
                     placeholder="Optional description..."
+                    placeholderTextColor={theme.textMuted}
+                    style={{ color: theme.text }}
                     multiline
                     numberOfLines={3}
                     value={categoryForm.description}
@@ -938,9 +968,9 @@ export default function InventoryScreen() {
                 )}
               </TouchableOpacity>
             </View>
-          </SafeAreaView>
+          </View>
         </Modal>
-      </SafeAreaView>
+      </View>
     </TouchableWithoutFeedback>
   );
 }

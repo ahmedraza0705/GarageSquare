@@ -233,7 +233,8 @@ export default function VehicleDetailScreen() {
       <View className="absolute bottom-4 left-4 right-4 flex-row items-center gap-2">
         {/* Add Service Button */}
         <TouchableOpacity
-          className="bg-green-200 w-12 h-12 rounded-lg items-center justify-center border border-green-300 shadow-sm"
+          style={{ backgroundColor: themeName === 'dark' ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7', borderColor: themeName === 'dark' ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0' }}
+          className="w-12 h-12 rounded-lg items-center justify-center border shadow-sm"
           onPress={() => setIsAddServiceModalVisible(true)}
         >
           <Ionicons name="add" size={28} color="#15803d" />
@@ -241,17 +242,17 @@ export default function VehicleDetailScreen() {
 
         {/* Delivery Button */}
         <TouchableOpacity
-          style={{ backgroundColor: isDelivered ? theme.primary : theme.surface }}
-          className="px-4 h-12 rounded-lg items-center justify-center shadow-sm"
+          style={{ backgroundColor: isDelivered ? theme.primary : theme.surface, borderColor: isDelivered ? theme.primary : theme.border }}
+          className="px-4 h-12 rounded-lg items-center justify-center border shadow-sm"
           onPress={() => setIsDelivered(!isDelivered)}
         >
           <Text style={{ color: isDelivered ? '#fff' : theme.text }} className="font-bold">delivery</Text>
         </TouchableOpacity>
 
         {/* Tech Manager Button */}
-        <View style={{ backgroundColor: theme.surface }} className="flex-1 h-12 rounded-lg flex-row items-center px-3 shadow-sm justify-between">
+        <View style={{ backgroundColor: theme.surface, borderColor: theme.border }} className="flex-1 h-12 rounded-lg border flex-row items-center px-3 shadow-sm justify-between">
           <Text style={{ color: theme.text }} className="text-xs font-bold">Technician Manager :</Text>
-          <View style={{ backgroundColor: 'transparent' }} className="rounded px-2 py-0.5">
+          <View className="rounded px-2 py-0.5">
             <Text style={{ color: theme.textMuted }} className="text-[10px]">Not Done</Text>
           </View>
         </View>

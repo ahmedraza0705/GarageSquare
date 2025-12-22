@@ -14,6 +14,7 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     Search,
@@ -33,8 +34,9 @@ type TimePeriod = 'Today' | 'Week' | 'Month' | 'Quarter' | 'Year';
 type InvoiceType = 'Estimate' | 'Invoice';
 
 export default function InvoiceScreen() {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const { user } = useAuth();
+    const { theme } = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('Month');
     const [selectedType, setSelectedType] = useState<InvoiceType>('Estimate');
@@ -336,31 +338,31 @@ export default function InvoiceScreen() {
     });
 
     return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: '#F5F5F5' }}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View className="flex-1" style={{ backgroundColor: theme.background }}>
+            <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.statusBarBg} />
 
             <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
                 {/* Search Bar */}
                 <View className="flex-row items-center gap-2 mb-4">
                     <View
-                        className="flex-1 flex-row items-center px-3 py-2.5 rounded-lg bg-white"
-                        style={{ borderWidth: 1, borderColor: '#E0E0E0' }}
+                        className="flex-1 flex-row items-center px-3 py-2.5 rounded-lg"
+                        style={{ borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface }}
                     >
-                        <Search size={18} color="#9E9E9E" />
+                        <Search size={18} color={theme.textMuted} />
                         <TextInput
                             className="flex-1 ml-2 text-sm"
                             placeholder="Search customers..."
-                            placeholderTextColor="#9E9E9E"
+                            placeholderTextColor={theme.textMuted}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
-                            style={{ color: '#1F2937' }}
+                            style={{ color: theme.text }}
                         />
                     </View>
                     <TouchableOpacity
-                        className="p-2.5 rounded-lg bg-white"
-                        style={{ borderWidth: 1, borderColor: '#E0E0E0' }}
+                        className="p-2.5 rounded-lg"
+                        style={{ borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface }}
                     >
-                        <Filter size={18} color="#1F2937" />
+                        <Filter size={18} color={theme.text} />
                     </TouchableOpacity>
                 </View>
 
@@ -372,14 +374,14 @@ export default function InvoiceScreen() {
                             onPress={() => setSelectedPeriod(period)}
                             className="flex-1 py-2 mx-1 rounded-lg items-center"
                             style={{
-                                backgroundColor: selectedPeriod === period ? '#4A90E2' : '#FFFFFF',
+                                backgroundColor: selectedPeriod === period ? theme.primary : theme.surface,
                                 borderWidth: 1,
-                                borderColor: selectedPeriod === period ? '#4A90E2' : '#E0E0E0',
+                                borderColor: selectedPeriod === period ? theme.primary : theme.border,
                             }}
                         >
                             <Text
                                 className="font-medium text-sm"
-                                style={{ color: selectedPeriod === period ? '#FFFFFF' : '#000000' }}
+                                style={{ color: selectedPeriod === period ? '#FFFFFF' : theme.text }}
                             >
                                 {period}
                             </Text>
@@ -390,8 +392,8 @@ export default function InvoiceScreen() {
                 {/* Invoice List */}
                 {loading ? (
                     <View className="items-center justify-center py-20">
-                        <ActivityIndicator size="large" color="#4A90E2" />
-                        <Text className="text-sm mt-4" style={{ color: '#9E9E9E' }}>
+                        <ActivityIndicator size="large" color={theme.primary} />
+                        <Text className="text-sm mt-4" style={{ color: theme.textMuted }}>
                             Loading {selectedType.toLowerCase()}s...
                         </Text>
                     </View>
@@ -403,7 +405,7 @@ export default function InvoiceScreen() {
                         </Text>
                         <TouchableOpacity
                             className="px-6 py-3 rounded-lg"
-                            style={{ backgroundColor: '#4A90E2' }}
+                            style={{ backgroundColor: theme.primary }}
                             onPress={loadInvoices}
                         >
                             <Text className="text-white font-semibold">Retry</Text>
@@ -419,10 +421,11 @@ export default function InvoiceScreen() {
                     return (
                         <View
                             key={invoice.id}
-                            className="mb-3 rounded-lg overflow-hidden bg-white"
+                            className="mb-3 rounded-lg overflow-hidden"
                             style={{
+                                backgroundColor: theme.surface,
                                 borderWidth: 1,
-                                borderColor: '#E0E0E0',
+                                borderColor: theme.border,
                             }}
                         >
                             <View className="p-4">
@@ -437,18 +440,18 @@ export default function InvoiceScreen() {
                                         </Text>
                                     </View>
                                     <View className="flex-1">
-                                        <Text className="text-base font-bold mb-1" style={{ color: '#1F2937' }}>
+                                        <Text className="text-base font-bold mb-1" style={{ color: theme.text }}>
                                             {customerName}
                                         </Text>
-                                        <Text className="text-sm" style={{ color: '#757575' }}>
+                                        <Text className="text-sm" style={{ color: theme.textMuted }}>
                                             {vehicleInfo}
                                         </Text>
                                     </View>
                                     <View className="items-end">
-                                        <Text className="text-xs mb-1" style={{ color: '#9E9E9E' }}>
+                                        <Text className="text-xs mb-1" style={{ color: theme.textMuted }}>
                                             {invoice.invoice_number}
                                         </Text>
-                                        <Text className="text-xs" style={{ color: '#9E9E9E' }}>
+                                        <Text className="text-xs" style={{ color: theme.textMuted }}>
                                             {new Date(invoice.invoice_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                         </Text>
                                     </View>
@@ -456,22 +459,22 @@ export default function InvoiceScreen() {
 
                                 {/* Vehicle License Plate */}
                                 <View className="mb-3">
-                                    <Text className="text-sm" style={{ color: '#757575' }}>
+                                    <Text className="text-sm" style={{ color: theme.textMuted }}>
                                         {invoice.vehicle?.license_plate || 'No license plate'}
                                     </Text>
                                 </View>
 
                                 {/* Amount and Action */}
                                 <View className="flex-row items-center justify-between">
-                                    <Text className="text-2xl font-bold" style={{ color: '#1F2937' }}>
+                                    <Text className="text-2xl font-bold" style={{ color: theme.text }}>
                                         ₹{invoice.total_amount.toLocaleString('en-IN')}
                                     </Text>
                                     <TouchableOpacity
                                         className="px-6 py-2.5 rounded-lg"
-                                        style={{ backgroundColor: '#E3F2FD' }}
+                                        style={{ backgroundColor: theme.tabIconBg }}
                                         onPress={() => navigation.navigate('InvoiceDetail' as never, { invoice } as never)}
                                     >
-                                        <Text className="font-semibold text-sm" style={{ color: '#1976D2' }}>
+                                        <Text className="font-semibold text-sm" style={{ color: theme.primary }}>
                                             Convert to Invoice
                                         </Text>
                                     </TouchableOpacity>
@@ -499,7 +502,7 @@ export default function InvoiceScreen() {
             <View
                 className="absolute bottom-0 left-0 right-0 flex-row items-center justify-around"
                 style={{
-                    backgroundColor: '#4682B4',
+                    backgroundColor: theme.tabBarBg,
                     height: Platform.OS === 'ios' ? 85 : 65,
                     paddingBottom: Platform.OS === 'ios' ? 30 : 10,
                     paddingTop: 10,
@@ -516,27 +519,27 @@ export default function InvoiceScreen() {
                     className="items-center"
                     onPress={() => navigation.navigate('MainTabs' as never, { screen: 'DashboardTab' } as never)}
                 >
-                    <LayoutDashboard size={24} color="#FFFFFF" />
+                    <LayoutDashboard size={24} color={theme.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => navigation.navigate('MainTabs' as never, { screen: 'BranchesTab' } as never)}
                 >
-                    <Building2 size={24} color="#FFFFFF" />
+                    <Building2 size={24} color={theme.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => navigation.navigate('MainTabs' as never, { screen: 'UsersTab' } as never)}
                 >
-                    <Users size={24} color="#FFFFFF" />
+                    <Users size={24} color={theme.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
                     className="items-center"
                     onPress={() => navigation.navigate('MainTabs' as never, { screen: 'ReportsTab' } as never)}
                 >
-                    <FileBarChart size={24} color="#FFFFFF" />
+                    <FileBarChart size={24} color={theme.text} />
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
