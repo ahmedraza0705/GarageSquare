@@ -2,100 +2,64 @@
 // ACTIVE JOBS SCREEN (Company Admin)
 // ============================================
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, RefreshControl } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { JobCard } from '@/types';
-
-// Static job cards data
-const staticJobCards: JobCard[] = [
-  {
-    id: 'job_001',
-    job_number: 'SA0001',
-    customer_id: 'customer_001',
-    vehicle_id: 'vehicle_001',
-    branch_id: 'branch_1',
-    assigned_to: 'tech_001',
-    status: 'in_progress',
-    priority: 'urgent',
-    description: 'Engine repair and maintenance',
-    estimated_cost: 21500,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    customer: {
-      id: 'customer_001',
-      full_name: 'Ahmed',
-      phone: '+1234567890',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    vehicle: {
-      id: 'vehicle_001',
-      customer_id: 'customer_001',
-      make: 'Honda',
-      model: 'City',
-      license_plate: 'GJ-05-RT-2134',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    assigned_user: {
-      id: 'tech_001',
-      email: 'ahmed.raza@example.com',
-      full_name: 'Ahmed raza',
-      role_id: null,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'job_002',
-    job_number: 'SA0002',
-    customer_id: 'customer_001',
-    vehicle_id: 'vehicle_002',
-    branch_id: 'branch_1',
-    assigned_to: 'tech_001',
-    status: 'in_progress',
-    priority: 'high',
-    description: 'Regular service and oil change',
-    estimated_cost: 10000,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    customer: {
-      id: 'customer_001',
-      full_name: 'Ahmed',
-      phone: '+1234567890',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    vehicle: {
-      id: 'vehicle_002',
-      customer_id: 'customer_001',
-      make: 'Hyundai',
-      model: 'i10',
-      license_plate: 'GJ-UD-KI-2234',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    assigned_user: {
-      id: 'tech_001',
-      email: 'ahmed.raza@example.com',
-      full_name: 'Ahmed raza',
-      role_id: null,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  },
-];
+import { JobCardService } from '@/services/jobCard.service';
+import { supabase } from '@/lib/supabase';
 
 export default function ActiveJobsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [jobCards] = useState<JobCard[]>(staticJobCards);
+  const [jobCards, setJobCards] = useState<JobCard[]>([]);
+  const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+
+  const loadActiveJobs = useCallback(async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      // Statuses that represent "Active"
+      const activeStatuses: any[] = ['pending', 'in_progress', 'on_hold'];
+      const data = await JobCardService.getAll({
+        status: activeStatuses
+      });
+      setJobCards(data || []);
+    } catch (error) {
+      console.error('Error loading active jobs:', error);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadActiveJobs(false);
+    }, [loadActiveJobs])
+  );
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('active-jobs-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'job_cards' },
+        () => {
+          loadActiveJobs(false);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [loadActiveJobs]);
 
   const getStatusBadge = (status: string, priority?: string) => {
     if (priority === 'urgent') {
@@ -111,6 +75,7 @@ export default function ActiveJobsScreen() {
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -118,13 +83,7 @@ export default function ActiveJobsScreen() {
     return `${day}-${month}-${year}`;
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  };
-
   const handleJobCardPress = (jobCard: JobCard) => {
-    // @ts-ignore
     navigation.navigate('JobCardDetail', { jobCardId: jobCard.id });
   };
 
@@ -149,9 +108,9 @@ export default function ActiveJobsScreen() {
         >
           <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
         </TouchableOpacity>
-        
+
         <Text style={styles.headerTitle}>Active Jobs</Text>
-        
+
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => setDarkMode(!darkMode)}
@@ -169,7 +128,12 @@ export default function ActiveJobsScreen() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={() => loadActiveJobs(true)} />
+        }
+      >
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBarRow}>
@@ -177,19 +141,15 @@ export default function ActiveJobsScreen() {
               <Text style={styles.searchIcon}>🔍</Text>
               <TextInput
                 style={styles.searchInput}
-                placeholder="Search User"
+                placeholder="Search Active Jobs"
                 placeholderTextColor="#9ca3af"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
-              <TouchableOpacity style={styles.filterButton}>
-                <Text style={styles.filterIcon}>🔽</Text>
-              </TouchableOpacity>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.addButton}
               onPress={() => {
-                // @ts-ignore
                 navigation.navigate('CreateJobCard');
               }}
             >
@@ -202,9 +162,6 @@ export default function ActiveJobsScreen() {
         <View style={styles.cardsContainer}>
           {filteredJobCards.map((jobCard) => {
             const badge = getStatusBadge(jobCard.status, jobCard.priority);
-            const deliveryDate = new Date();
-            deliveryDate.setDate(deliveryDate.getDate() + 2);
-            const deliveryTime = '3:00 PM';
 
             return (
               <TouchableOpacity
@@ -235,7 +192,7 @@ export default function ActiveJobsScreen() {
                 <View style={styles.vehicleSection}>
                   <Text style={styles.carIcon}>🚗</Text>
                   <View style={styles.vehicleInfo}>
-                    <Text style={styles.vehicleModel}>{jobCard.vehicle?.model || 'N/A'}</Text>
+                    <Text style={styles.vehicleModel}>{jobCard.vehicle?.make} {jobCard.vehicle?.model || 'N/A'}</Text>
                     <Text style={styles.licensePlate}>{jobCard.vehicle?.license_plate || 'N/A'}</Text>
                   </View>
                 </View>
@@ -253,10 +210,10 @@ export default function ActiveJobsScreen() {
                 {/* Delivery Info */}
                 <View style={styles.deliveryRow}>
                   <Text style={styles.deliveryText}>
-                    Delivery date: {formatDate(deliveryDate.toISOString())}
+                    Date: {formatDate(jobCard.created_at)}
                   </Text>
                   <Text style={styles.deliveryText}>
-                    Delivery due: {deliveryTime}
+                    Priority: {jobCard.priority}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -264,9 +221,9 @@ export default function ActiveJobsScreen() {
           })}
         </View>
 
-        {filteredJobCards.length === 0 && (
+        {filteredJobCards.length === 0 && !loading && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No job cards found</Text>
+            <Text style={styles.emptyText}>No active job cards found</Text>
           </View>
         )}
       </ScrollView>

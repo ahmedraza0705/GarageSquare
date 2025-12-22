@@ -39,9 +39,29 @@ const logSupabaseConfig = () => {
 logSupabaseConfig();
 
 const ExpoSecureStoreAdapter = {
-  getItem: (key: string) => SecureStore.getItemAsync(key),
-  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+  getItem: async (key: string) => {
+    try {
+      return await SecureStore.getItemAsync(key);
+    } catch (error) {
+      // Return null instead of throwing to prevent crashing on transient storage issues
+      console.warn('[Supabase] SecureStore getItem error:', error);
+      return null;
+    }
+  },
+  setItem: async (key: string, value: string) => {
+    try {
+      await SecureStore.setItemAsync(key, value);
+    } catch (error) {
+      console.warn('[Supabase] SecureStore setItem error:', error);
+    }
+  },
+  removeItem: async (key: string) => {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch (error) {
+      console.warn('[Supabase] SecureStore removeItem error:', error);
+    }
+  },
 };
 
 export const supabaseConfig = {
@@ -49,15 +69,16 @@ export const supabaseConfig = {
   hasUrl: Boolean(supabaseUrl),
   hasKey: Boolean(supabaseAnonKey),
   url: supabaseUrl || 'Not set',
+  key: supabaseAnonKey || 'Not set', // Export key for temp client usage
 };
 
 export const supabase: SupabaseClient | null = supabaseConfig.isConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        storage: ExpoSecureStoreAdapter,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false,
-      },
-    })
+    auth: {
+      storage: ExpoSecureStoreAdapter,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  })
   : null;

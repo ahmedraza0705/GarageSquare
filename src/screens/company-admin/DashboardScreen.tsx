@@ -2,153 +2,172 @@
 // COMPANY ADMIN DASHBOARD
 // ============================================
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl, Platform } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import * as SecureStore from 'expo-secure-store';
+import { CustomerService } from '@/services/customer.service';
+import { VehicleService } from '@/services/vehicle.service';
+import { JobCardService } from '@/services/jobCard.service';
+
+// Bar Chart Component (Moved outside to prevent unnecessary remounts)
+const BarChart = ({ data }: { data: any[] }) => {
+  const maxValue = 15;
+  return (
+    <View style={styles.chartContainer}>
+      <View style={styles.chartLegend}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendColor, { backgroundColor: '#4682B4' }]} />
+          <Text style={styles.legendText}>branch 1</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendColor, { backgroundColor: '#35C56A' }]} />
+          <Text style={styles.legendText}>branch 2</Text>
+        </View>
+      </View>
+      <View style={styles.chartContent}>
+        <View style={styles.yAxis}>
+          {[15, 10, 5, 0].map((value) => (
+            <Text key={value} style={styles.yAxisLabel}>{value}</Text>
+          ))}
+        </View>
+        <View style={styles.barsContainer}>
+          {data.map((item, index) => (
+            <View key={index} style={styles.barGroup}>
+              <View style={styles.bars}>
+                <View style={[styles.bar, { height: (item.branch1 / maxValue) * 120, backgroundColor: '#4682B4' }]} />
+                <View style={[styles.bar, { height: (item.branch2 / maxValue) * 120, backgroundColor: '#35C56A' }]} />
+              </View>
+              <Text style={styles.xAxisLabel}>{item.month}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export default function CompanyAdminDashboard() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { user } = useAuth();
+
   const [stats, setStats] = useState({
-    activeJobs: 56,
-    customers: 156,
-    vehicles: 100,
-    revenue: 24.5, // in Lakhs
+    activeJobs: 0,
+    customers: 0,
+    vehicles: 0,
+    revenue: 24.5,
     checkIn: 12,
     processing: 20,
     delivery: 40,
     newCustomers: 12,
   });
 
-  const [chartData] = useState([
+  const [refreshing, setRefreshing] = useState(false);
+
+  const chartData = useMemo(() => [
     { month: 'Jan', branch1: 8, branch2: 6 },
     { month: 'Feb', branch1: 10, branch2: 8 },
     { month: 'Mar', branch1: 12, branch2: 10 },
     { month: 'Apr', branch1: 14, branch2: 12 },
     { month: 'May', branch1: 15, branch2: 13 },
-  ]);
+  ], []);
 
-  const [staffData] = useState({
+  const staffData = useMemo(() => ({
     branchManager: 2,
     supervisor: 4,
     technicianManager: 10,
     technician: 40,
-  });
+  }), []);
 
-  useEffect(() => {
-    loadStats();
-    showLoginCredentials();
+  const loadStats = useCallback(async () => {
+    try {
+      const [vehicleCount, customerCount, activeJobCount] = await Promise.all([
+        VehicleService.getCount(),
+        CustomerService.getCount(),
+        JobCardService.getActiveCount()
+      ]);
+
+      setStats(prev => ({
+        ...prev,
+        vehicles: vehicleCount,
+        customers: customerCount,
+        activeJobs: activeJobCount
+      }));
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
   }, []);
 
-  const showLoginCredentials = async () => {
+  const showLoginCredentials = useCallback(async () => {
     try {
       const usersJson = await SecureStore.getItemAsync('garage_square_users');
       if (usersJson) {
-        const users: Array<{ email: string; password: string; userData: any }> = JSON.parse(usersJson);
-        const adminUser = users.find(u => u.userData?.profile?.role?.name === 'company_admin');
-        
+        const parsed = JSON.parse(usersJson);
+        const users = Array.isArray(parsed) ? parsed : [];
+        const adminUser = users.find((u: any) => u.userData?.profile?.role?.name === 'company_admin');
         if (adminUser) {
           console.log('\n=== COMPANY ADMIN LOGIN CREDENTIALS ===');
           console.log(`Email: ${adminUser.email}`);
           console.log(`Password: ${adminUser.password}`);
           console.log('========================================\n');
-        } else {
-          console.log('\n=== NO COMPANY ADMIN FOUND ===');
-          console.log('Please sign up first. The first user becomes Company Admin.');
-          console.log('================================\n');
         }
-      } else {
-        console.log('\n=== NO USERS FOUND ===');
-        console.log('Please sign up first. The first user becomes Company Admin.');
-        console.log('========================\n');
       }
     } catch (error) {
       console.error('Error loading credentials:', error);
     }
-  };
+  }, []);
 
-  const loadStats = async () => {
-    try {
-      // Check if Supabase is disabled
-      if (!supabase) {
-        console.warn('Supabase is disabled - using default stats');
-        return;
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+      showLoginCredentials();
+    }, [loadStats, showLoginCredentials])
+  );
+
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel('dashboard-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => loadStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'job_cards' }, () => loadStats())
+      .subscribe();
+
+    return () => {
+      // Explicitly check if supabase exists before calling removeChannel
+      if (supabase) {
+        supabase.removeChannel(channel);
       }
+    };
+  }, [loadStats]);
 
-      // Load actual stats from database
-      // For now, using default values
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
-
-  // Bar Chart Component
-  const BarChart = () => {
-    const maxValue = 15;
-    
-    return (
-      <View style={styles.chartContainer}>
-        <View style={styles.chartLegend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#2563eb' }]} />
-            <Text style={styles.legendText}>branch 1</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#10b981' }]} />
-            <Text style={styles.legendText}>branch 2</Text>
-          </View>
-        </View>
-        
-        <View style={styles.chartContent}>
-          {/* Y-axis labels */}
-          <View style={styles.yAxis}>
-            {[15, 10, 5, 0].map((value) => (
-              <Text key={value} style={styles.yAxisLabel}>
-                {value}
-              </Text>
-            ))}
-          </View>
-          
-          {/* Chart bars */}
-          <View style={styles.barsContainer}>
-            {chartData.map((item, index) => (
-              <View key={index} style={styles.barGroup}>
-                <View style={styles.bars}>
-                  <View
-                    style={[
-                      styles.bar,
-                      { height: (item.branch1 / maxValue) * 120, backgroundColor: '#2563eb' },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.bar,
-                      { height: (item.branch2 / maxValue) * 120, backgroundColor: '#10b981' },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.xAxisLabel}>{item.month}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-    );
-  };
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadStats();
+    setRefreshing(false);
+  }, [loadStats]);
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#4682B4"
+            colors={['#4682B4']} // Android support
+          />
+        }
+      >
         <View style={styles.container}>
-          {/* Top Row Cards */}
           <View style={styles.cardRow}>
             {/* Active Jobs Card */}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.largeCard, styles.activeJobsCard]}
-              onPress={() => navigation.navigate('ActiveJobs' as never)}
+              onPress={() => navigation.navigate('ActiveJobs')}
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
@@ -164,7 +183,11 @@ export default function CompanyAdminDashboard() {
             </TouchableOpacity>
 
             {/* Customers Card */}
-            <View style={[styles.largeCard, styles.whiteCard]}>
+            <TouchableOpacity
+              style={[styles.largeCard, styles.whiteCard]}
+              onPress={() => navigation.navigate('Customers')} // Original navigation
+              activeOpacity={0.8}
+            >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={styles.cardTitle}>Customers</Text>
@@ -175,13 +198,16 @@ export default function CompanyAdminDashboard() {
                   <Text style={styles.iconEmoji}>👥</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
-          {/* Second Row Cards */}
           <View style={styles.cardRow}>
             {/* Vehicle Card */}
-            <View style={[styles.largeCard, styles.whiteCard]}>
+            <TouchableOpacity
+              style={[styles.largeCard, styles.whiteCard]}
+              onPress={() => navigation.navigate('Vehicles')}
+              activeOpacity={0.8}
+            >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={styles.cardTitle}>Vehicle</Text>
@@ -192,9 +218,9 @@ export default function CompanyAdminDashboard() {
                   <Text style={styles.iconEmoji}>🚗</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
 
-            {/* Revenue Card */}
+            {/* Revenue Card (Static for now) */}
             <View style={[styles.largeCard, styles.revenueCard]}>
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
@@ -209,12 +235,10 @@ export default function CompanyAdminDashboard() {
             </View>
           </View>
 
-          {/* Bar Chart Card */}
           <View style={[styles.chartCard, styles.whiteCard]}>
-            <BarChart />
+            <BarChart data={chartData} />
           </View>
 
-          {/* Third Row - Status Cards */}
           <View style={styles.statusRow}>
             <View style={[styles.statusCard, styles.whiteCard]}>
               <Text style={styles.statusTitle}>Check-in</Text>
@@ -230,9 +254,7 @@ export default function CompanyAdminDashboard() {
             </View>
           </View>
 
-          {/* Bottom Row - Staff and New Customers */}
           <View style={styles.bottomRow}>
-            {/* Staff Card */}
             <View style={[styles.bottomCard, styles.whiteCard]}>
               <Text style={styles.bottomCardTitle}>Staff</Text>
               <View style={styles.staffList}>
@@ -255,7 +277,6 @@ export default function CompanyAdminDashboard() {
               </View>
             </View>
 
-            {/* New Customers Card */}
             <View style={[styles.bottomCard, styles.whiteCard]}>
               <Text style={styles.bottomCardTitle}>New Customers</Text>
               <Text style={styles.bottomCardSubtitle}>This month</Text>
@@ -271,7 +292,7 @@ export default function CompanyAdminDashboard() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    paddingBottom: 100, // Space for bottom navigation
+    paddingBottom: 100,
   },
   cardRow: {
     flexDirection: 'row',
@@ -285,14 +306,14 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   activeJobsCard: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#4682B4',
   },
   revenueCard: {
-    backgroundColor: '#d97706',
+    backgroundColor: '#C37125',
   },
   whiteCard: {
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
+    shadowColor: '#272727',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -309,17 +330,14 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'rgba(39, 39, 39, 0.63)',
     marginBottom: 8,
   },
   cardValue: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
     marginBottom: 4,
-  },
-  revenueValue: {
-    color: '#ffffff',
   },
   cardTrend: {
     fontSize: 12,
@@ -365,7 +383,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#272727',
   },
   chartContent: {
     flexDirection: 'row',
@@ -378,7 +396,7 @@ const styles = StyleSheet.create({
   },
   yAxisLabel: {
     fontSize: 10,
-    color: '#6b7280',
+    color: '#272727',
     textAlign: 'right',
   },
   barsContainer: {
@@ -406,7 +424,7 @@ const styles = StyleSheet.create({
   },
   xAxisLabel: {
     fontSize: 10,
-    color: '#6b7280',
+    color: '#272727',
     marginTop: 4,
   },
   statusRow: {
@@ -422,13 +440,13 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'rgba(39, 39, 39, 0.63)',
     marginBottom: 8,
   },
   statusValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
   },
   bottomRow: {
     flexDirection: 'row',
@@ -442,12 +460,12 @@ const styles = StyleSheet.create({
   bottomCardTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
     marginBottom: 12,
   },
   bottomCardSubtitle: {
     fontSize: 12,
-    color: '#6b7280',
+    color: '#272727',
     marginBottom: 8,
   },
   staffList: {
@@ -460,17 +478,17 @@ const styles = StyleSheet.create({
   },
   staffLabel: {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'rgba(39, 39, 39, 0.63)',
   },
   staffValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000000',
+    color: '#272727',
   },
   newCustomersValue: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#272727',
     marginTop: 8,
   },
 });

@@ -2,9 +2,8 @@
 // VEHICLE SERVICE
 // ============================================
 
-// COMMENTED OUT - Supabase removed
-// import { supabase } from '@/lib/supabase';
-import { Vehicle, CreateVehicleForm } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { Vehicle, CreateVehicleForm, VehicleServiceItem, VehicleServiceStatus } from '@/types';
 
 export class VehicleService {
   /**
@@ -13,99 +12,166 @@ export class VehicleService {
   static async getAll(filters?: {
     customer_id?: string;
     branch_id?: string;
+    search?: string;
   }) {
-    // COMMENTED OUT - Supabase removed
-    // let query = supabase
-    //   .from('vehicles')
-    //   .select(`
-    //     *,
-    //     customer:customers(*)
-    //   `)
-    //   .order('created_at', { ascending: false });
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (filters?.customer_id) {
-    //   query = query.eq('customer_id', filters.customer_id);
-    // }
-    // if (filters?.branch_id) {
-    //   query = query.eq('branch_id', filters.branch_id);
-    // }
+    let query = supabase
+      .from('vehicles')
+      .select(`
+        *,
+        customer:customers(*, branch:branches(name))
+      `)
+      .order('created_at', { ascending: false });
 
-    // const { data, error } = await query;
-    // if (error) throw error;
-    // return data as Vehicle[];
-    throw new Error('Supabase is disabled - vehicle service not available');
+    if (filters?.customer_id) {
+      query = query.eq('customer_id', filters.customer_id);
+    }
+    if (filters?.branch_id) {
+      // Filter by branch via the customer relation if needed, 
+      // but if vehicles has branch_id, use that directly.
+      // Assuming vehicles table has branch_id as per typical schema here.
+      query = query.eq('branch_id', filters.branch_id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching vehicles:', error);
+      throw error;
+    }
+
+    let vehicles = data as Vehicle[];
+
+    if (filters?.search) {
+      const lowerSearch = filters.search.toLowerCase();
+      vehicles = vehicles.filter((v: any) =>
+        v.make?.toLowerCase().includes(lowerSearch) ||
+        v.model?.toLowerCase().includes(lowerSearch) ||
+        v.license_plate?.toLowerCase().includes(lowerSearch) ||
+        v.customer?.full_name?.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    return vehicles;
+  }
+
+  /**
+   * Get total vehicle count
+   */
+  static async getCount() {
+    if (!supabase) return 0;
+
+    const { count, error } = await supabase
+      .from('vehicles')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching vehicle count:', error);
+      return 0;
+    }
+
+    return count || 0;
   }
 
   /**
    * Get vehicle by ID
    */
   static async getById(id: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('vehicles')
-    //   .select(`
-    //     *,
-    //     customer:customers(*)
-    //   `)
-    //   .eq('id', id)
-    //   .single();
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    // return data as Vehicle;
-    throw new Error('Supabase is disabled - vehicle service not available');
+    const { data, error } = await supabase
+      .from('vehicles')
+      .select(`
+        *,
+        customer:customers(*, branch:branches(name))
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching vehicle by ID:', error);
+      throw error;
+    }
+    return data as Vehicle;
   }
 
   /**
    * Create new vehicle
    */
   static async create(formData: CreateVehicleForm, branchId?: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('vehicles')
-    //   .insert({
-    //     ...formData,
-    //     branch_id: branchId,
-    //   })
-    //   .select()
-    //   .single();
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    // return data as Vehicle;
-    throw new Error('Supabase is disabled - vehicle service not available');
+    // Filter out fields that don't exist in the database schema
+    const { vin, ...validFields } = formData;
+
+    const { data, error } = await supabase
+      .from('vehicles')
+      .insert({
+        ...validFields,
+        branch_id: branchId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating vehicle:', error);
+      throw error;
+    }
+    return data as Vehicle;
   }
 
   /**
    * Update vehicle
    */
   static async update(id: string, updates: Partial<Vehicle>) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('vehicles')
-    //   .update({
-    //     ...updates,
-    //     updated_at: new Date().toISOString(),
-    //   })
-    //   .eq('id', id)
-    //   .select()
-    //   .single();
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    // return data as Vehicle;
-    throw new Error('Supabase is disabled - vehicle service not available');
+    // Remove relations/read-only fields AND fields that don't exist in schema
+    const {
+      customer,
+      services,
+      branch,
+      id: _,
+      created_at,
+      updated_at,
+      branch_name,  // Not in DB schema
+      last_visit,   // Not in DB schema
+      vin,          // Not in DB schema
+      ...cleanUpdates
+    } = updates as any;
+
+    const { data, error } = await supabase
+      .from('vehicles')
+      .update({
+        ...cleanUpdates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating vehicle:', error);
+      throw error;
+    }
+    return data as Vehicle;
   }
 
   /**
    * Delete vehicle
    */
   static async delete(id: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { error } = await supabase
-    //   .from('vehicles')
-    //   .delete()
-    //   .eq('id', id);
+    if (!supabase) throw new Error('Supabase client not initialized');
 
-    // if (error) throw error;
-    throw new Error('Supabase is disabled - vehicle service not available');
+    const { error } = await supabase
+      .from('vehicles')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting vehicle:', error);
+      throw error;
+    }
   }
 }
-
