@@ -9,12 +9,11 @@ import { useTheme } from '@/context/ThemeContext';
 import { CustomerService } from '@/services/customer.service';
 import { Customer } from '@/types';
 import { getInitials } from '@/utils/string';
-
 import { Ionicons } from '@expo/vector-icons';
 
 export default function CustomersScreen() {
   const { theme } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,14 +30,12 @@ export default function CustomersScreen() {
         setLoading(true);
       }
 
-      console.log('Fetching customers...');
       const data = await CustomerService.getAll();
-      console.log('Fetched customers count:', data?.length || 0);
-      setCustomers(data);
-      setFilteredCustomers(data);
+      setCustomers(data || []);
+      setFilteredCustomers(data || []);
     } catch (err: any) {
       console.error('Error loading customers:', err);
-      setError(err.message || 'Failed to load customers. Please check your connection.');
+      setError(err.message || 'Failed to load customers.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -117,7 +114,7 @@ export default function CustomersScreen() {
                 borderWidth: 1,
                 borderColor: theme.primary
               }}
-              onPress={() => navigation.navigate('CreateCustomer' as never)}
+              onPress={() => navigation.navigate('CreateCustomer')}
             >
               <Ionicons name="add" size={24} color={theme.primary} />
             </TouchableOpacity>
@@ -161,13 +158,13 @@ export default function CustomersScreen() {
                     borderWidth: 1,
                     borderColor: theme.border
                   }}
-                  onPress={() => (navigation.navigate as any)('CustomerDetail', { customerId: customer.id })}
+                  onPress={() => navigation.navigate('CustomerDetail', { customerId: customer.id })}
                 >
                   <View style={{
                     width: 48,
                     height: 48,
                     borderRadius: 24,
-                    backgroundColor: '#3B82F6',
+                    backgroundColor: '#4682B4',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 16
@@ -181,12 +178,12 @@ export default function CustomersScreen() {
                     <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text, marginBottom: 2 }}>
                       {customer.full_name}
                     </Text>
-                    <Text style={{ color: '#9CA3AF', fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
+                    <Text style={{ color: theme.textMuted, fontSize: 12, fontWeight: '500' }} numberOfLines={1}>
                       {customer.address || 'No address provided'}
                     </Text>
                   </View>
 
-                  <Text style={{ fontSize: 20, fontWeight: '300', color: theme.border, marginLeft: 8 }}>›</Text>
+                  <Ionicons name="chevron-forward" size={20} color={theme.border} />
                 </TouchableOpacity>
               ))}
             </View>

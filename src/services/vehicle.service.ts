@@ -3,7 +3,7 @@
 // ============================================
 
 import { supabase } from '@/lib/supabase';
-import { Vehicle, CreateVehicleForm } from '@/types';
+import { Vehicle, CreateVehicleForm, VehicleServiceItem, VehicleServiceStatus } from '@/types';
 
 export class VehicleService {
   /**
@@ -20,7 +20,7 @@ export class VehicleService {
       .from('vehicles')
       .select(`
         *,
-        customer:customers(*)
+        customer:customers(*, branch:branches(name))
       `)
       .order('created_at', { ascending: false });
 
@@ -28,15 +28,32 @@ export class VehicleService {
       query = query.eq('customer_id', filters.customer_id);
     }
     if (filters?.branch_id) {
+      // Filter by branch via the customer relation if needed, 
+      // but if vehicles has branch_id, use that directly.
+      // Assuming vehicles table has branch_id as per typical schema here.
       query = query.eq('branch_id', filters.branch_id);
     }
 
     const { data, error } = await query;
+
     if (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
     }
-    return data as Vehicle[];
+
+    let vehicles = data as Vehicle[];
+
+    if (filters?.search) {
+      const lowerSearch = filters.search.toLowerCase();
+      vehicles = vehicles.filter((v: any) =>
+        v.make?.toLowerCase().includes(lowerSearch) ||
+        v.model?.toLowerCase().includes(lowerSearch) ||
+        v.license_plate?.toLowerCase().includes(lowerSearch) ||
+        v.customer?.full_name?.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    return vehicles;
   }
 
   /**
@@ -67,7 +84,7 @@ export class VehicleService {
       .from('vehicles')
       .select(`
         *,
-        customer:customers(*)
+        customer:customers(*, branch:branches(name))
       `)
       .eq('id', id)
       .single();
@@ -85,10 +102,13 @@ export class VehicleService {
   static async create(formData: CreateVehicleForm, branchId?: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
+    // Filter out fields that don't exist in the database schema
+    const { vin, ...validFields } = formData;
+
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
-        ...formData,
+        ...validFields,
         branch_id: branchId,
       })
       .select()
@@ -107,10 +127,24 @@ export class VehicleService {
   static async update(id: string, updates: Partial<Vehicle>) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
+    // Remove relations/read-only fields AND fields that don't exist in schema
+    const {
+      customer,
+      services,
+      branch,
+      id: _,
+      created_at,
+      updated_at,
+      branch_name,  // Not in DB schema
+      last_visit,   // Not in DB schema
+      vin,          // Not in DB schema
+      ...cleanUpdates
+    } = updates as any;
+
     const { data, error } = await supabase
       .from('vehicles')
       .update({
-        ...updates,
+        ...cleanUpdates,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -140,72 +174,4 @@ export class VehicleService {
       throw error;
     }
   }
-
-  /**
-   * Add service to vehicle
-   */
-  static async addService(vehicleId: string, serviceName: string, estimatedTime: string) {
-    if (!supabase) throw new Error('Supabase client not initialized');
-
-    // This is a simplified version - in a real app, you might have a services table
-    // For now, we'll fetch the vehicle, update its services array, and save it back
-    // Or if the services are stored as a JSONB column, we can update it directly
-    const { data: vehicle, error: fetchError } = await supabase
-      .from('vehicles')
-      .select('services')
-      .eq('id', vehicleId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    const currentServices = (vehicle.services as any[]) || [];
-    const newService = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: serviceName,
-      status: 'pending',
-      estimate: estimatedTime,
-      created_at: new Date().toISOString()
-    };
-
-    const { error: updateError } = await supabase
-      .from('vehicles')
-      .update({
-        services: [...currentServices, newService],
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', vehicleId);
-
-    if (updateError) throw updateError;
-  }
-
-  /**
-   * Update service status
-   */
-  static async updateServiceStatus(vehicleId: string, serviceId: string, status: string) {
-    if (!supabase) throw new Error('Supabase client not initialized');
-
-    const { data: vehicle, error: fetchError } = await supabase
-      .from('vehicles')
-      .select('services')
-      .eq('id', vehicleId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    const currentServices = (vehicle.services as any[]) || [];
-    const updatedServices = currentServices.map((s: any) =>
-      s.id === serviceId ? { ...s, status } : s
-    );
-
-    const { error: updateError } = await supabase
-      .from('vehicles')
-      .update({
-        services: updatedServices,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', vehicleId);
-
-    if (updateError) throw updateError;
-  }
 }
-

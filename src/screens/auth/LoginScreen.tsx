@@ -42,16 +42,18 @@ export default function LoginScreen() {
     if (!validate()) return;
 
     try {
-      // Trim email and password to avoid whitespace issues
+      // Trim email to avoid whitespace issues, but keep password as-is
       const trimmedEmail = email.trim();
       const trimmedPassword = password.trim();
+      const rawPassword = password;
 
       console.log('Login attempt:', {
         email: trimmedEmail,
-        passwordLength: trimmedPassword.length,
+        passwordLength: rawPassword.length,
       });
 
       await signIn({ email: trimmedEmail, password: trimmedPassword });
+      await signIn({ email: trimmedEmail, password: rawPassword });
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert('Login Failed', error.message || 'Invalid email or password');

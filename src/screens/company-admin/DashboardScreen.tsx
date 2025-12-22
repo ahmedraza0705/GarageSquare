@@ -2,8 +2,8 @@
 // COMPANY ADMIN DASHBOARD
 // ============================================
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,156 +11,145 @@ import { useTheme } from '@/context/ThemeContext';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomerService } from '@/services/customer.service';
-import { JobCardService } from '@/services/jobCard.service';
 import { VehicleService } from '@/services/vehicle.service';
+import { JobCardService } from '@/services/jobCard.service';
+
+// Bar Chart Component
+const BarChart = ({ data, theme }: { data: any[]; theme: any }) => {
+  const maxValue = 15;
+  return (
+    <View style={styles.chartContainer}>
+      <View style={styles.chartLegend}>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendColor, { backgroundColor: '#4682B4' }]} />
+          <Text style={[styles.legendText, { color: theme.text }]}>branch 1</Text>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendColor, { backgroundColor: theme.primary }]} />
+          <Text style={[styles.legendText, { color: theme.text }]}>branch 2</Text>
+        </View>
+      </View>
+      <View style={styles.chartContent}>
+        <View style={styles.yAxis}>
+          {[15, 10, 5, 0].map((value) => (
+            <Text key={value} style={[styles.yAxisLabel, { color: theme.text }]}>{value}</Text>
+          ))}
+        </View>
+        <View style={styles.barsContainer}>
+          {data.map((item, index) => (
+            <View key={index} style={styles.barGroup}>
+              <View style={styles.bars}>
+                <View style={[styles.bar, { height: (item.branch1 / maxValue) * 120, backgroundColor: '#4682B4' }]} />
+                <View style={[styles.bar, { height: (item.branch2 / maxValue) * 120, backgroundColor: theme.primary }]} />
+              </View>
+              <Text style={[styles.xAxisLabel, { color: theme.text }]}>{item.month}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export default function CompanyAdminDashboard() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const { theme, themeName } = useTheme();
+  const { theme } = useTheme();
+
   const [stats, setStats] = useState({
-    activeJobs: 56,
-    customers: 156,
-    vehicles: 100,
-    revenue: 24.5, // in Lakhs
+    activeJobs: 0,
+    customers: 0,
+    vehicles: 0,
+    revenue: 24.5,
     checkIn: 12,
     processing: 20,
     delivery: 40,
     newCustomers: 12,
   });
+
   const [refreshing, setRefreshing] = useState(false);
 
-  const [chartData] = useState([
+  const chartData = useMemo(() => [
     { month: 'Jan', branch1: 8, branch2: 6 },
     { month: 'Feb', branch1: 10, branch2: 8 },
     { month: 'Mar', branch1: 12, branch2: 10 },
     { month: 'Apr', branch1: 14, branch2: 12 },
     { month: 'May', branch1: 15, branch2: 13 },
-  ]);
+  ], []);
 
-  const [staffData] = useState({
+  const staffData = useMemo(() => ({
     branchManager: 2,
     supervisor: 4,
     technicianManager: 10,
     technician: 40,
-  });
+  }), []);
 
-  useEffect(() => {
-    showLoginCredentials();
+  const loadStats = useCallback(async () => {
+    try {
+      const [vehicleCount, customerCount, activeJobCount] = await Promise.all([
+        VehicleService.getCount(),
+        CustomerService.getCount(),
+        JobCardService.getActiveCount()
+      ]);
+
+      setStats(prev => ({
+        ...prev,
+        vehicles: vehicleCount,
+        customers: customerCount,
+        activeJobs: activeJobCount
+      }));
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadStats();
-    }, [])
-  );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadStats();
-    setRefreshing(false);
-  }, []);
-
-  const showLoginCredentials = async () => {
+  const showLoginCredentials = useCallback(async () => {
     try {
       const usersJson = await SecureStore.getItemAsync('garage_square_users');
       if (usersJson) {
-        const users: Array<{ email: string; password: string; userData: any }> = JSON.parse(usersJson);
-        const adminUser = users.find(u => u.userData?.profile?.role?.name === 'company_admin');
-
+        const parsed = JSON.parse(usersJson);
+        const users = Array.isArray(parsed) ? parsed : [];
+        const adminUser = users.find((u: any) => u.userData?.profile?.role?.name === 'company_admin');
         if (adminUser) {
           console.log('\n=== COMPANY ADMIN LOGIN CREDENTIALS ===');
           console.log(`Email: ${adminUser.email}`);
           console.log(`Password: ${adminUser.password}`);
           console.log('========================================\n');
-        } else {
-          console.log('\n=== NO COMPANY ADMIN FOUND ===');
-          console.log('Please sign up first. The first user becomes Company Admin.');
-          console.log('================================\n');
         }
-      } else {
-        console.log('\n=== NO USERS FOUND ===');
-        console.log('Please sign up first. The first user becomes Company Admin.');
-        console.log('========================\n');
       }
     } catch (error) {
       console.error('Error loading credentials:', error);
     }
-  };
+  }, []);
 
-  const loadStats = async () => {
-    try {
-      // Check if Supabase is disabled
-      if (!supabase) {
-        console.warn('Supabase is disabled - using default stats');
-        return;
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadStats();
+    setRefreshing(false);
+  }, [loadStats]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadStats();
+      showLoginCredentials();
+    }, [loadStats, showLoginCredentials])
+  );
+
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = supabase
+      .channel('dashboard-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => loadStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'job_cards' }, () => loadStats())
+      .subscribe();
+
+    return () => {
+      if (supabase) {
+        supabase.removeChannel(channel);
       }
-
-      // Load actual stats from database
-      const customerCount = await CustomerService.getCount();
-
-      setStats(prev => ({
-        ...prev,
-        customers: customerCount
-      }));
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
-
-  // Bar Chart Component
-  const BarChart = () => {
-    const maxValue = 15;
-
-    return (
-      <View style={styles.chartContainer}>
-        <View style={styles.chartLegend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#4682B4' }]} />
-            <Text style={[styles.legendText, { color: theme.text }]}>branch 1</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#C37125' }]} />
-            <Text style={[styles.legendText, { color: theme.text }]}>branch 2</Text>
-          </View>
-        </View>
-
-        <View style={styles.chartContent}>
-          {/* Y-axis labels */}
-          <View style={styles.yAxis}>
-            {[15, 10, 5, 0].map((value) => (
-              <Text key={value} style={[styles.yAxisLabel, { color: theme.text }]}>
-                {value}
-              </Text>
-            ))}
-          </View>
-
-          {/* Chart bars */}
-          <View style={styles.barsContainer}>
-            {chartData.map((item, index) => (
-              <View key={index} style={styles.barGroup}>
-                <View style={styles.bars}>
-                  <View
-                    style={[
-                      styles.bar,
-                      { height: (item.branch1 / maxValue) * 120, backgroundColor: '#4682B4' },
-                    ]}
-                  />
-                  <View
-                    style={[
-                      styles.bar,
-                      { height: (item.branch2 / maxValue) * 120, backgroundColor: theme.primary },
-                    ]}
-                  />
-                </View>
-                <Text style={[styles.xAxisLabel, { color: theme.text }]}>{item.month}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      </View>
-    );
-  };
+    };
+  }, [loadStats]);
 
   return (
     <View style={[styles.containerMain, { backgroundColor: theme.background }]}>
@@ -171,12 +160,11 @@ export default function CompanyAdminDashboard() {
         }
       >
         <View style={styles.container}>
-          {/* Top Row Cards */}
           <View style={styles.cardRow}>
             {/* Active Jobs Card */}
             <TouchableOpacity
               style={[styles.largeCard, styles.activeJobsCard]}
-              onPress={() => navigation.navigate('ActiveJobs' as never)}
+              onPress={() => navigation.navigate('ActiveJobs')}
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
@@ -195,14 +183,11 @@ export default function CompanyAdminDashboard() {
             <TouchableOpacity
               style={[
                 styles.largeCard,
-                styles.whiteCard,
                 {
                   backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                  borderWidth: 0, // Added border for visibility
                 }
               ]}
-              onPress={() => navigation.navigate('Customers' as never)}
+              onPress={() => navigation.navigate('Customers')}
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
@@ -218,12 +203,11 @@ export default function CompanyAdminDashboard() {
             </TouchableOpacity>
           </View>
 
-          {/* Second Row Cards */}
           <View style={styles.cardRow}>
             {/* Vehicle Card */}
             <TouchableOpacity
               style={[styles.largeCard, { backgroundColor: theme.surface }]}
-              onPress={() => navigation.navigate('Vehicles' as never)}
+              onPress={() => navigation.navigate('Vehicles')}
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
@@ -241,7 +225,7 @@ export default function CompanyAdminDashboard() {
             {/* Revenue Card */}
             <TouchableOpacity
               style={[styles.largeCard, styles.revenueCard]}
-              onPress={() => navigation.navigate('ReportsTab' as never)}
+              onPress={() => navigation.navigate('ReportsTab')}
               activeOpacity={0.8}
             >
               <View style={styles.cardContent}>
@@ -259,10 +243,9 @@ export default function CompanyAdminDashboard() {
 
           {/* Bar Chart Card */}
           <View style={[styles.chartCard, { backgroundColor: theme.surface }]}>
-            <BarChart />
+            <BarChart data={chartData} theme={theme} />
           </View>
 
-          {/* Third Row - Status Cards */}
           <View style={styles.statusRow}>
             <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
               <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Check-in</Text>
@@ -278,7 +261,6 @@ export default function CompanyAdminDashboard() {
             </View>
           </View>
 
-          {/* Bottom Row - Staff and New Customers */}
           <View style={styles.bottomRow}>
             {/* Staff Card */}
             <View style={[styles.bottomCard, { backgroundColor: theme.surface }]}>
@@ -344,9 +326,6 @@ const styles = StyleSheet.create({
   revenueCard: {
     backgroundColor: '#C37125',
   },
-  whiteCard: {
-    // Styling handled inline with theme
-  },
   cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -367,9 +346,6 @@ const styles = StyleSheet.create({
     color: '#272727',
     marginBottom: 4,
   },
-  revenueValue: {
-    color: '#ffffff',
-  },
   cardTrend: {
     fontSize: 12,
     color: '#C37125',
@@ -383,9 +359,6 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconEmoji: {
-    // Kept for backward compatibility if needed, but not used for Ionicons
   },
   chartCard: {
     borderRadius: 16,
@@ -475,7 +448,7 @@ const styles = StyleSheet.create({
   },
   statusTitle: {
     fontSize: 14,
-    color: '#272727a0',
+    color: 'rgba(39, 39, 39, 0.63)',
     marginBottom: 8,
   },
   statusValue: {
@@ -515,7 +488,7 @@ const styles = StyleSheet.create({
   },
   staffLabel: {
     fontSize: 14,
-    color: '#272727a0',
+    color: 'rgba(39, 39, 39, 0.63)',
   },
   staffValue: {
     fontSize: 14,

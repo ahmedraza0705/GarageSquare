@@ -16,6 +16,7 @@ interface MenuItem {
   screenName?: string;
   tabScreen?: string;
   params?: any; // Added params support
+  nestedScreen?: string;
   isWorking: boolean;
 }
 
@@ -87,10 +88,19 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
     if (item.screenName) {
       if (item.tabScreen) {
-        // @ts-ignore - navigating into nested tabs
-        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        if (item.nestedScreen) {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, {
+            screen: item.tabScreen,
+            params: { screen: item.nestedScreen }
+          });
+        } else {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        }
       } else {
         // @ts-ignore
+        console.log('Navigating to:', item.screenName);
         props.navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());

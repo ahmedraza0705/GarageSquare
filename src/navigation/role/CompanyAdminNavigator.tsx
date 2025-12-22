@@ -48,7 +48,7 @@ import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
 import BranchDetailsScreen from '@/screens/company-admin/BranchDetailsScreen';
 import BranchFileUploadScreen from '@/screens/company-admin/BranchFileUploadScreen';
-import ChangePasswordScreen from '@/screens/shared/ChangePasswordScreen';
+import ChangePasswordScreen from '@/screens/shared/Chan13gePasswordScreen';
 import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
@@ -58,6 +58,41 @@ import ProfilePopup from '@/components/navigation/ProfilePopup';
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const DashboardInnerStack = createNativeStackNavigator();
+
+function DashboardStackNavigator() {
+  const { theme, themeName, toggleTheme } = useTheme();
+
+  return (
+    <DashboardInnerStack.Navigator
+      screenOptions={{
+        header: ({ route }) => (
+          <CustomHeader
+            route={route}
+            theme={theme}
+            themeName={themeName}
+            onToggleTheme={toggleTheme}
+            showBack={route.name !== 'DashboardHome'}
+          />
+        ),
+        headerShown: true,
+      }}
+    >
+      <DashboardInnerStack.Screen
+        name="DashboardHome"
+        component={CompanyAdminDashboard}
+      />
+      <DashboardInnerStack.Screen
+        name="Vehicles"
+        component={VehiclesScreen}
+      />
+      <DashboardInnerStack.Screen
+        name="Customers"
+        component={CustomersScreen}
+      />
+    </DashboardInnerStack.Navigator>
+  );
+}
 
 // Custom Header Component
 function CustomHeader({
@@ -98,22 +133,30 @@ function CustomHeader({
     }
 
     const titleMap: Record<string, string> = {
+      // Navigators
       DashboardTab: 'Dashboard',
       MainTabs: 'Dashboard',
-      Dashboard: 'Dashboard',
-      BranchesTab: 'Branch Management',
-      Branches: 'Branch Management',
+      DashboardStack: 'Dashboard',
+
+      // Screens
+      DashboardHome: 'Dashboard',
+      Vehicles: 'Vehicles Management', // Plural to match Pic 2
+      Customers: 'Customers',
+
+      // Tabs
+      BranchesTab: 'Branches',
       UsersTab: 'User Management',
-      UserManagement: 'User Management',
       ReportsTab: 'Reports',
+
+      // Other Screens
+      Branches: 'Branches',
+      UserManagement: 'User Management',
       Reports: 'Reports',
       InvoiceTab: 'Estimate',
       Invoice: 'Estimate',
       InvoiceList: 'Estimate',
       InvoiceDetail: 'Invoice Detail',
       ActiveJobs: 'Active Jobs',
-      Vehicles: 'Vehicles',
-      Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
       ChangePassword: 'Change Password',
@@ -331,7 +374,7 @@ function CompanyAdminTabs() {
     >
       <Tab.Screen
         name="DashboardTab"
-        component={DashboardStack}
+        component={DashboardStackNavigator}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
@@ -443,12 +486,14 @@ function CompanyAdminDrawer() {
         }}
       />
       <Drawer.Screen
-        name="Vehicles"
+        name="LegacyVehiclesHidden" // Renamed further to ensure no overlap
         component={VehiclesScreen}
         options={{
           title: 'Vehicles',
+          headerShown: false,
           drawerItemStyle: { display: 'none' },
         }}
+      // Redirect to the tab stack version if accessed via Drawer
       />
       <Drawer.Screen
         name="Customers"
