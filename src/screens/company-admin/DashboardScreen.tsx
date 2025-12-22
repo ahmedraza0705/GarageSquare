@@ -11,6 +11,7 @@ import * as SecureStore from 'expo-secure-store';
 import { CustomerService } from '@/services/customer.service';
 import { VehicleService } from '@/services/vehicle.service';
 import { JobCardService } from '@/services/jobCard.service';
+import { useJobs } from '../../context/JobContext';
 
 // Bar Chart Component (Moved outside to prevent unnecessary remounts)
 const BarChart = ({ data }: { data: any[] }) => {
@@ -52,6 +53,10 @@ const BarChart = ({ data }: { data: any[] }) => {
 export default function CompanyAdminDashboard() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
+  const { jobs, getJobsByStatus } = useJobs();
+
+  const activeJobs = getJobsByStatus('active');
+  const totalJobs = jobs.length;
 
   const [stats, setStats] = useState({
     activeJobs: 0,
@@ -173,7 +178,7 @@ export default function CompanyAdminDashboard() {
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={[styles.cardTitle, styles.whiteText]}>Active Jobs</Text>
-                  <Text style={[styles.cardValue, styles.whiteText]}>{stats.activeJobs}</Text>
+                  <Text style={[styles.cardValue, styles.whiteText]}>{activeJobs.length}</Text>
                   <Text style={[styles.cardTrend, styles.whiteText]}>+10%</Text>
                 </View>
                 <View style={styles.cardIcon}>

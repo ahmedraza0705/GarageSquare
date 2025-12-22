@@ -84,6 +84,17 @@ function DashboardStackNavigator() {
         name="Customers"
         component={CustomersScreen}
       />
+      {/* Moved ActiveJobs and JobCardDetail here to be part of the Tab/Drawer hierarchy */}
+      <DashboardInnerStack.Screen
+        name="ActiveJobs"
+        component={ActiveJobsScreen}
+        options={{ headerShown: false }} // Uses its own custom header
+      />
+      <DashboardInnerStack.Screen
+        name="JobCardDetail"
+        component={JobCardDetailScreen}
+        options={{ headerShown: false }} // Uses its own custom header
+      />
     </DashboardInnerStack.Navigator>
   );
 }
@@ -225,7 +236,22 @@ function CustomHeader({
   );
 }
 
+// Logic to hide tab bar on specific screens
+const getTabBarVisibility = (route: any) => {
+  const routeName = getFocusedRouteNameFromRoute(route);
 
+  // Try to find the darkest nested route
+  // If routeName is undefined, it means we are at the root of the stack (DashboardHome)
+
+  if (routeName === 'JobCardDetail' ||
+    routeName === 'CreateCustomer' ||
+    routeName === 'CreateVehicle' ||
+    routeName === 'CreateJobCard' ||
+    routeName === 'JobTasksDetail') {
+    return 'none';
+  }
+  return 'flex';
+};
 
 // Bottom Tab Navigator
 function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
@@ -236,9 +262,10 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
 
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: {
+          display: getTabBarVisibility(route), // Apply dynamic visibility
           backgroundColor: BAR_COLOR,
           borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 85 : 65,
@@ -260,7 +287,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         tabBarActiveTintColor: ACTIVE_COLOR,
         tabBarInactiveTintColor: INACTIVE_COLOR,
         tabBarShowLabel: false, // Hide labels for a cleaner look like the image
-      }}
+      })}
     >
       <Tab.Screen
         name="DashboardTab"
@@ -423,25 +450,17 @@ export default function CompanyAdminNavigator() {
           />
         )}
       </Stack.Screen>
-      <Stack.Screen
-        name="ActiveJobs"
-        component={ActiveJobsScreen}
-        options={{
-          headerShown: false, // Using custom header in screen
-        }}
-      />
+
+      {/* 
+         Removed ActiveJobs and JobCardDetail from here as they are now in DashboardStack/InnerStack
+         This allows them to inherit the Drawer and Tab navigation context properly.
+      */}
+
       <Stack.Screen
         name="JobTasksDetail"
         component={JobTasksDetailScreen}
         options={{
           headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="JobCardDetail"
-        component={JobCardDetailScreen}
-        options={{
-          headerShown: false, // Using custom header in screen
         }}
       />
       <Stack.Screen
@@ -557,7 +576,7 @@ export default function CompanyAdminNavigator() {
       />
       <Stack.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsScreen} // Kept for other entry points if needed?
         options={{
           headerShown: true,
           header: ({ route }) => (

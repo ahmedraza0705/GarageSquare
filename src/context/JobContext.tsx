@@ -30,16 +30,23 @@ export interface Job {
     services?: string[]; // list of service names
     completedServices?: string[]; // list of completed service names
     otherRequirements?: string;
+
+    // Persisted states for Task list and Quality Check list
+    taskStatuses?: Record<string, string>;
+    qualityStatuses?: Record<string, string>;
+    updatedAt?: number;
 }
 
 interface JobContextType {
     jobs: Job[];
     addJob: (job: Omit<Job, 'id' | 'status' | 'jobId'>) => void;
     updateJobStatus: (id: string, status: string, options?: { workCompleted?: boolean, qualityCheckCompleted?: boolean, assignedTech?: string, deliveryCompleted?: boolean }) => void;
+    setJobDetails: (id: string, details: Partial<Pick<Job, 'taskStatuses' | 'qualityStatuses'>>) => void;
     toggleWorkComplete: (id: string) => void;
     toggleQualityCheck: (id: string) => void;
     toggleDelivery: (id: string) => void;
     toggleServiceStatus: (id: string, serviceName: string) => void;
+    deleteJob: (id: string) => void;
     getJobsByStatus: (statusTab: 'pending' | 'active' | 'done') => Job[];
 }
 
@@ -130,7 +137,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
 
     const updateJobStatus = (id: string, status: string, options?: { workCompleted?: boolean, qualityCheckCompleted?: boolean, assignedTech?: string, deliveryCompleted?: boolean }) => {
         setJobs(prev => prev.map(job =>
-            job.id === id ? { ...job, status, ...options } : job
+            job.id === id ? { ...job, status, ...options, updatedAt: Date.now() } : job
         ));
     };
 
@@ -183,8 +190,18 @@ export function JobProvider({ children }: { children: ReactNode }) {
         });
     };
 
+    const deleteJob = (id: string) => {
+        setJobs(prev => prev.filter(job => job.id !== id));
+    };
+
+    const setJobDetails = (id: string, details: Partial<Pick<Job, 'taskStatuses' | 'qualityStatuses'>>) => {
+        setJobs(prev => prev.map(job =>
+            job.id === id ? { ...job, ...details, updatedAt: Date.now() } : job
+        ));
+    };
+
     return (
-        <JobContext.Provider value={{ jobs, addJob, updateJobStatus, toggleWorkComplete, toggleQualityCheck, toggleDelivery, toggleServiceStatus, getJobsByStatus }}>
+        <JobContext.Provider value={{ jobs, addJob, updateJobStatus, setJobDetails, deleteJob, toggleWorkComplete, toggleQualityCheck, toggleDelivery, toggleServiceStatus, getJobsByStatus }}>
             {children}
         </JobContext.Provider>
     );

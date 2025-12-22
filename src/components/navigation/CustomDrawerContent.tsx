@@ -31,12 +31,19 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
 
   // Consolidated menu items (latest version)
   const menuItems: MenuItem[] = [
-    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
+    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', nestedScreen: 'DashboardHome', isWorking: true },
     { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
     { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
     { label: 'Job Tasks and Assignments', screenName: 'JobTasks', isWorking: true },
     { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
+    // Updated Vehicle Management with correct nested path
+    {
+      label: 'Vehicle Management',
+      screenName: 'MainTabs',
+      tabScreen: 'DashboardTab',
+      nestedScreen: 'Vehicles',
+      isWorking: true
+    },
     { label: 'Reports', screenName: 'Reports', isWorking: true },
     { label: 'Invoice and Billing', isWorking: false },
     { label: 'Customers', screenName: 'Customers', isWorking: true },
@@ -91,14 +98,18 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     setActiveLabel(item.label);
 
     if (item.screenName) {
-      if (item.tabScreen) {
-        // Navigate within a tab navigator
-        // @ts-ignore – navigation may be typed loosely
-        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
-      } else if (item.nestedScreen) {
-        // Navigate to a nested screen inside a stack
+      // Fix: Check for nested screen FIRST
+      if (item.tabScreen && item.nestedScreen) {
+        // Navigate to a nested screen inside a tab -> stack
         // @ts-ignore
-        props.navigation.navigate(item.screenName, { screen: item.tabScreen, params: { screen: item.nestedScreen } });
+        props.navigation.navigate(item.screenName, {
+          screen: item.tabScreen,
+          params: { screen: item.nestedScreen }
+        });
+      } else if (item.tabScreen) {
+        // Navigate within a tab navigator
+        // @ts-ignore
+        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
       } else {
         // Simple navigation
         // @ts-ignore
