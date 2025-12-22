@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Linking, Alert, Platform, Mod
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
+import { Trash2, Edit3 } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { BranchService } from '@/services/branch.service';
@@ -183,28 +184,28 @@ export default function BranchDetailsScreen() {
                     <TouchableOpacity
                         onPress={handleDelete}
                         style={{
-                            backgroundColor: '#FEE2E2',
-                            width: 36,
-                            height: 36,
-                            borderRadius: 8,
+                            backgroundColor: themeName === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2',
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
                             alignItems: 'center',
                             justifyContent: 'center',
                         }}
                     >
-                        <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                        <Trash2 color="#ef4444" size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={openEditModal}
                         style={{
-                            backgroundColor: theme.tabIconBg,
-                            width: 36,
-                            height: 36,
-                            borderRadius: 8,
+                            backgroundColor: themeName === 'dark' ? 'rgba(195, 113, 37, 0.2)' : 'rgba(70, 130, 180, 0.2)',
+                            width: 40,
+                            height: 40,
+                            borderRadius: 12,
                             alignItems: 'center',
                             justifyContent: 'center',
                         }}
                     >
-                        <Ionicons name="create-outline" size={24} color={theme.primary} />
+                        <Edit3 color={themeName === 'dark' ? '#C37125' : '#4682B4'} size={20} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -438,29 +439,34 @@ export default function BranchDetailsScreen() {
                             alignItems: 'center',
                             height: 50,
                             justifyContent: 'center',
+                            borderWidth: 1,
+                            borderColor: theme.primary
                         }}>
                             <View style={{ marginRight: 10 }}>
-                                <Ionicons name="call" size={18} color="white" />
+                                <Ionicons name="call" size={18} color="#FFFFFF" />
                             </View>
-                            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#FFFFFF' }}>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold', color: '#FFFFFF' }}>
                                 {loadingManager ? '...' : (manager?.phone || branch.phone || '+91 96622 80843')}
                             </Text>
                         </TouchableOpacity>
 
                         {/* Email Card */}
+                        {/* Email Card */}
                         <TouchableOpacity onPress={handleEmail} style={{
-                            backgroundColor: theme.tabIconBg,
+                            backgroundColor: theme.primary,
                             borderRadius: 15,
-                            padding: 8,
+                            padding: 12,
                             flexDirection: 'row',
                             alignItems: 'center',
                             height: 50,
                             justifyContent: 'center',
+                            borderWidth: 1,
+                            borderColor: theme.primary
                         }}>
-                            <View style={{ marginRight: 5 }}>
-                                <Ionicons name="mail" size={18} color={theme.primary} />
+                            <View style={{ marginRight: 10 }}>
+                                <Ionicons name="mail" size={18} color="#FFFFFF" />
                             </View>
-                            <Text style={{ fontSize: 10, color: theme.textMuted, fontWeight: '600' }} numberOfLines={1}>
+                            <Text style={{ fontSize: 13, color: '#FFFFFF', fontWeight: 'bold' }} numberOfLines={1}>
                                 {loadingManager ? '...' : (manager?.email || branch.email || 'ahmed.raza@gmail.com')}
                             </Text>
                         </TouchableOpacity>

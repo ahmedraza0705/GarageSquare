@@ -16,7 +16,7 @@ export default function StartingScreen() {
   const { theme } = useTheme();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+    <View className="flex-1" style={{ backgroundColor: '#2d3748' }}>
       <StatusBar barStyle={theme.statusBarStyle} />
       {/* Background - Using gradient as placeholder for garage image */}
       <View style={styles.backgroundContainer}>
@@ -47,18 +47,18 @@ export default function StartingScreen() {
 
                 {/* Wings - left */}
                 <View style={styles.wingLeft}>
-                  <View style={[styles.wingShape, { transform: [{ rotate: '-45deg' }], backgroundColor: theme.primary }]} />
+                  <View style={[styles.wingShape, { transform: [{ rotate: '-45deg' }], backgroundColor: '#3B82F6' }]} />
                 </View>
                 {/* Wings - right */}
                 <View style={styles.wingRight}>
-                  <View style={[styles.wingShape, { transform: [{ rotate: '45deg' }], backgroundColor: theme.primary }]} />
+                  <View style={[styles.wingShape, { transform: [{ rotate: '45deg' }], backgroundColor: '#3B82F6' }]} />
                 </View>
               </View>
 
               {/* Crossed Wrenches Below */}
               <View style={styles.wrenchesContainer}>
-                <View style={[styles.wrench, styles.wrench1, { backgroundColor: theme.primary }]} />
-                <View style={[styles.wrench, styles.wrench2, { backgroundColor: theme.primary }]} />
+                <View style={[styles.wrench, styles.wrench1, { backgroundColor: '#3B82F6' }]} />
+                <View style={[styles.wrench, styles.wrench2, { backgroundColor: '#3B82F6' }]} />
               </View>
             </View>
           </View>
@@ -69,7 +69,7 @@ export default function StartingScreen() {
             <TouchableOpacity
               onPress={() => navigation.navigate('Login')}
               className="py-4 rounded-lg items-center justify-center mb-4"
-              style={[styles.button, { backgroundColor: theme.primary }]}
+              style={[styles.button, { backgroundColor: '#3B82F6' }]}
             >
               <Text className="text-white font-bold text-lg">Get Started</Text>
             </TouchableOpacity>
@@ -129,11 +129,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
+  // Revert specific styles to standard blue (no theme dependency for colors where possible or hardcoded)
+  // Replacing theme.primary and #C37125 with #3B82F6 (Standard Blue)
+
   gearCircle: {
     width: 96,
     height: 96,
     borderWidth: 4,
-    borderColor: '#C37125',
+    borderColor: '#3B82F6',
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
@@ -141,13 +144,13 @@ const styles = StyleSheet.create({
   },
   star: {
     fontSize: 36,
-    color: '#C37125',
+    color: '#3B82F6',
   },
   gearTooth: {
     position: 'absolute',
     width: 24,
     height: 24,
-    backgroundColor: '#C37125',
+    backgroundColor: '#3B82F6',
     borderRadius: 12,
   },
   gearToothTop: {
@@ -189,7 +192,7 @@ const styles = StyleSheet.create({
   wingShape: {
     width: 64,
     height: 32,
-    backgroundColor: '#C37125',
+    backgroundColor: '#3B82F6',
     borderRadius: 16,
   },
   wrenchesContainer: {
@@ -206,9 +209,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 32,
     height: 4,
-    backgroundColor: '#C37125',
+    backgroundColor: '#3B82F6',
     borderRadius: 2,
   },
+
   wrench1: {
     transform: [{ rotate: '45deg' }],
   },

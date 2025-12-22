@@ -33,7 +33,8 @@ import {
   ClipboardList,
   Calendar,
   X,
-  Save
+  Save,
+  Edit3
 } from 'lucide-react-native';
 
 // Helper for Stats Card - Defined outside to prevent remount loops on scroll
@@ -171,7 +172,7 @@ export default function CustomerDetailScreen() {
           <ArrowLeft color={theme.text} size={24} />
         </TouchableOpacity>
 
-        <Text style={{ color: theme.text }} className="text-xl font-bold">User Details</Text>
+        <Text style={{ color: theme.text }} className="text-xl font-bold">Customer Details</Text>
 
         <View className="flex-row gap-2">
           <TouchableOpacity
@@ -184,10 +185,10 @@ export default function CustomerDetailScreen() {
 
           <TouchableOpacity
             onPress={() => setEditModalVisible(true)}
-            style={{ backgroundColor: themeName === 'dark' ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7' }}
+            style={{ backgroundColor: themeName === 'dark' ? 'rgba(195, 113, 37, 0.2)' : 'rgba(70, 130, 180, 0.2)' }}
             className="w-10 h-10 rounded-xl items-center justify-center"
           >
-            <Plus color="#22c55e" size={20} />
+            <Edit3 color={themeName === 'dark' ? '#C37125' : '#4682B4'} size={20} />
           </TouchableOpacity>
         </View>
       </View>
@@ -198,7 +199,7 @@ export default function CustomerDetailScreen() {
       >
         {/* Profile Section */}
         <View className="items-center py-6">
-          <View style={{ borderColor: theme.surface, backgroundColor: '#4682B4' }} className="w-32 h-32 rounded-full mb-4 border-4 shadow-lg items-center justify-center">
+          <View style={{ borderColor: theme.surface, backgroundColor: themeName === 'dark' ? '#C37125' : '#4682B4' }} className="w-32 h-32 rounded-full mb-4 border-4 shadow-lg items-center justify-center">
             <Text className="text-white text-4xl font-bold">
               {getInitials(customer.full_name)}
             </Text>

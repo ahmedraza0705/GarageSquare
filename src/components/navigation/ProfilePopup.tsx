@@ -58,10 +58,7 @@ export default function ProfilePopup({ visible, onClose }: ProfilePopupProps) {
                                     </View>
                                 </View>
                                 <TouchableOpacity onPress={handleLogout} style={styles.logoutIcon}>
-                                    <Image
-                                        source={require('../../assets/logout_icon_v2.png')}
-                                        style={{ width: 24, height: 24, resizeMode: 'contain' }}
-                                    />
+                                    <Ionicons name="log-out-outline" size={24} color="#1f2937" />
                                 </TouchableOpacity>
                             </View>
 

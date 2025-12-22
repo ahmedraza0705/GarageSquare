@@ -176,7 +176,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
             <View style={styles.headerTopRow}>
               <Text style={[styles.languageText, { color: theme.primary }]}>{language}</Text>
               <TouchableOpacity style={styles.editIcon}>
-                <Ionicons name="pencil" size={18} color="#EAB308" />
+                <Ionicons name="pencil" size={18} color={theme.primary} />
               </TouchableOpacity>
             </View>
 
@@ -238,10 +238,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
           style={styles.logoutButton}
           onPress={handleLogout}
         >
-          <Image
-            source={require('../../assets/logout_icon_v2.png')}
-            style={[styles.logoutImage, { tintColor: theme.notification }]}
-          />
+          <Ionicons name="log-out-outline" size={24} color={theme.notification} style={{ marginRight: 12 }} />
           <Text style={[styles.logoutText, { color: theme.notification }]}>Logout</Text>
         </TouchableOpacity>
       </View >

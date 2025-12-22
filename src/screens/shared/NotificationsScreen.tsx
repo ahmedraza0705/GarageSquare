@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { View, Text, Switch, ScrollView, StyleSheet } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function NotificationsScreen() {
+    const { theme } = useTheme();
     const [allowNotifications, setAllowNotifications] = useState(true);
 
     const [toggles, setToggles] = useState<Record<string, boolean>>({
@@ -25,11 +27,11 @@ export default function NotificationsScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: '#f3f4f6' }]}>
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.card}>
-                    <View style={styles.headerRow}>
-                        <Text style={styles.headerLabel}>Allow Notifications</Text>
+                <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                    <View style={[styles.headerRow, { borderBottomColor: theme.border }]}>
+                        <Text style={[styles.headerLabel, { color: theme.text }]}>Allow Notifications</Text>
                         <Switch
                             value={allowNotifications}
                             onValueChange={setAllowNotifications}
@@ -39,8 +41,8 @@ export default function NotificationsScreen() {
                     </View>
 
                     {notificationItems.map((item, index) => (
-                        <View key={index} style={styles.itemRow}>
-                            <Text style={styles.itemText}>{item}</Text>
+                        <View key={index} style={[styles.itemRow, { borderBottomColor: theme.border }]}>
+                            <Text style={[styles.itemText, { color: theme.text }]}>{item}</Text>
                             <Switch
                                 value={toggles[item]}
                                 onValueChange={() => toggleSwitch(item)}

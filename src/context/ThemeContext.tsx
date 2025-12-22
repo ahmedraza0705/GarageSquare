@@ -33,7 +33,7 @@ export type ThemeColors = {
 
 export const themes: Record<ThemeName, ThemeColors> = {
   light: {
-    primary: '#35C56A', // Steel Blue from palette
+    primary: '#4682B4', // Steel Blue from palette
     background: '#F1F5F9', // Steel bluish gray for background
     surface: '#FFFFFF',
     surfaceAlt: '#E2E8F0',
@@ -52,7 +52,7 @@ export const themes: Record<ThemeName, ThemeColors> = {
     avatarText: '#FFFFFF',
     tabBarBg: '#4682B4',
     tabBarBorder: 'transparent',
-    tabIconBg: 'rgba(255, 255, 255, 0.2)',
+    tabIconBg: 'rgba(70, 130, 180, 0.12)',
     tabIconColor: '#FFFFFF',
     tabIconInactiveOpacity: 0.7,
     drawerBackground: '#F0F9FF',

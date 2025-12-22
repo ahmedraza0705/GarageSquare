@@ -203,8 +203,8 @@ export default function SignupScreen() {
           onPress={handleSignup}
           disabled={!isFormValid() || loading}
           className={`py-4 rounded-lg items-center justify-center mb-4 ${isFormValid() && !loading
-            ? 'bg-[#4682B4]'
-            : 'bg-[#4682B4]'
+            ? 'bg-blue-600'
+            : 'bg-blue-600'
             }`}
         >
           {loading ? (

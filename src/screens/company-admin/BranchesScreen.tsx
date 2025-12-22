@@ -277,7 +277,7 @@ export default function BranchesScreen() {
               backgroundColor: theme.surface,
               borderRadius: 12,
               paddingHorizontal: 16,
-              paddingVertical: 12,
+              height: 48,
               marginRight: 12,
               borderWidth: 1,
               borderColor: theme.border
@@ -294,7 +294,6 @@ export default function BranchesScreen() {
             <TouchableOpacity
               style={{
                 backgroundColor: 'rgba(53, 197, 106, 0.4)',
-                padding: 12,
                 borderRadius: 12,
                 width: 48,
                 height: 48,
@@ -305,7 +304,7 @@ export default function BranchesScreen() {
               }}
               onPress={() => setModalVisible(true)}
             >
-              <Ionicons name="add" size={24} color="#000000" />
+              <Ionicons name="add" size={24} color={themeName === 'light' ? '#000000' : '#FFFFFF'} />
             </TouchableOpacity>
           </View>
 
@@ -328,7 +327,7 @@ export default function BranchesScreen() {
                   width: 48,
                   height: 48,
                   borderRadius: 24,
-                  backgroundColor: theme.primary,
+                  backgroundColor: themeName === 'dark' ? '#C37125' : '#4682B4',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 16

@@ -119,13 +119,13 @@ export default function LoginScreen() {
         <TouchableOpacity
           onPress={handleLogin}
           disabled={loading}
-          className={`py-4 rounded-lg items-center justify-center mb-4 ${loading ? 'bg-gray-300' : 'bg-gray-300'
+          className={`py-4 rounded-lg items-center justify-center mb-4 ${loading ? 'bg-gray-300' : 'bg-blue-600'
             }`}
         >
           {loading ? (
             <Text className="text-gray-600 font-semibold">Logging in...</Text>
           ) : (
-            <Text className="text-gray-700 font-semibold text-base">
+            <Text className="text-white font-semibold text-base">
               Log in
             </Text>
           )}

@@ -12,7 +12,7 @@ import { getInitials } from '@/utils/string';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function CustomersScreen() {
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
   const navigation = useNavigation<any>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
@@ -87,7 +87,7 @@ export default function CustomersScreen() {
               backgroundColor: theme.surface,
               borderRadius: 12,
               paddingHorizontal: 16,
-              paddingVertical: 12,
+              height: 48,
               marginRight: 12,
               borderWidth: 1,
               borderColor: theme.border
@@ -104,19 +104,18 @@ export default function CustomersScreen() {
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: theme.tabIconBg,
-                padding: 12,
+                backgroundColor: 'rgba(53, 197, 106, 0.4)',
                 borderRadius: 12,
                 width: 48,
                 height: 48,
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderWidth: 1,
-                borderColor: theme.primary
+                borderColor: '#35C56A'
               }}
               onPress={() => navigation.navigate('CreateCustomer')}
             >
-              <Ionicons name="add" size={24} color={theme.primary} />
+              <Ionicons name="add" size={24} color={themeName === 'light' ? '#000000' : '#FFFFFF'} />
             </TouchableOpacity>
           </View>
 
@@ -164,7 +163,7 @@ export default function CustomersScreen() {
                     width: 48,
                     height: 48,
                     borderRadius: 24,
-                    backgroundColor: '#4682B4',
+                    backgroundColor: themeName === 'dark' ? '#C37125' : '#4682B4',
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginRight: 16

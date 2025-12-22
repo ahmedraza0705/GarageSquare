@@ -85,10 +85,7 @@ export default function SettingsScreen() {
           <View style={styles.menuLeft}>
             <View style={styles.iconContainer}>
               {/* Using Custom Logout Image */}
-              <Image
-                source={require('../../assets/logout_icon_v2.png')}
-                style={{ width: 24, height: 24, resizeMode: 'contain', tintColor: theme.notification }}
-              />
+              <Ionicons name="log-out-outline" size={24} color={theme.notification} />
             </View>
             <Text style={[styles.menuTitle, { color: theme.notification }]}>Log Out</Text>
           </View>

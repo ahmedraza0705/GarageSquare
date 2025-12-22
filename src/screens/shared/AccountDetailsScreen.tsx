@@ -5,11 +5,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthService } from '@/services/auth.service';
 import { useTheme } from '@/context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function AccountDetailsScreen() {
     const navigation = useNavigation();
     const { user } = useAuth();
-    const { theme } = useTheme();
+    const { theme, themeName } = useTheme();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -93,8 +94,10 @@ export default function AccountDetailsScreen() {
     };
 
     const getInitials = () => {
-        const first = formData.firstName?.[0] || '';
-        return first.toUpperCase() || 'A';
+        // Use formData if available (editing), otherwise fallback to user object directly
+        const nameSource = formData.firstName || user?.profile?.full_name || user?.email || '';
+        const firstChar = nameSource.trim().charAt(0);
+        return firstChar.toUpperCase() || 'A';
     };
 
     return (
@@ -103,12 +106,18 @@ export default function AccountDetailsScreen() {
 
                 {/* Profile Avatar Section */}
                 <View style={styles.avatarContainer}>
-                    <View style={[styles.avatar, { backgroundColor: theme.primary, opacity: 0.8 }]}>
-                        <Text style={[styles.avatarText, { color: theme.white || '#fff' }]}>{getInitials()}</Text>
+                    <View style={[
+                        styles.avatar,
+                        {
+                            backgroundColor: themeName === 'dark' ? '#C37125' : '#4682B4',
+                            opacity: 0.8
+                        }
+                    ]}>
+                        <Text style={[styles.avatarText, { color: '#fff' }]}>{getInitials()}</Text>
                     </View>
                     {isEditing && (
                         <TouchableOpacity style={[styles.editIconContainer, { backgroundColor: theme.surface }]}>
-                            <Text style={styles.editIcon}>✏️</Text>
+                            <Ionicons name="pencil" size={16} color={themeName === 'dark' ? '#C37125' : '#4682B4'} />
                         </TouchableOpacity>
                     )}
                 </View>

@@ -15,24 +15,24 @@ import { VehicleService } from '@/services/vehicle.service';
 import { JobCardService } from '@/services/jobCard.service';
 
 // Bar Chart Component
-const BarChart = ({ data, theme }: { data: any[]; theme: any }) => {
+const BarChart = ({ data, theme, themeName }: { data: any[]; theme: any; themeName: string }) => {
   const maxValue = 15;
   return (
     <View style={styles.chartContainer}>
       <View style={styles.chartLegend}>
         <View style={styles.legendItem}>
           <View style={[styles.legendColor, { backgroundColor: '#4682B4' }]} />
-          <Text style={[styles.legendText, { color: theme.text }]}>branch 1</Text>
+          <Text style={[styles.legendText, { color: themeName === 'dark' ? theme.text : '#272727' }]}>branch 1</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendColor, { backgroundColor: theme.primary }]} />
-          <Text style={[styles.legendText, { color: theme.text }]}>branch 2</Text>
+          <View style={[styles.legendColor, { backgroundColor: '#C37125' }]} />
+          <Text style={[styles.legendText, { color: themeName === 'dark' ? theme.text : '#272727' }]}>branch 2</Text>
         </View>
       </View>
       <View style={styles.chartContent}>
         <View style={styles.yAxis}>
           {[15, 10, 5, 0].map((value) => (
-            <Text key={value} style={[styles.yAxisLabel, { color: theme.text }]}>{value}</Text>
+            <Text key={value} style={[styles.yAxisLabel, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{value}</Text>
           ))}
         </View>
         <View style={styles.barsContainer}>
@@ -40,9 +40,9 @@ const BarChart = ({ data, theme }: { data: any[]; theme: any }) => {
             <View key={index} style={styles.barGroup}>
               <View style={styles.bars}>
                 <View style={[styles.bar, { height: (item.branch1 / maxValue) * 120, backgroundColor: '#4682B4' }]} />
-                <View style={[styles.bar, { height: (item.branch2 / maxValue) * 120, backgroundColor: theme.primary }]} />
+                <View style={[styles.bar, { height: (item.branch2 / maxValue) * 120, backgroundColor: '#C37125' }]} />
               </View>
-              <Text style={[styles.xAxisLabel, { color: theme.text }]}>{item.month}</Text>
+              <Text style={[styles.xAxisLabel, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{item.month}</Text>
             </View>
           ))}
         </View>
@@ -54,7 +54,7 @@ const BarChart = ({ data, theme }: { data: any[]; theme: any }) => {
 export default function CompanyAdminDashboard() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { theme, themeName } = useTheme();
 
   const [stats, setStats] = useState({
     activeJobs: 0,
@@ -73,7 +73,7 @@ export default function CompanyAdminDashboard() {
     { month: 'Jan', branch1: 8, branch2: 6 },
     { month: 'Feb', branch1: 10, branch2: 8 },
     { month: 'Mar', branch1: 12, branch2: 10 },
-    { month: 'Apr', branch1: 14, branch2: 12 },
+    { month: 'Apr', branch1: 15, branch2: 12 },
     { month: 'May', branch1: 15, branch2: 13 },
   ], []);
 
@@ -192,12 +192,12 @@ export default function CompanyAdminDashboard() {
             >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
-                  <Text style={[styles.cardTitle, { color: theme.textMuted }]}>Customers</Text>
-                  <Text style={[styles.cardValue, { color: theme.text }]}>{stats.customers}</Text>
-                  <Text style={styles.cardTrend}>+12%</Text>
+                  <Text style={[styles.cardTitle, { color: themeName === 'dark' ? theme.textMuted : 'rgba(39, 39, 39, 0.63)' }]}>Customers</Text>
+                  <Text style={[styles.cardValue, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{stats.customers}</Text>
+                  <Text style={[styles.cardTrend, { color: themeName === 'dark' ? '#C37125' : '#35C56A' }]}>+12%</Text>
                 </View>
                 <View style={styles.cardIcon}>
-                  <Ionicons name="people-outline" size={32} color={theme.text} />
+                  <Ionicons name="people-outline" size={32} color={themeName === 'dark' ? theme.text : '#272727'} />
                 </View>
               </View>
             </TouchableOpacity>
@@ -212,12 +212,12 @@ export default function CompanyAdminDashboard() {
             >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
-                  <Text style={[styles.cardTitle, { color: theme.textMuted }]}>Vehicle</Text>
-                  <Text style={[styles.cardValue, { color: theme.text }]}>{stats.vehicles}</Text>
-                  <Text style={styles.cardTrend}>+9%</Text>
+                  <Text style={[styles.cardTitle, { color: themeName === 'dark' ? theme.textMuted : 'rgba(39, 39, 39, 0.63)' }]}>Vehicle</Text>
+                  <Text style={[styles.cardValue, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{stats.vehicles}</Text>
+                  <Text style={[styles.cardTrend, { color: themeName === 'dark' ? '#C37125' : '#35C56A' }]}>+9%</Text>
                 </View>
                 <View style={styles.cardIcon}>
-                  <Ionicons name="car-outline" size={32} color={theme.text} />
+                  <Ionicons name="car-outline" size={32} color={themeName === 'dark' ? theme.text : '#272727'} />
                 </View>
               </View>
             </TouchableOpacity>
@@ -243,21 +243,21 @@ export default function CompanyAdminDashboard() {
 
           {/* Bar Chart Card */}
           <View style={[styles.chartCard, { backgroundColor: theme.surface }]}>
-            <BarChart data={chartData} theme={theme} />
+            <BarChart data={chartData} theme={theme} themeName={themeName} />
           </View>
 
           <View style={styles.statusRow}>
             <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
-              <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Check-in</Text>
-              <Text style={[styles.statusValue, { color: theme.text }]}>{stats.checkIn}</Text>
+              <Text style={[styles.statusTitle, { color: themeName === 'dark' ? theme.textMuted : 'rgba(39, 39, 39, 0.63)' }]}>Check-in</Text>
+              <Text style={[styles.statusValue, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{stats.checkIn}</Text>
             </View>
             <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
-              <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Processing</Text>
-              <Text style={[styles.statusValue, { color: theme.text }]}>{stats.processing}</Text>
+              <Text style={[styles.statusTitle, { color: themeName === 'dark' ? theme.textMuted : 'rgba(39, 39, 39, 0.63)' }]}>Processing</Text>
+              <Text style={[styles.statusValue, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{stats.processing}</Text>
             </View>
             <View style={[styles.statusCard, { backgroundColor: theme.surface }]}>
-              <Text style={[styles.statusTitle, { color: theme.textMuted }]}>Delivery</Text>
-              <Text style={[styles.statusValue, { color: theme.text }]}>{stats.delivery}</Text>
+              <Text style={[styles.statusTitle, { color: themeName === 'dark' ? theme.textMuted : 'rgba(39, 39, 39, 0.63)' }]}>Delivery</Text>
+              <Text style={[styles.statusValue, { color: themeName === 'dark' ? theme.text : '#272727' }]}>{stats.delivery}</Text>
             </View>
           </View>
 
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardValue: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#272727',
     marginBottom: 4,
@@ -487,12 +487,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   staffLabel: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '700',
     color: 'rgba(39, 39, 39, 0.63)',
   },
   staffValue: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 12,
+    fontWeight: '700',
     color: '#272727',
   },
   newCustomersValue: {

@@ -79,14 +79,6 @@ function DashboardStackNavigator() {
         name="DashboardHome"
         component={CompanyAdminDashboard}
       />
-      <DashboardInnerStack.Screen
-        name="Vehicles"
-        component={VehiclesScreen}
-      />
-      <DashboardInnerStack.Screen
-        name="Customers"
-        component={CustomersScreen}
-      />
     </DashboardInnerStack.Navigator>
   );
 }
@@ -205,7 +197,7 @@ function CustomHeader({
 
     // List of screens that should show menu button (hamburger) instead of back button
     // These are primary drawer screens
-    const drawerScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab', 'Vehicles', 'Customers', 'Inventory', 'JobCards'];
+    const drawerScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab', 'Inventory', 'JobCards'];
 
     // If we're on a drawer screen, don't show back button
     if (drawerScreens.includes(routeName) || drawerScreens.includes(route?.name)) {
@@ -375,11 +367,12 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
             ]}>
               <LayoutDashboard color={color} size={24} />
             </View>
           ),
+          headerShown: false,
         }}
       />
       <Tab.Screen
@@ -390,7 +383,7 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
             ]}>
               <Building2 color={color} size={24} />
             </View>
@@ -404,7 +397,7 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
             ]}>
               <Users color={color} size={24} />
             </View>
@@ -418,7 +411,7 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
             ]}>
               <FileBarChart color={color} size={24} />
             </View>
@@ -479,24 +472,6 @@ function CompanyAdminDrawer() {
         options={{
           title: 'Inventory',
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
-      />
-      <Drawer.Screen
-        name="Vehicles"
-        component={VehiclesScreen}
-        options={{
-          title: 'Vehicles',
-          headerShown: false,
-          drawerItemStyle: { display: 'none' },
-        }}
-      // Redirect to the tab stack version if accessed via Drawer
-      />
-      <Drawer.Screen
-        name="Customers"
-        component={CustomersScreen}
-        options={{
-          title: 'Customers',
-          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -587,7 +562,7 @@ export default function CompanyAdminNavigator() {
         name="CreateVehicle"
         component={CreateVehicleScreen}
         options={{
-          headerShown: true,
+          headerShown: false,
           title: 'Add Vehicle',
           headerStyle: { backgroundColor: theme.headerBg },
           headerTintColor: theme.headerText,
@@ -682,6 +657,38 @@ export default function CompanyAdminNavigator() {
         }}
       />
       <Stack.Screen
+        name="Vehicles"
+        component={VehiclesScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="Customers"
+        component={CustomersScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -697,7 +704,7 @@ export default function CompanyAdminNavigator() {
           ),
         }}
       />
-    </Stack.Navigator>
+    </Stack.Navigator >
   );
 }
 

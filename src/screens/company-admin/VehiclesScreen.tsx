@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, Sa
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { VehicleService } from '@/services/vehicle.service';
+import { useTheme } from '@/context/ThemeContext';
 import { CustomerService } from '@/services/customer.service';
 import { Vehicle, Customer } from '@/types';
 import { Search, Plus, X, CheckCircle, User } from 'lucide-react-native';
@@ -10,9 +11,10 @@ import { supabase } from '@/lib/supabase';
 
 export default function VehiclesScreen() {
   const navigation = useNavigation<any>();
+  const { theme, themeName } = useTheme();
   const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal States
@@ -63,15 +65,23 @@ export default function VehiclesScreen() {
     }
   }, [showIdentityModal]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadVehicles(false);
-    }, [loadVehicles])
-  );
+  // Load vehicles only on first mount
+  useEffect(() => {
+    loadVehicles(true);
+  }, []);
 
-  // Realtime subscription
+  // Realtime subscription - stable reference
   useEffect(() => {
     if (!supabase) return;
+
+    const reloadVehicles = async () => {
+      try {
+        const data = await VehicleService.getAll({ search: searchQuery });
+        setVehicles(data);
+      } catch (error) {
+        console.error('Error reloading vehicles:', error);
+      }
+    };
 
     const channel = supabase
       .channel('vehicles-list-changes')
@@ -79,7 +89,7 @@ export default function VehiclesScreen() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'vehicles' },
         () => {
-          loadVehicles(false);
+          reloadVehicles();
         }
       )
       .subscribe();
@@ -89,7 +99,7 @@ export default function VehiclesScreen() {
         supabase.removeChannel(channel);
       }
     };
-  }, [loadVehicles]);
+  }, [searchQuery]);
 
   const handleCustomerNameChange = (text: string) => {
     setCustomerInfo(prev => ({ ...prev, name: text }));
@@ -133,64 +143,78 @@ export default function VehiclesScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
       {/* Search and Add Bar */}
-      <View className="px-5 py-4 flex-row items-center bg-gray-50 border-b border-gray-100">
-        <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-sm mr-3">
+      <View style={{ paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.surface, borderBottomWidth: 1, borderBottomColor: theme.border }}>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.background, borderRadius: 12, paddingHorizontal: 12, height: 48, borderWidth: 1, borderColor: theme.border, marginRight: 12 }}>
           <Search size={20} color="#9CA3AF" />
           <TextInput
-            placeholder="Search User"
+            placeholder="Search Vehicle"
             placeholderTextColor="#9CA3AF"
-            className="flex-1 ml-2 text-base text-gray-900"
+            style={{ flex: 1, marginLeft: 8, fontSize: 16, color: theme.text }}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
         <TouchableOpacity
-          className="bg-[#A7F3D0] p-2 rounded-lg items-center justify-center w-11 h-11 border border-[#6EE7B7]"
+          style={{
+            backgroundColor: 'rgba(53, 197, 106, 0.4)',
+            borderRadius: 12,
+            width: 48,
+            height: 48,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderWidth: 1,
+            borderColor: '#35C56A'
+          }}
           onPress={() => {
             setCustomerInfo({ name: '', id: '' });
             setShowSuggestions(false);
             setShowIdentityModal(true);
           }}
         >
-          <Plus size={28} color="#059669" />
+          <Plus size={24} color={themeName === 'dark' ? '#FFFFFF' : '#000000'} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
-        className="flex-1 bg-[#F9FAFB]"
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 100 }}
+        style={{ flex: 1, backgroundColor: theme.background }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={() => loadVehicles(true)} />
+          <RefreshControl refreshing={loading} onRefresh={() => loadVehicles(true)} tintColor={theme.primary} />
         }
       >
         {vehicles.map((vehicle) => (
           <TouchableOpacity
             key={vehicle.id}
-            className="bg-white rounded-xl p-5 mb-4 border border-gray-100"
-            onPress={() => navigation.navigate('VehicleDetail', {
-              vehicleId: vehicle.id
-            })}
             style={{
+              backgroundColor: theme.surface,
+              borderRadius: 16,
+              padding: 20,
+              marginBottom: 16,
+              borderWidth: 1,
+              borderColor: theme.border,
               elevation: 4,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.1,
               shadowRadius: 8,
             }}
+            onPress={() => navigation.navigate('VehicleDetail', {
+              vehicleId: vehicle.id
+            })}
           >
-            <View className="flex-row justify-between items-center">
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <Text className="text-lg font-bold text-gray-900">
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>
                   {vehicle.make} {vehicle.model}
                 </Text>
-                <Text className="text-gray-600 text-sm mt-1">
+                <Text style={{ color: theme.textMuted, fontSize: 14, marginTop: 4 }}>
                   {vehicle.license_plate}
                 </Text>
               </View>
-              <View className="items-end">
-                <Text className="text-gray-600 text-xs">
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ color: theme.textMuted, fontSize: 12 }}>
                   {vehicle.branch_name || vehicle.customer?.branch?.name || 'Surat'}
                 </Text>
               </View>
@@ -199,13 +223,13 @@ export default function VehiclesScreen() {
         ))}
 
         {vehicles.length === 0 && !loading && (
-          <View className="items-center py-20">
-            <Text className="text-gray-400 text-lg">No vehicles found</Text>
+          <View style={{ alignItems: 'center', paddingVertical: 80 }}>
+            <Text style={{ color: theme.textMuted, fontSize: 18 }}>No vehicles found</Text>
             <TouchableOpacity
-              className="mt-4 bg-blue-50 px-6 py-2 rounded-full"
+              style={{ marginTop: 16, backgroundColor: theme.surface, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 9999, borderWidth: 1, borderColor: theme.primary }}
               onPress={() => setSearchQuery('')}
             >
-              <Text className="text-blue-600 font-medium">Clear Search</Text>
+              <Text style={{ color: theme.primary, fontWeight: '600' }}>Clear Search</Text>
             </TouchableOpacity>
           </View>
         )}
