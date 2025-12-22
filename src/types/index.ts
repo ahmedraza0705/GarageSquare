@@ -42,6 +42,7 @@ export interface Company {
   city?: string;
   state?: string;
   postal_code?: string;
+  zip_code?: string; // Keep both for compatibility if needed, or pick one
   country?: string;
   phone?: string;
   email?: string;
@@ -51,6 +52,7 @@ export interface Company {
   created_at: string;
   updated_at: string;
 }
+
 
 export interface Role {
   id: string;
@@ -71,13 +73,6 @@ export interface Permission {
   created_at: string;
 }
 
-export interface Company {
-  id: string;
-  name: string;
-  created_at: string;
-  updated_at: string;
-}
-
 
 export interface Branch {
   id: string;
@@ -93,21 +88,6 @@ export interface Branch {
   updated_at: string;
 }
 
-export interface Company {
-  id: string;
-  name: string;
-  registry_number?: string;
-  description?: string;
-  address?: string;
-  country?: string;
-  state?: string;
-  city?: string;
-  zip_code?: string;
-  onboarding_completed: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface UserProfile {
   id: string;
   email: string;
@@ -116,21 +96,19 @@ export interface UserProfile {
   company_name?: string;
   company_id?: string;
   city?: string;
+  state?: string;
   postal_code?: string;
   country?: string;
   role_id: string | null;
   branch_id?: string;
   avatar_url?: string;
   address?: string;
-  state?: string;
-  country?: string;
-  postal_code?: string;
   is_active: boolean;
+  onboarding_completed?: boolean;
   created_at: string;
   updated_at: string;
   role?: Role;
   branch?: Branch;
-  company_id?: string;
   company?: Company;
 }
 

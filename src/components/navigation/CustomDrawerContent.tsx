@@ -92,8 +92,9 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
       setActiveLabel(directMatch.label);
     } else if (activeRouteName === 'MainTabs') {
       const mainTabsState = props.state.routes.find(route => route.name === 'MainTabs');
-      if (mainTabsState && mainTabsState.state) {
-        const activeTabRoute = mainTabsState.state.routes[mainTabsState.state.index];
+      if (mainTabsState && mainTabsState.state && typeof (mainTabsState.state as any).index === 'number') {
+        const state = mainTabsState.state as any;
+        const activeTabRoute = state.routes[state.index];
         const tabMatch = menuItems.find(item => item.tabScreen === activeTabRoute.name);
         if (tabMatch) {
           setActiveLabel(tabMatch.label);

@@ -360,7 +360,6 @@ function CompanyAdminDrawer({
         drawerType: 'front',
         overlayColor: theme.overlay,
         drawerPosition: 'left',
-        swipeEnabled: true,
       })}
     >
       <Drawer.Screen
@@ -383,14 +382,21 @@ function CompanyAdminDrawer({
         )}
       </Drawer.Screen>
       <Drawer.Screen
-        name="LegacyVehiclesHidden" // Renamed further to ensure no overlap
+        name="Inventory"
+        component={InventoryScreen}
+        options={{
+          title: 'Inventory',
+          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
+      <Drawer.Screen
+        name="Vehicles"
         component={VehiclesScreen}
         options={{
           title: 'Vehicles',
           headerShown: false,
           drawerItemStyle: { display: 'none' },
         }}
-      // Redirect to the tab stack version if accessed via Drawer
       />
       <Drawer.Screen
         name="Customers"
