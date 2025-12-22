@@ -8,7 +8,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { DrawerActions, useNavigation, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeColors, ThemeName } from '@/context/ThemeContext';
 import CustomDrawerContent from '@/components/navigation/CustomDrawerContent';
@@ -50,9 +50,45 @@ import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
 import ProfilePopup from '@/components/navigation/ProfilePopup';
 
+
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const DashboardInnerStack = createNativeStackNavigator();
+
+function DashboardStackNavigator() {
+  const { theme, themeName, toggleTheme } = useTheme();
+
+  return (
+    <DashboardInnerStack.Navigator
+      screenOptions={{
+        header: ({ route }) => (
+          <CustomHeader
+            route={route}
+            theme={theme}
+            themeName={themeName}
+            onToggleTheme={toggleTheme}
+            showBack={route.name !== 'DashboardHome'}
+          />
+        ),
+        headerShown: true,
+      }}
+    >
+      <DashboardInnerStack.Screen
+        name="DashboardHome"
+        component={CompanyAdminDashboard}
+      />
+      <DashboardInnerStack.Screen
+        name="Vehicles"
+        component={VehiclesScreen}
+      />
+      <DashboardInnerStack.Screen
+        name="Customers"
+        component={CustomersScreen}
+      />
+    </DashboardInnerStack.Navigator>
+  );
+}
 
 // Custom Header Component
 function CustomHeader({
@@ -70,35 +106,63 @@ function CustomHeader({
 }) {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
   const getScreenTitle = () => {
-    const routeName = route?.name || 'Dashboard';
+    // 1. Check if the screen name has a direct mapping
     const titleMap: Record<string, string> = {
+      // Navigators
       DashboardTab: 'Dashboard',
       MainTabs: 'Dashboard',
-      Dashboard: 'Dashboard',
+      DashboardStack: 'Dashboard',
+
+      // Screens
+      DashboardHome: 'Dashboard',
+      Vehicles: 'Vehicles Management', // Plural to match Pic 2
+      Customers: 'Customers',
+
+      // Tabs
       BranchesTab: 'Branches',
-      Branches: 'Branches',
       UsersTab: 'User Management',
-      UserManagement: 'User Management',
       ReportsTab: 'Reports',
+
+      // Other Screens
+      Branches: 'Branches',
+      UserManagement: 'User Management',
       Reports: 'Reports',
       InventoryTab: 'Inventory Management',
       Inventory: 'Inventory Management',
       ActiveJobs: 'Active Jobs',
-      Vehicles: 'Vehicles',
-      Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
-      // New titles
       ChangePassword: 'Change Password',
       AccountDetails: 'Account Details',
       Notifications: 'Notifications',
       About: 'About GarageSquares',
     };
-    return titleMap[routeName] || 'Dashboard';
+
+    // 2. Try to get the deepest focused route name
+    const getDeepestRouteName = (r: any): string => {
+      const name = getFocusedRouteNameFromRoute(r);
+      if (name) {
+        // If we found a name, check if it's a tab or stack container that might have more nesting
+        if (name === 'DashboardTab' || name === 'MainTabs') {
+          // This is a bit of a hack since we don't have the state object here directly,
+          // but we can check if it exists in the route object's state
+          const state = r.state;
+          if (state && state.routes && state.index !== undefined) {
+            return getDeepestRouteName(state.routes[state.index]);
+          }
+        }
+        return name;
+      }
+      return r.name;
+    };
+
+    const routeName = getDeepestRouteName(route);
+    return titleMap[routeName] || routeName || 'Dashboard';
   };
 
   return (
@@ -164,6 +228,8 @@ function CustomHeader({
   );
 }
 
+
+
 // Bottom Tab Navigator
 function CompanyAdminTabs({
   theme,
@@ -217,7 +283,7 @@ function CompanyAdminTabs({
     >
       <Tab.Screen
         name="DashboardTab"
-        component={CompanyAdminDashboard}
+        component={DashboardStackNavigator}
         options={{
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
@@ -299,9 +365,13 @@ function CompanyAdminDrawer({
     >
       <Drawer.Screen
         name="MainTabs"
-        options={{
-          title: 'Dashboard',
-          headerShown: false, // Hide drawer header for tabs since they have their own
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route);
+          // Hide global drawer header if we are on DashboardTab, as Stack handles it locally
+          if (routeName === 'DashboardTab' || !routeName) {
+            return { headerShown: false };
+          }
+          return { headerShown: true, title: 'Dashboard' };
         }}
       >
         {() => (
@@ -313,27 +383,20 @@ function CompanyAdminDrawer({
         )}
       </Drawer.Screen>
       <Drawer.Screen
-        name="Inventory"
-        component={InventoryScreen}
-        options={{
-          title: 'Inventory',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
-        }}
-      />
-      <Drawer.Screen
-        name="Vehicles"
+        name="LegacyVehiclesHidden" // Renamed further to ensure no overlap
         component={VehiclesScreen}
         options={{
           title: 'Vehicles',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          headerShown: false,
+          drawerItemStyle: { display: 'none' },
         }}
+      // Redirect to the tab stack version if accessed via Drawer
       />
       <Drawer.Screen
         name="Customers"
         component={CustomersScreen}
         options={{
           title: 'Customers',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
       <Drawer.Screen
@@ -352,6 +415,15 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Settings',
+          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
+
     </Drawer.Navigator>
   );
 }
@@ -389,10 +461,7 @@ export default function CompanyAdminNavigator() {
         name="CustomerDetail"
         component={CustomerDetailScreen}
         options={{
-          headerShown: true,
-          title: 'Customer Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -409,7 +478,7 @@ export default function CompanyAdminNavigator() {
         name="CreateCustomer"
         component={CreateCustomerScreen}
         options={{
-          headerShown: true,
+          headerShown: false,
           title: 'Add Customer',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',

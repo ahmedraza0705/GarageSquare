@@ -21,44 +21,63 @@ import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
+import { LayoutGrid, Building2, User, BarChart3 } from 'lucide-react-native';
+
 function ManagerTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#0ea5e9',
-        tabBarInactiveTintColor: '#64748b',
+        tabBarActiveTintColor: '#ffffff',
+        tabBarInactiveTintColor: '#cbd5e1',
+        tabBarStyle: {
+          backgroundColor: '#4E88B9', // Custom blue from image
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          height: 65,
+          paddingBottom: 10,
+          paddingTop: 10,
+          position: 'absolute',
+          bottom: 15,
+          left: 15,
+          right: 15,
+          elevation: 5,
+        },
+        tabBarShowLabel: false,
       }}
     >
-      <Tab.Screen 
-        name="Dashboard" 
+      <Tab.Screen
+        name="Dashboard"
         component={ManagerDashboard}
-        options={{ title: 'Dashboard' }}
+        options={{
+          title: 'Dashboard',
+          tabBarIcon: ({ color }) => <LayoutGrid size={28} color={color} />
+        }}
       />
-      <Tab.Screen 
-        name="Customers" 
-        component={CustomersScreen}
-        options={{ title: 'Customers' }}
-      />
-      <Tab.Screen 
-        name="Vehicles" 
+      <Tab.Screen
+        name="Vehicles"
         component={VehiclesScreen}
-        options={{ title: 'Vehicles' }}
+        options={{
+          title: 'Vehicles',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Building2 size={28} color={color} />
+        }}
       />
-      <Tab.Screen 
-        name="JobCards" 
-        component={JobCardsScreen}
-        options={{ title: 'Job Cards' }}
+      <Tab.Screen
+        name="Customers"
+        component={CustomersScreen}
+        options={{
+          title: 'Customers',
+          tabBarIcon: ({ color }) => <User size={28} color={color} />
+        }}
       />
-      <Tab.Screen 
-        name="Payments" 
+      <Tab.Screen
+        name="Payments"
         component={PaymentsScreen}
-        options={{ title: 'Payments' }}
-      />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{ title: 'Settings' }}
+        options={{
+          title: 'Payments',
+          tabBarIcon: ({ color }) => <BarChart3 size={28} color={color} />
+        }}
       />
     </Tab.Navigator>
   );

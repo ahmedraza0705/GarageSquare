@@ -93,6 +93,21 @@ export interface Branch {
   updated_at: string;
 }
 
+export interface Company {
+  id: string;
+  name: string;
+  registry_number?: string;
+  description?: string;
+  address?: string;
+  country?: string;
+  state?: string;
+  city?: string;
+  zip_code?: string;
+  onboarding_completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -108,11 +123,14 @@ export interface UserProfile {
   avatar_url?: string;
   address?: string;
   state?: string;
+  country?: string;
+  postal_code?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   role?: Role;
   branch?: Branch;
+  company_id?: string;
   company?: Company;
 }
 
@@ -124,6 +142,7 @@ export interface Customer {
   phone: string;
   address?: string;
   branch_id?: string;
+  branch?: { name: string };
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -140,11 +159,28 @@ export interface Vehicle {
   license_plate?: string;
   color?: string;
   mileage?: number;
-  notes?: string;
+  fuel_type?: string;
+  year_purchase?: number;
+  delivery_type?: string;
   branch_id?: string;
+  branch_name?: string;
+  last_visit?: string;
   created_at: string;
   updated_at: string;
+  branch?: { name: string };
   customer?: Customer;
+  services?: VehicleServiceItem[];
+}
+
+export type VehicleServiceStatus = 'pending' | 'completed' | 'need_approval' | 'rejected';
+
+export interface VehicleServiceItem {
+  id: string;
+  name: string;
+  status: VehicleServiceStatus;
+  assigned_to?: string;
+  estimate?: string; // e.g., "20 min", "1 hour"
+  created_at: string;
 }
 
 export interface JobCard {
@@ -171,7 +207,7 @@ export interface JobCard {
   vehicle?: Vehicle;
   assigned_user?: UserProfile;
   supervisor?: UserProfile;
-  services?: JobCardService[];
+  services?: JobCardServiceItem[];
   tasks?: Task[];
 }
 
@@ -187,7 +223,7 @@ export interface Service {
   updated_at: string;
 }
 
-export interface JobCardService {
+export interface JobCardServiceItem {
   id: string;
   job_card_id: string;
   service_id: string;
@@ -293,6 +329,9 @@ export interface CreateVehicleForm {
   license_plate?: string;
   color?: string;
   mileage?: number;
+  fuel_type?: string;
+  year_purchase?: number;
+  delivery_type?: string;
   notes?: string;
 }
 

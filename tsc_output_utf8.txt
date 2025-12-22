@@ -354,3 +354,42 @@ src/screens/company-admin/BranchesScreen.tsx(451,27): error TS2769: No overload 
   Overload 2 of 2, '(props: TextProps, context: any): Text', gave the following error.
     Type '{ children: string; className: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Text> & Readonly<TextProps>'.
       Property 'className' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Text> & Readonly<TextProps>'.
+﻿src/screens/company-admin/DashboardScreen.tsx(138,7): error TS18047: 'supabase' is possibly 'null'.
+src/screens/company-admin/JobCardsScreen.tsx(68,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/company-admin/VehiclesScreen.tsx(47,7): error TS18047: 'supabase' is possibly 'null'.
+src/screens/company-admin/VehiclesScreen.tsx(73,9): error TS2353: Object literal may only specify known properties, and 'customer_name' does not exist in type 'CreateVehicleForm'.
+src/screens/customer/MyJobCardsScreen.tsx(76,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/customer/MyVehiclesScreen.tsx(65,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/manager/JobCardsScreen.tsx(70,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/onboarding/CompanyAddressScreen.tsx(15,59): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyAddressScreen.tsx(16,59): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyAddressScreen.tsx(17,55): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyAddressScreen.tsx(18,53): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyAddressScreen.tsx(19,59): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyAddressScreen.tsx(23,29): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyAddressScreen.tsx(30,61): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyDetailsScreen.tsx(15,67): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyDetailsScreen.tsx(16,73): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyDetailsScreen.tsx(20,67): error TS2339: Property 'company' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyDetailsScreen.tsx(24,45): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyDetailsScreen.tsx(25,33): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/onboarding/CompanyDetailsScreen.tsx(35,61): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/onboarding/DataUploadScreen.tsx(88,29): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/onboarding/DataUploadScreen.tsx(98,61): error TS2339: Property 'company_id' does not exist on type 'UserProfile'.
+src/screens/shared/CreateVehicleScreen.tsx(88,9): error TS2353: Object literal may only specify known properties, and 'notes' does not exist in type 'CreateVehicleForm'.
+src/screens/shared/TaskDetailScreen.tsx(29,15): error TS2345: Argument of type 'void' is not assignable to parameter of type 'SetStateAction<Task | null>'.
+src/screens/supervisor/JobCardsScreen.tsx(70,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/supervisor/TasksScreen.tsx(24,16): error TS2345: Argument of type 'void' is not assignable to parameter of type 'SetStateAction<Task[]>'.
+src/screens/supervisor/TasksScreen.tsx(57,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/technician-group-manager/JobCardsScreen.tsx(93,50): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/technician-group-manager/TasksScreen.tsx(24,16): error TS2345: Argument of type 'void' is not assignable to parameter of type 'SetStateAction<Task[]>'.
+src/screens/technician-group-manager/TasksScreen.tsx(88,50): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/technician/MyJobCardsScreen.tsx(57,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+src/screens/technician/MyTasksScreen.tsx(26,16): error TS2345: Argument of type 'void' is not assignable to parameter of type 'SetStateAction<Task[]>'.
+src/screens/technician/MyTasksScreen.tsx(59,48): error TS2345: Argument of type '[never, never]' is not assignable to parameter of type 'never'.
+supabase/functions/create-user-with-role/index.ts(6,23): error TS2307: Cannot find module 'https://deno.land/std@0.177.0/http/server.ts' or its corresponding type declarations.
+supabase/functions/create-user-with-role/index.ts(7,30): error TS2307: Cannot find module 'https://esm.sh/@supabase/supabase-js@2.42.5' or its corresponding type declarations.
+supabase/functions/create-user-with-role/index.ts(9,21): error TS2304: Cannot find name 'Deno'.
+supabase/functions/create-user-with-role/index.ts(10,24): error TS2304: Cannot find name 'Deno'.
+supabase/functions/create-user-with-role/index.ts(13,14): error TS7006: Parameter 'req' implicitly has an 'any' type.
+supabase/functions/create-user-with-role/index.ts(87,54): error TS2339: Property 'message' does not exist on type '{}'.

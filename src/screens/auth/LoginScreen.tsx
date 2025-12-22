@@ -21,19 +21,19 @@ export default function LoginScreen() {
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
-    
+
     if (!email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -42,16 +42,16 @@ export default function LoginScreen() {
     if (!validate()) return;
 
     try {
-      // Trim email and password to avoid whitespace issues
+      // Trim email to avoid whitespace issues, but keep password as-is
       const trimmedEmail = email.trim();
-      const trimmedPassword = password.trim();
-      
+      const rawPassword = password;
+
       console.log('Login attempt:', {
         email: trimmedEmail,
-        passwordLength: trimmedPassword.length,
+        passwordLength: rawPassword.length,
       });
-      
-      await signIn({ email: trimmedEmail, password: trimmedPassword });
+
+      await signIn({ email: trimmedEmail, password: rawPassword });
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert('Login Failed', error.message || 'Invalid email or password');
@@ -117,9 +117,8 @@ export default function LoginScreen() {
         <TouchableOpacity
           onPress={handleLogin}
           disabled={loading}
-          className={`py-4 rounded-lg items-center justify-center mb-4 ${
-            loading ? 'bg-gray-300' : 'bg-gray-300'
-          }`}
+          className={`py-4 rounded-lg items-center justify-center mb-4 ${loading ? 'bg-gray-300' : 'bg-gray-300'
+            }`}
         >
           {loading ? (
             <Text className="text-gray-600 font-semibold">Logging in...</Text>

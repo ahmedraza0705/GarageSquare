@@ -8,16 +8,24 @@ import { RoleName } from '@/types';
 export function useRole() {
   const { user } = useAuth();
 
+  // Hard-coded company admin emails (SYNC with RoleBasedNavigator.tsx)
+  const adminEmails = ['test@gmail.com'];
+  const email = user?.email?.toLowerCase() || '';
+
   // Try to get role from profile.role.name first
   let role: RoleName | undefined = user?.profile?.role?.name as RoleName | undefined;
+
+  // Fallback to email whitelist for admin status
+  if (email && adminEmails.includes(email)) {
+    role = 'company_admin';
+  }
 
   // Debug logging
   if (user) {
     console.log('🔍 Role Detection:', {
-      email: user.email,
+      email: email,
       hasProfile: !!user.profile,
-      roleId: user.profile?.role_id,
-      roleName: user.profile?.role?.name,
+      profileRole: user.profile?.role?.name,
       finalRole: role,
     });
   }
@@ -40,6 +48,7 @@ export function useRole() {
     isTechnician,
     isCustomer,
     isStaff,
+    userProfile: user?.profile,
     branchId: user?.profile?.branch_id,
   };
 }

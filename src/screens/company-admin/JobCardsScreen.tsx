@@ -9,7 +9,7 @@ import { JobCardService } from '@/services/jobCard.service';
 import { JobCard } from '@/types';
 
 export default function JobCardsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,7 +65,7 @@ export default function JobCardsScreen() {
           <TouchableOpacity
             key={jobCard.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('JobCardDetail' as never, { jobCardId: jobCard.id } as never)}
+            onPress={() => navigation.navigate('JobCardDetail', { jobCardId: jobCard.id })}
           >
             <View className="flex-row justify-between items-start mb-2">
               <Text className="text-lg font-semibold text-gray-900">
@@ -77,7 +77,7 @@ export default function JobCardsScreen() {
                 </Text>
               </View>
             </View>
-            
+
             {jobCard.customer && (
               <Text className="text-gray-600 text-sm mb-1">
                 Customer: {jobCard.customer.full_name}

@@ -1,5 +1,5 @@
 // ============================================
-// CUSTOMER SERVICE
+// CUSTOMER SERVICE (SUPABASE)
 // ============================================
 
 import { supabase } from '@/lib/supabase';
@@ -17,22 +17,43 @@ export class CustomerService {
 
     let query = supabase
       .from('customers')
-      .select(`
-        *,
-        vehicles:vehicles(*)
-      `)
+      .select('*') // Simplified for debugging
       .order('created_at', { ascending: false });
 
     if (filters?.branch_id) {
       query = query.eq('branch_id', filters.branch_id);
     }
+
     if (filters?.search) {
-      query = query.or(`full_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
+      query = query.or(`full_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
     }
 
     const { data, error } = await query;
-    if (error) throw error;
+
+    if (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
+    }
+
     return data as Customer[];
+  }
+
+  /**
+   * Get total customer count
+   */
+  static async getCount() {
+    if (!supabase) return 0;
+
+    const { count, error } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+
+    if (error) {
+      console.error('Error fetching customer count:', error);
+      return 0;
+    }
+
+    return count || 0;
   }
 
   /**
@@ -43,14 +64,15 @@ export class CustomerService {
 
     const { data, error } = await supabase
       .from('customers')
-      .select(`
-        *,
-        vehicles:vehicles(*)
-      `)
+      .select('*, vehicles(*)')
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching customer by ID:', error);
+      throw error;
+    }
+
     return data as Customer;
   }
 
@@ -60,17 +82,38 @@ export class CustomerService {
   static async create(formData: CreateCustomerForm, userId: string, branchId?: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
+    // Check if the user profile exists before setting it as created_by
+    // to avoid foreign key constraint violations if the user was manually created in Auth
+    // but not yet in user_profiles.
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    const insertData: any = {
+      ...formData,
+      user_id: userId, // Link to the user who created it
+      branch_id: branchId,
+    };
+
+    console.log('Final Customer Insert Data:', insertData);
+
+    if (profile) {
+      insertData.created_by = userId;
+    }
+
     const { data, error } = await supabase
       .from('customers')
-      .insert({
-        ...formData,
-        branch_id: branchId,
-        created_by: userId,
-      })
+      .insert([insertData])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating customer:', error);
+      throw error;
+    }
+
     return data as Customer;
   }
 
@@ -80,17 +123,24 @@ export class CustomerService {
   static async update(id: string, updates: Partial<Customer>) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
+    // Remove relations/read-only fields before update
+    const { vehicles, id: _, created_at, updated_at, ...cleanUpdates } = updates as any;
+
     const { data, error } = await supabase
       .from('customers')
       .update({
-        ...updates,
+        ...cleanUpdates,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating customer:', error);
+      throw error;
+    }
+
     return data as Customer;
   }
 
@@ -105,7 +155,9 @@ export class CustomerService {
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting customer:', error);
+      throw error;
+    }
   }
 }
-
