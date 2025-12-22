@@ -16,10 +16,8 @@ export default function ActiveJobsScreen() {
   const { user } = useAuth();
   const { theme, toggleTheme, themeName } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [jobCards] = useState<JobCard[]>(staticJobCards);
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   const loadActiveJobs = useCallback(async (showLoading = true) => {
     try {
@@ -210,13 +208,9 @@ export default function ActiveJobsScreen() {
                   </Text>
                 </View>
 
-                {/* Delivery Info */}
                 <View style={[styles.deliveryRow, { borderTopColor: theme.border }]}>
                   <Text style={[styles.deliveryText, { color: theme.textMuted }]}>
-                    Delivery date: {formatDate(deliveryDate.toISOString())}
-                  </Text>
-                  <Text style={[styles.deliveryText, { color: theme.textMuted }]}>
-                    Delivery due: {deliveryTime}
+                    Due: {formatDate(jobCard.completed_at || jobCard.created_at)}
                   </Text>
                 </View>
               </TouchableOpacity>

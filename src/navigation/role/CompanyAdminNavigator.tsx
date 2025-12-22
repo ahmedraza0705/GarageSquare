@@ -20,10 +20,7 @@ import {
   Building2,
   Users,
   FileBarChart,
-  FileText,
-  Menu,
-  Moon,
-  Sun
+  FileText
 } from 'lucide-react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -48,7 +45,7 @@ import CreateVehicleScreen from '@/screens/shared/CreateVehicleScreen';
 import CreateJobCardScreen from '@/screens/shared/CreateJobCardScreen';
 import BranchDetailsScreen from '@/screens/company-admin/BranchDetailsScreen';
 import BranchFileUploadScreen from '@/screens/company-admin/BranchFileUploadScreen';
-import ChangePasswordScreen from '@/screens/shared/Chan13gePasswordScreen';
+import ChangePasswordScreen from '@/screens/shared/ChangePasswordScreen';
 import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
@@ -111,7 +108,6 @@ function CustomHeader({
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const [showProfile, setShowProfile] = useState(false);
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
@@ -486,7 +482,7 @@ function CompanyAdminDrawer() {
         }}
       />
       <Drawer.Screen
-        name="LegacyVehiclesHidden" // Renamed further to ensure no overlap
+        name="Vehicles"
         component={VehiclesScreen}
         options={{
           title: 'Vehicles',
