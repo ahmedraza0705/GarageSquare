@@ -12,9 +12,9 @@ import {
     StatusBar,
     Share,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Share2, Download } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useTheme } from '@/context/ThemeContext';
 
 type InvoiceDetailRouteParams = {
     invoice: {
@@ -36,6 +36,7 @@ export default function InvoiceDetailScreen() {
     const navigation = useNavigation();
     const route = useRoute<RouteParams>();
     const { invoice } = route.params;
+    const { theme } = useTheme();
 
     // Generate invoice number from estimate number
     const invoiceNumber = invoice.invoiceNumber.replace('EST', 'INV');
@@ -68,18 +69,15 @@ export default function InvoiceDetailScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: '#F8F9FA' }}>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View className="flex-1" style={{ backgroundColor: theme.background }}>
+            <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.statusBarBg} />
 
             {/* Header */}
             <View
-                className="px-4 py-3 bg-white flex-row items-center justify-between"
+                className="px-4 py-3 flex-row items-center justify-between"
                 style={{
-                    elevation: 2,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 4,
+                    backgroundColor: theme.background,
+                    borderBottomWidth: 0, // Seamless look
                 }}
             >
                 <View className="flex-row items-center flex-1">
@@ -87,18 +85,18 @@ export default function InvoiceDetailScreen() {
                         onPress={() => navigation.goBack()}
                         className="mr-3"
                     >
-                        <ArrowLeft size={24} color="#1F2937" />
+                        <ArrowLeft size={24} color={theme.text} />
                     </TouchableOpacity>
-                    <Text className="text-lg font-bold" style={{ color: '#1F2937' }}>
+                    <Text className="text-lg font-bold" style={{ color: theme.text }}>
                         {invoiceNumber}
                     </Text>
                 </View>
                 <View className="flex-row gap-3">
                     <TouchableOpacity onPress={handleShare}>
-                        <Share2 size={22} color="#1F2937" />
+                        <Share2 size={22} color={theme.text} />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleDownload}>
-                        <Download size={22} color="#1F2937" />
+                        <Download size={22} color={theme.text} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -108,7 +106,9 @@ export default function InvoiceDetailScreen() {
                 <View
                     className="mb-4 rounded-2xl overflow-hidden p-4"
                     style={{
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
+                        borderWidth: 1,
+                        borderColor: theme.border,
                         elevation: 2,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 2 },
@@ -126,23 +126,23 @@ export default function InvoiceDetailScreen() {
                             </Text>
                         </View>
                         <View className="flex-1">
-                            <Text className="text-lg font-bold mb-1" style={{ color: '#1F2937' }}>
+                            <Text className="text-lg font-bold mb-1" style={{ color: theme.text }}>
                                 {invoice.customerName}
                             </Text>
                             <View className="flex-row justify-between">
                                 <View>
-                                    <Text className="text-xs mb-0.5" style={{ color: '#757575' }}>
+                                    <Text className="text-xs mb-0.5" style={{ color: theme.textMuted }}>
                                         Phone :
                                     </Text>
-                                    <Text className="text-xs font-semibold" style={{ color: '#1F2937' }}>
+                                    <Text className="text-xs font-semibold" style={{ color: theme.text }}>
                                         Email
                                     </Text>
                                 </View>
                                 <View className="items-end">
-                                    <Text className="text-xs mb-0.5" style={{ color: '#757575' }}>
+                                    <Text className="text-xs mb-0.5" style={{ color: theme.textMuted }}>
                                         +91 9033786017
                                     </Text>
-                                    <Text className="text-xs" style={{ color: '#757575' }}>
+                                    <Text className="text-xs" style={{ color: theme.textMuted }}>
                                         funky@gmail.com
                                     </Text>
                                 </View>
@@ -155,7 +155,9 @@ export default function InvoiceDetailScreen() {
                 <View
                     className="mb-4 rounded-2xl overflow-hidden p-4"
                     style={{
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
+                        borderWidth: 1,
+                        borderColor: theme.border,
                         elevation: 2,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 2 },
@@ -164,18 +166,18 @@ export default function InvoiceDetailScreen() {
                     }}
                 >
                     <View className="flex-row justify-between items-start mb-2">
-                        <Text className="text-xl font-bold" style={{ color: '#1F2937' }}>
+                        <Text className="text-xl font-bold" style={{ color: theme.text }}>
                             {invoice.location}
                         </Text>
-                        <Text className="text-sm" style={{ color: '#757575' }}>
+                        <Text className="text-sm" style={{ color: theme.textMuted }}>
                             {invoice.jobNumber}
                         </Text>
                     </View>
                     <View className="flex-row justify-between">
-                        <Text className="text-sm font-semibold" style={{ color: '#1F2937' }}>
+                        <Text className="text-sm font-semibold" style={{ color: theme.text }}>
                             Fuel Type
                         </Text>
-                        <Text className="text-sm" style={{ color: '#757575' }}>
+                        <Text className="text-sm" style={{ color: theme.textMuted }}>
                             Petrol
                         </Text>
                     </View>
@@ -185,7 +187,9 @@ export default function InvoiceDetailScreen() {
                 <View
                     className="mb-4 rounded-2xl overflow-hidden p-4"
                     style={{
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
+                        borderWidth: 1,
+                        borderColor: theme.border,
                         elevation: 2,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 2 },
@@ -194,10 +198,10 @@ export default function InvoiceDetailScreen() {
                     }}
                 >
                     <View className="flex-row justify-between items-center mb-4">
-                        <Text className="text-xl font-bold" style={{ color: '#1F2937' }}>
+                        <Text className="text-xl font-bold" style={{ color: theme.text }}>
                             Billing Summary
                         </Text>
-                        <Text className="text-sm" style={{ color: '#9E9E9E' }}>
+                        <Text className="text-sm" style={{ color: theme.textMuted }}>
                             SubTotal
                         </Text>
                     </View>
@@ -205,10 +209,10 @@ export default function InvoiceDetailScreen() {
                     {/* Billing Items */}
                     {billingItems.map((item, index) => (
                         <View key={index} className="flex-row justify-between mb-3">
-                            <Text className="text-base" style={{ color: '#1F2937' }}>
+                            <Text className="text-base" style={{ color: theme.text }}>
                                 {item.name}
                             </Text>
-                            <Text className="text-base font-semibold" style={{ color: '#1F2937' }}>
+                            <Text className="text-base font-semibold" style={{ color: theme.text }}>
                                 ₹ {item.price.toLocaleString('en-IN')}
                             </Text>
                         </View>
@@ -217,18 +221,18 @@ export default function InvoiceDetailScreen() {
                     {/* Subtotal */}
                     <View
                         className="flex-row justify-between py-3 mb-3"
-                        style={{ borderTopWidth: 1, borderTopColor: '#E5E7EB' }}
+                        style={{ borderTopWidth: 1, borderTopColor: theme.border }}
                     >
-                        <Text className="text-base font-bold" style={{ color: '#1F2937' }}>
+                        <Text className="text-base font-bold" style={{ color: theme.text }}>
                             Total
                         </Text>
-                        <Text className="text-base font-bold" style={{ color: '#1F2937' }}>
+                        <Text className="text-base font-bold" style={{ color: theme.text }}>
                             ₹ {subtotal.toLocaleString('en-IN')}
                         </Text>
                     </View>
 
                     {/* Warning Message */}
-                    <View className="mb-3 py-2 px-3 rounded-lg" style={{ backgroundColor: '#FFF3E0' }}>
+                    <View className="mb-3 py-2 px-3 rounded-lg" style={{ backgroundColor: 'rgba(230, 81, 0, 0.1)' }}>
                         <Text className="text-xs text-center" style={{ color: '#E65100' }}>
                             This invoice cannot be edited after finalization
                         </Text>
@@ -236,18 +240,18 @@ export default function InvoiceDetailScreen() {
 
                     {/* Tax Details */}
                     <View className="flex-row justify-between mb-2">
-                        <Text className="text-base font-semibold" style={{ color: '#1F2937' }}>
+                        <Text className="text-base font-semibold" style={{ color: theme.text }}>
                             CGST
                         </Text>
-                        <Text className="text-base" style={{ color: '#757575' }}>
+                        <Text className="text-base" style={{ color: theme.textMuted }}>
                             ₹ {cgst.toLocaleString('en-IN')}
                         </Text>
                     </View>
                     <View className="flex-row justify-between mb-4">
-                        <Text className="text-base font-semibold" style={{ color: '#1F2937' }}>
+                        <Text className="text-base font-semibold" style={{ color: theme.text }}>
                             SGST
                         </Text>
-                        <Text className="text-base" style={{ color: '#757575' }}>
+                        <Text className="text-base" style={{ color: theme.textMuted }}>
                             ₹ {sgst.toLocaleString('en-IN')}
                         </Text>
                     </View>
@@ -255,12 +259,12 @@ export default function InvoiceDetailScreen() {
                     {/* Grand Total */}
                     <View
                         className="flex-row justify-between pt-3"
-                        style={{ borderTopWidth: 1, borderTopColor: '#E5E7EB' }}
+                        style={{ borderTopWidth: 1, borderTopColor: theme.border }}
                     >
-                        <Text className="text-lg font-bold" style={{ color: '#1F2937' }}>
+                        <Text className="text-lg font-bold" style={{ color: theme.text }}>
                             Grand Total
                         </Text>
-                        <Text className="text-lg font-bold" style={{ color: '#1F2937' }}>
+                        <Text className="text-lg font-bold" style={{ color: theme.text }}>
                             ₹ {grandTotal.toLocaleString('en-IN')}
                         </Text>
                     </View>
@@ -269,6 +273,6 @@ export default function InvoiceDetailScreen() {
                 {/* Bottom Spacing */}
                 <View className="h-24" />
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

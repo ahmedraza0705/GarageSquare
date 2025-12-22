@@ -8,6 +8,8 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { JobCardService } from '@/services/jobCard.service';
 import { JobCard } from '@/types';
+import { useTheme } from '@/context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 // Mock tasks data - replace with actual data from your service
 const mockTasks = [
@@ -62,13 +64,13 @@ const mockTasks = [
 ];
 
 export default function JobCardDetailScreen() {
+  const { theme, themeName, toggleTheme } = useTheme();
   const route = useRoute();
   const navigation = useNavigation();
   const { user } = useAuth();
   const { jobCardId } = route.params as { jobCardId: string };
   const [jobCard, setJobCard] = useState<JobCard | null>(null);
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     loadJobCard();
@@ -77,7 +79,7 @@ export default function JobCardDetailScreen() {
   const loadJobCard = async () => {
     try {
       setLoading(true);
-      
+
       // Try to load from service first
       try {
         const data = await JobCardService.getById(jobCardId);
@@ -129,7 +131,7 @@ export default function JobCardDetailScreen() {
             },
           },
         ];
-        
+
         const foundJobCard = staticJobCards.find(jc => jc.id === jobCardId);
         if (foundJobCard) {
           setJobCard(foundJobCard);
@@ -186,136 +188,107 @@ export default function JobCardDetailScreen() {
 
   if (loading || !jobCard) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Active Jobs</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              onPress={() => setDarkMode(!darkMode)}
-              style={styles.headerButton}
-            >
-              <Text style={styles.darkModeIcon}>{darkMode ? '☀️' : '🌙'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.avatarButton}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+      <View style={{ flex: 1, backgroundColor: theme.background }} className="items-center justify-center">
+        <Text style={{ color: theme.textMuted }}>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Custom Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Active Jobs</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            onPress={() => setDarkMode(!darkMode)}
-            style={styles.headerButton}
-          >
-            <Text style={styles.darkModeIcon}>{darkMode ? '☀️' : '🌙'}</Text>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      {/* Header */}
+      <View style={{ backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder }} className="flex-row items-center justify-between px-4 py-3 border-b">
+        <View className="flex-row items-center gap-3">
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color={theme.headerText} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarButton}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-              </Text>
+          <Text style={{ color: theme.headerText }} className="text-lg font-bold">Active Jobs</Text>
+        </View>
+        <View className="flex-row items-center gap-3">
+          <TouchableOpacity onPress={toggleTheme}>
+            <View style={{ backgroundColor: theme.surfaceAlt }} className="p-1 rounded-full w-8 h-8 items-center justify-center">
+              <Ionicons name={themeName === 'dark' ? 'sunny' : 'moon'} size={16} color={theme.headerText} />
             </View>
           </TouchableOpacity>
+          <View className="bg-red-300 w-8 h-8 rounded-lg items-center justify-center">
+            <Text className="text-red-800 font-bold">
+              {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
+            </Text>
+          </View>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
         {/* Job Card Container */}
-        <View style={styles.jobCardContainer}>
+        <View style={{ backgroundColor: theme.surface, borderColor: theme.border }} className="margin-4 rounded-xl p-4 border shadow-sm m-4">
           {/* Job Card Header */}
-          <View style={styles.jobCardHeader}>
-            <Text style={styles.jobCardTitle}>Job Card: {jobCard.job_number}</Text>
+          <View className="flex-row justify-between items-center mb-4">
+            <Text style={{ color: theme.text }} className="text-xl font-bold">Job Card: {jobCard.job_number}</Text>
             {jobCard.priority === 'urgent' && (
-              <View style={styles.urgentBadge}>
-                <Text style={styles.urgentText}>Urgent</Text>
+              <View className="bg-red-100 px-3 py-1 rounded-full">
+                <Text className="text-red-600 text-xs font-bold uppercase">Urgent</Text>
               </View>
             )}
           </View>
 
           {/* Vehicle and Customer Info */}
-          <View style={styles.infoSection}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>VIN:</Text>
-              <Text style={styles.infoValue}>{jobCard.vehicle?.license_plate || jobCard.vehicle?.vin || 'N/A'}</Text>
+          <View style={{ borderBottomColor: theme.border }} className="mb-5 pb-4 border-b">
+            <View className="flex-row mb-2">
+              <Text style={{ color: theme.textMuted }} className="text-sm mr-2 min-w-[100px]">VIN:</Text>
+              <Text style={{ color: theme.text }} className="text-sm font-medium">{jobCard.vehicle?.license_plate || jobCard.vehicle?.vin || 'N/A'}</Text>
             </View>
-            
-            <View style={styles.vehicleRow}>
-              <Text style={styles.vehicleModel}>
+
+            <View className="flex-row items-center mb-2">
+              <Text style={{ color: theme.text }} className="text-lg font-semibold mr-2">
                 {jobCard.vehicle?.make} {jobCard.vehicle?.model}
               </Text>
-              <Text style={styles.carIcon}>🚗</Text>
+              <Text className="text-2xl">🚗</Text>
             </View>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Customer:</Text>
-              <Text style={styles.infoValue}>{jobCard.customer?.full_name || 'N/A'}</Text>
+            <View className="flex-row mb-2">
+              <Text style={{ color: theme.textMuted }} className="text-sm mr-2 min-w-[100px]">Customer:</Text>
+              <Text style={{ color: theme.text }} className="text-sm font-medium">{jobCard.customer?.full_name || 'N/A'}</Text>
             </View>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Phone No.:</Text>
-              <Text style={styles.infoValue}>{jobCard.customer?.phone || 'N/A'}</Text>
+            <View className="flex-row mb-2">
+              <Text style={{ color: theme.textMuted }} className="text-sm mr-2 min-w-[100px]">Phone No.:</Text>
+              <Text style={{ color: theme.text }} className="text-sm font-medium">{jobCard.customer?.phone || 'N/A'}</Text>
             </View>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Assigned tech:</Text>
-              <Text style={styles.infoValue}>{jobCard.assigned_user?.full_name || 'N/A'}</Text>
+            <View className="flex-row">
+              <Text style={{ color: theme.textMuted }} className="text-sm mr-2 min-w-[100px]">Assigned tech:</Text>
+              <Text style={{ color: theme.text }} className="text-sm font-medium">{jobCard.assigned_user?.full_name || 'N/A'}</Text>
             </View>
           </View>
 
           {/* Two Column Layout */}
-          <View style={styles.twoColumnLayout}>
+          <View className="flex-row gap-4 mb-5">
             {/* Left Column - Job Tasks */}
-            <View style={styles.leftColumn}>
-              <Text style={styles.sectionTitle}>Job Tasks</Text>
-              
+            <View className="flex-1">
+              <Text style={{ color: theme.text }} className="text-base font-bold mb-3">Job Tasks</Text>
+
               {mockTasks.map((task) => {
                 const statusBadge = getTaskStatusBadge(task.status);
                 const actionButton = getTaskActionButton(task.status);
-                
+
                 return (
-                  <View key={task.id} style={styles.taskItem}>
-                    <View style={styles.taskHeader}>
-                      <Text style={styles.taskTitle}>{task.title}:</Text>
-                      <View style={[styles.statusBadge, { backgroundColor: statusBadge.bgColor }]}>
-                        <Text style={[styles.statusText, { color: statusBadge.color }]}>
+                  <View key={task.id} style={{ borderBottomColor: theme.border }} className="mb-4 pb-3 border-b">
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Text style={{ color: theme.text }} className="text-sm font-semibold flex-1">{task.title}:</Text>
+                      <View style={{ backgroundColor: statusBadge.bgColor }} className="px-2 py-1 rounded-lg">
+                        <Text style={{ color: statusBadge.color }} className="text-[10px] font-bold uppercase">
                           {statusBadge.label}
                         </Text>
                       </View>
                     </View>
-                    <Text style={styles.taskDetail}>Assigned: {task.assigned_to}</Text>
-                    <Text style={styles.taskDetail}>Estimate: {task.estimate}</Text>
+                    <Text style={{ color: theme.textMuted }} className="text-xs mb-1">Assigned: {task.assigned_to}</Text>
+                    <Text style={{ color: theme.textMuted }} className="text-xs">Estimate: {task.estimate}</Text>
                     <TouchableOpacity
-                      style={[styles.actionButton, { backgroundColor: actionButton.color, opacity: actionButton.disabled ? 0.5 : 1 }]}
+                      style={{ backgroundColor: actionButton.color, opacity: actionButton.disabled ? 0.5 : 1 }}
+                      className="px-3 py-1.5 rounded-lg mt-2 self-start"
                       disabled={actionButton.disabled}
                     >
-                      <Text style={styles.actionButtonText}>{actionButton.label}</Text>
+                      <Text className="text-white text-xs font-semibold">{actionButton.label}</Text>
                     </TouchableOpacity>
                   </View>
                 );
@@ -323,72 +296,72 @@ export default function JobCardDetailScreen() {
             </View>
 
             {/* Right Column - Summaries */}
-            <View style={styles.rightColumn}>
+            <View className="flex-1">
               {/* Task Summary */}
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryTitle}>Task Summary:</Text>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Total Tasks:</Text>
-                  <Text style={styles.summaryValue}>{taskSummary.total}</Text>
+              <View style={{ backgroundColor: theme.surfaceAlt }} className="p-3 rounded-xl mb-4">
+                <Text style={{ color: theme.text }} className="text-sm font-bold mb-3">Task Summary:</Text>
+                <View className="flex-row justify-between mb-2">
+                  <Text style={{ color: theme.textMuted }} className="text-xs flex-1">Total Tasks:</Text>
+                  <Text style={{ color: theme.text }} className="text-xs font-bold">{taskSummary.total}</Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Complete:</Text>
-                  <Text style={styles.summaryValue}>{taskSummary.complete}</Text>
+                <View className="flex-row justify-between mb-2">
+                  <Text style={{ color: theme.textMuted }} className="text-xs flex-1">Complete:</Text>
+                  <Text style={{ color: theme.text }} className="text-xs font-bold">{taskSummary.complete}</Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Pending:</Text>
-                  <Text style={styles.summaryValue}>{taskSummary.pending}</Text>
+                <View className="flex-row justify-between mb-2">
+                  <Text style={{ color: theme.textMuted }} className="text-xs flex-1">Pending:</Text>
+                  <Text style={{ color: theme.text }} className="text-xs font-bold">{taskSummary.pending}</Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Approval:</Text>
-                  <Text style={styles.summaryValue}>{taskSummary.approval}</Text>
+                <View className="flex-row justify-between mb-2">
+                  <Text style={{ color: theme.textMuted }} className="text-xs flex-1">Approval:</Text>
+                  <Text style={{ color: theme.text }} className="text-xs font-bold">{taskSummary.approval}</Text>
                 </View>
-                <View style={styles.summaryItem}>
-                  <Text style={styles.summaryLabel}>Rejected:</Text>
-                  <Text style={styles.summaryValue}>{taskSummary.rejected}</Text>
+                <View className="flex-row justify-between">
+                  <Text style={{ color: theme.textMuted }} className="text-xs flex-1">Rejected:</Text>
+                  <Text style={{ color: theme.text }} className="text-xs font-bold">{taskSummary.rejected}</Text>
                 </View>
               </View>
 
               {/* Charges Summary */}
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryTitle}>Charges Summary:</Text>
+              <View style={{ backgroundColor: theme.surfaceAlt }} className="p-3 rounded-xl">
+                <Text style={{ color: theme.text }} className="text-sm font-bold mb-3">Charges Summary:</Text>
                 {mockTasks.map((task) => (
-                  <View key={task.id} style={styles.summaryItem}>
-                    <Text style={styles.summaryLabel}>{task.title}:</Text>
-                    <Text style={styles.summaryValue}>{task.cost.toLocaleString('en-IN')}</Text>
+                  <View key={task.id} className="flex-row justify-between mb-2">
+                    <Text style={{ color: theme.textMuted }} className="text-xs flex-1">{task.title}:</Text>
+                    <Text style={{ color: theme.text }} className="text-xs font-bold">{task.cost.toLocaleString('en-IN')}</Text>
                   </View>
                 ))}
-                <View style={[styles.summaryItem, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total:</Text>
-                  <Text style={styles.totalValue}>{totalCharges.toLocaleString('en-IN')}</Text>
+                <View style={{ borderTopColor: theme.border }} className="mt-2 pt-2 border-t flex-row justify-between">
+                  <Text style={{ color: theme.text }} className="text-sm font-bold">Total:</Text>
+                  <Text style={{ color: theme.text }} className="text-sm font-bold">{totalCharges.toLocaleString('en-IN')}</Text>
                 </View>
               </View>
             </View>
           </View>
 
           {/* Quality Check Section */}
-          <View style={styles.qualitySection}>
-            <Text style={styles.sectionTitle}>Quality Check Complete:</Text>
-            <View style={styles.qualityRow}>
-              <View style={styles.qualityItem}>
-                <Text style={styles.qualityLabel}>Technician Manager:</Text>
-                <TouchableOpacity style={[styles.qualityButton, styles.disabledButton]}>
-                  <Text style={styles.qualityButtonText}>Not Done</Text>
+          <View style={{ borderBottomColor: theme.border }} className="mb-5 pb-4 border-b">
+            <Text style={{ color: theme.text }} className="text-base font-bold mb-3">Quality Check Complete:</Text>
+            <View className="flex-row gap-4">
+              <View className="flex-1">
+                <Text style={{ color: theme.textMuted }} className="text-xs mb-2">Technician Manager:</Text>
+                <TouchableOpacity style={{ opacity: 0.5 }} className="px-3 py-2 rounded-lg bg-gray-400">
+                  <Text className="text-white text-xs font-semibold text-center">Not Done</Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.qualityItem}>
-                <Text style={styles.qualityLabel}>Technician:</Text>
-                <TouchableOpacity style={[styles.qualityButton, styles.disabledButton]}>
-                  <Text style={styles.qualityButtonText}>Done</Text>
+              <View className="flex-1">
+                <Text style={{ color: theme.textMuted }} className="text-xs mb-2">Technician:</Text>
+                <TouchableOpacity style={{ opacity: 0.5 }} className="px-3 py-2 rounded-lg bg-gray-400">
+                  <Text className="text-white text-xs font-semibold text-center">Done</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
 
           {/* Ready to Delivery Section */}
-          <View style={styles.deliverySection}>
-            <Text style={styles.sectionTitle}>Ready to delivery:</Text>
-            <Text style={styles.deliveryValue}>False</Text>
+          <View>
+            <Text style={{ color: theme.text }} className="text-base font-bold">Ready to delivery:</Text>
+            <Text style={{ color: theme.text }} className="text-2xl font-bold mt-2">False</Text>
           </View>
         </View>
       </ScrollView>
@@ -396,285 +369,4 @@ export default function JobCardDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#2563eb',
-  },
-  backButton: {
-    padding: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    width: 32,
-    height: 32,
-    resizeMode: 'contain',
-    color: '#000000',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#ffffff',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  headerButton: {
-    padding: 8,
-  },
-  darkModeIcon: {
-    fontSize: 20,
-    color: '#ffffff',
-  },
-  avatarButton: {
-    padding: 4,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#ef4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#6b7280',
-  },
-  jobCardContainer: {
-    backgroundColor: '#ffffff',
-    margin: 16,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#2563eb',
-  },
-  jobCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  jobCardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  urgentBadge: {
-    backgroundColor: '#fee2e2',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  urgentText: {
-    color: '#ef4444',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  infoSection: {
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginRight: 8,
-    minWidth: 100,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '500',
-  },
-  vehicleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  vehicleModel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginRight: 8,
-  },
-  carIcon: {
-    fontSize: 24,
-  },
-  twoColumnLayout: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 20,
-  },
-  leftColumn: {
-    flex: 1,
-  },
-  rightColumn: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  taskItem: {
-    marginBottom: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  taskHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  taskTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-    flex: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  taskDetail: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
-  },
-  actionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  actionButtonText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  summaryCard: {
-    backgroundColor: '#f9fafb',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  summaryTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    flex: 1,
-  },
-  summaryValue: {
-    fontSize: 12,
-    color: '#111827',
-    fontWeight: '600',
-  },
-  totalRow: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-  totalLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  totalValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  qualitySection: {
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  qualityRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  qualityItem: {
-    flex: 1,
-  },
-  qualityLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  qualityButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    backgroundColor: '#9ca3af',
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  qualityButtonText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  deliverySection: {
-    marginBottom: 8,
-  },
-  deliveryValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginTop: 8,
-  },
-});
+

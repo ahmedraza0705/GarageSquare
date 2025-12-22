@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/context/ThemeContext';
 import { JobCard } from '@/types';
 
 // Static job cards data
@@ -93,9 +94,9 @@ const staticJobCards: JobCard[] = [
 export default function ActiveJobsScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { theme, toggleTheme, themeName } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobCards] = useState<JobCard[]>(staticJobCards);
-  const [darkMode, setDarkMode] = useState(false);
 
   const getStatusBadge = (status: string, priority?: string) => {
     if (priority === 'urgent') {
@@ -118,11 +119,6 @@ export default function ActiveJobsScreen() {
     return `${day}-${month}-${year}`;
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  };
-
   const handleJobCardPress = (jobCard: JobCard) => {
     // @ts-ignore
     navigation.navigate('JobCardDetail', { jobCardId: jobCard.id });
@@ -140,24 +136,24 @@ export default function ActiveJobsScreen() {
   });
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* Custom Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: theme.border, borderBottomWidth: 0 }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
           <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
         </TouchableOpacity>
-        
-        <Text style={styles.headerTitle}>Active Jobs</Text>
-        
+
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Active Jobs</Text>
+
         <View style={styles.headerRight}>
           <TouchableOpacity
-            onPress={() => setDarkMode(!darkMode)}
+            onPress={toggleTheme}
             style={styles.headerButton}
           >
-            <Text style={styles.darkModeIcon}>{darkMode ? '☀️' : '🌙'}</Text>
+            <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.avatarButton}>
             <View style={styles.avatar}>
@@ -171,14 +167,14 @@ export default function ActiveJobsScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, { backgroundColor: theme.background, borderBottomWidth: 0 }]}>
           <View style={styles.searchBarRow}>
-            <View style={styles.searchBar}>
+            <View style={[styles.searchBar, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <Text style={styles.searchIcon}>🔍</Text>
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: theme.text }]}
                 placeholder="Search User"
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={theme.textMuted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -186,7 +182,7 @@ export default function ActiveJobsScreen() {
                 <Text style={styles.filterIcon}>🔽</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.addButton}
               onPress={() => {
                 // @ts-ignore
@@ -209,7 +205,7 @@ export default function ActiveJobsScreen() {
             return (
               <TouchableOpacity
                 key={jobCard.id}
-                style={styles.jobCard}
+                style={[styles.jobCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
                 onPress={() => handleJobCardPress(jobCard)}
                 activeOpacity={0.7}
               >
@@ -223,7 +219,7 @@ export default function ActiveJobsScreen() {
                   </View>
 
                   {/* Job Card Number - Centered */}
-                  <Text style={styles.jobNumber}>Job Card {jobCard.job_number}</Text>
+                  <Text style={[styles.jobNumber, { color: theme.text }]}>Job Card {jobCard.job_number}</Text>
 
                   {/* Price Tag */}
                   <View style={styles.priceTag}>
@@ -235,27 +231,27 @@ export default function ActiveJobsScreen() {
                 <View style={styles.vehicleSection}>
                   <Text style={styles.carIcon}>🚗</Text>
                   <View style={styles.vehicleInfo}>
-                    <Text style={styles.vehicleModel}>{jobCard.vehicle?.model || 'N/A'}</Text>
-                    <Text style={styles.licensePlate}>{jobCard.vehicle?.license_plate || 'N/A'}</Text>
+                    <Text style={[styles.vehicleModel, { color: theme.text }]}>{jobCard.vehicle?.model || 'N/A'}</Text>
+                    <Text style={[styles.licensePlate, { color: theme.textMuted }]}>{jobCard.vehicle?.license_plate || 'N/A'}</Text>
                   </View>
                 </View>
 
                 {/* Customer and Technician Info */}
                 <View style={styles.infoSection}>
-                  <Text style={styles.infoText}>
+                  <Text style={[styles.infoText, { color: theme.textMuted }]}>
                     Customer : {jobCard.customer?.full_name || 'N/A'}
                   </Text>
-                  <Text style={styles.infoText}>
+                  <Text style={[styles.infoText, { color: theme.textMuted }]}>
                     Assigned tech: {jobCard.assigned_user?.full_name || 'N/A'}
                   </Text>
                 </View>
 
                 {/* Delivery Info */}
-                <View style={styles.deliveryRow}>
-                  <Text style={styles.deliveryText}>
+                <View style={[styles.deliveryRow, { borderTopColor: theme.border }]}>
+                  <Text style={[styles.deliveryText, { color: theme.textMuted }]}>
                     Delivery date: {formatDate(deliveryDate.toISOString())}
                   </Text>
-                  <Text style={styles.deliveryText}>
+                  <Text style={[styles.deliveryText, { color: theme.textMuted }]}>
                     Delivery due: {deliveryTime}
                   </Text>
                 </View>
@@ -266,7 +262,7 @@ export default function ActiveJobsScreen() {
 
         {filteredJobCards.length === 0 && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No job cards found</Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No job cards found</Text>
           </View>
         )}
       </ScrollView>
@@ -281,9 +277,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   headerButton: {
     padding: 8,
@@ -301,7 +294,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000000',
   },
   headerRight: {
     flexDirection: 'row',
@@ -331,9 +323,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   searchBarRow: {
     flexDirection: 'row',
@@ -344,10 +333,8 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 8,
@@ -359,7 +346,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#111827',
   },
   filterButton: {
     padding: 4,
@@ -388,12 +374,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   jobCard: {
-    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -421,7 +405,6 @@ const styles = StyleSheet.create({
   jobNumber: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#111827',
     flex: 1,
     textAlign: 'center',
   },
@@ -451,19 +434,16 @@ const styles = StyleSheet.create({
   vehicleModel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 4,
   },
   licensePlate: {
     fontSize: 14,
-    color: '#6b7280',
   },
   infoSection: {
     marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
-    color: '#6b7280',
     marginBottom: 4,
   },
   deliveryRow: {
@@ -472,11 +452,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
   },
   deliveryText: {
     fontSize: 13,
-    color: '#6b7280',
   },
   emptyContainer: {
     padding: 32,
@@ -484,7 +462,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#6b7280',
   },
 });
-

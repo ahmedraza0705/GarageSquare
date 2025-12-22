@@ -5,7 +5,7 @@
 import 'react-native-gesture-handler';
 import React from 'react';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'react-native';
+import { View, StatusBar } from 'react-native';
 import RootNavigator from './src/navigation/RootNavigator';
 import './global.css';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';

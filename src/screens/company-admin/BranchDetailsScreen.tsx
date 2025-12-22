@@ -5,7 +5,7 @@ import { Branch } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
-import { branchService } from '@/services/branchService';
+import { BranchService } from '@/services/branch.service';
 
 const getInitials = (name: string) => {
     return name
@@ -39,7 +39,7 @@ export default function BranchDetailsScreen() {
         const fetchManager = async () => {
             if (branch.manager_id) {
                 setLoadingManager(true);
-                const managerData = await branchService.getBranchManager(branch.manager_id);
+                const managerData = await BranchService.getBranchManager(branch.manager_id);
                 setManager(managerData);
                 setLoadingManager(false);
             }
@@ -130,7 +130,7 @@ export default function BranchDetailsScreen() {
 
         try {
             setIsSaving(true);
-            const updatedBranch = await branchService.updateBranch(branch.id, {
+            const updatedBranch = await BranchService.updateBranch(branch.id, {
                 name: editName,
                 address: editAddress,
                 location: editLocation
@@ -158,14 +158,14 @@ export default function BranchDetailsScreen() {
         <View style={{ flex: 1, backgroundColor: theme.background }}>
             {/* Custom Header */}
             <View style={{
-                backgroundColor: theme.headerBg,
+                backgroundColor: theme.background,
                 paddingHorizontal: 20,
                 paddingVertical: 16,
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 borderBottomColor: theme.headerBorder,
-                marginTop: Platform.OS === 'ios' ? 40 : 0
+                borderBottomWidth: 0, // Seamless look
             }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -196,7 +196,7 @@ export default function BranchDetailsScreen() {
                     <TouchableOpacity
                         onPress={openEditModal}
                         style={{
-                            backgroundColor: '#D1FAE5',
+                            backgroundColor: theme.tabIconBg,
                             width: 36,
                             height: 36,
                             borderRadius: 8,
@@ -204,7 +204,7 @@ export default function BranchDetailsScreen() {
                             justifyContent: 'center',
                         }}
                     >
-                        <Ionicons name="add" size={24} color="#059669" />
+                        <Ionicons name="create-outline" size={24} color={theme.primary} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -394,7 +394,7 @@ export default function BranchDetailsScreen() {
                     {/* Nested Contact Card Container */}
                     <View style={{
                         flex: 1,
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.surface,
                         borderRadius: 24,
                         padding: 16,
                         gap: 16,
@@ -408,7 +408,7 @@ export default function BranchDetailsScreen() {
                                 width: 44,
                                 height: 44,
                                 borderRadius: 22,
-                                backgroundColor: '#587eb5',
+                                backgroundColor: theme.primary,
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginRight: 12,
@@ -431,7 +431,7 @@ export default function BranchDetailsScreen() {
 
                         {/* Phone Card */}
                         <TouchableOpacity onPress={handleCall} style={{
-                            backgroundColor: '#587eb5',
+                            backgroundColor: theme.primary,
                             borderRadius: 15,
                             padding: 12,
                             flexDirection: 'row',
@@ -449,7 +449,7 @@ export default function BranchDetailsScreen() {
 
                         {/* Email Card */}
                         <TouchableOpacity onPress={handleEmail} style={{
-                            backgroundColor: theme.surfaceAlt,
+                            backgroundColor: theme.tabIconBg,
                             borderRadius: 15,
                             padding: 8,
                             flexDirection: 'row',
@@ -458,7 +458,7 @@ export default function BranchDetailsScreen() {
                             justifyContent: 'center',
                         }}>
                             <View style={{ marginRight: 5 }}>
-                                <Ionicons name="mail" size={18} color="#587eb5" />
+                                <Ionicons name="mail" size={18} color={theme.primary} />
                             </View>
                             <Text style={{ fontSize: 10, color: theme.textMuted, fontWeight: '600' }} numberOfLines={1}>
                                 {loadingManager ? '...' : (manager?.email || branch.email || 'ahmed.raza@gmail.com')}
@@ -571,7 +571,7 @@ export default function BranchDetailsScreen() {
                             onPress={handleSave}
                             disabled={isSaving}
                             style={{
-                                backgroundColor: '#2563EB',
+                                backgroundColor: theme.primary,
                                 borderRadius: 12,
                                 paddingVertical: 14,
                                 alignItems: 'center',

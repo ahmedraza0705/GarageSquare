@@ -147,9 +147,12 @@ function CustomHeader({
   const screenTitle = getScreenTitle();
   const isDashboard = screenTitle === 'Dashboard';
 
-  // Match Dashboard body background for seamless look in Light Mode
-  const headerBackgroundColor = (isDashboard && themeName === 'light')
-    ? 'rgba(54, 69, 79, 0.1)'
+  // Match body background for seamless look in Light Mode for specific screens
+  const seamlessScreens = ['Dashboard', 'Branch Management', 'Branches', 'User Management', 'Reports'];
+  const isSeamless = seamlessScreens.includes(screenTitle);
+
+  const headerBackgroundColor = (isSeamless && themeName === 'light')
+    ? theme.background
     : theme.headerBg;
 
   // Determine if we should show back button
@@ -161,11 +164,12 @@ function CustomHeader({
 
     const routeName = route?.name || 'Dashboard';
 
-    // Main tab screens should show menu button, not back button
-    const mainScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab'];
+    // List of screens that should show menu button (hamburger) instead of back button
+    // These are primary drawer screens
+    const drawerScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab', 'Vehicles', 'Customers', 'Inventory', 'JobCards'];
 
-    // If we're on MainTabs, don't show back button
-    if (mainScreens.includes(routeName)) {
+    // If we're on a drawer screen, don't show back button
+    if (drawerScreens.includes(routeName) || drawerScreens.includes(route?.name)) {
       return false;
     }
 
@@ -182,10 +186,10 @@ function CustomHeader({
             backgroundColor: headerBackgroundColor,
             borderBottomColor: theme.headerBorder,
             // Remove border for seamless dashboard look
-            borderBottomWidth: isDashboard ? 0 : 1,
-            paddingTop: insets.top,
-            paddingBottom: 16,
-            height: 75 + insets.top, // Adjust height based on notch
+            // Remove border for seamless look
+            borderBottomWidth: isSeamless ? 0 : 1,
+            paddingBottom: 8,
+            height: 60, // Fixed height since parent SafeAreaView handles the notch
           },
         ]}
       >
@@ -276,8 +280,6 @@ function DashboardStack() {
       }}
     >
       <Stack.Screen name="Dashboard" component={CompanyAdminDashboard} />
-      <Stack.Screen name="Vehicles" component={VehiclesScreen} />
-      <Stack.Screen name="Customers" component={CustomersScreen} />
     </Stack.Navigator>
   );
 }

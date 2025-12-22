@@ -103,7 +103,7 @@ export default function JobCardsScreen() {
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: 'rgba(53, 197, 106, 0.4)',
+                backgroundColor: theme.tabIconBg,
                 padding: 12,
                 borderRadius: 12,
                 width: 48,
@@ -111,11 +111,11 @@ export default function JobCardsScreen() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderWidth: 1,
-                borderColor: '#35C56A'
+                borderColor: theme.primary
               }}
               onPress={() => navigation.navigate('CreateJobCard' as never)}
             >
-              <Ionicons name="add" size={24} color="#000000" />
+              <Ionicons name="add" size={24} color={theme.primary} />
             </TouchableOpacity>
           </View>
 

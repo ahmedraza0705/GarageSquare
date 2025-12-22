@@ -39,11 +39,12 @@ const UploadSection = ({ title, files, onUpload, uploaded }: { title: string, fi
                 </View>
             ) : (
                 <TouchableOpacity
-                    className="flex-row items-center bg-blue-100 px-6 py-2 rounded-lg"
+                    style={{ backgroundColor: '#C3712520' }}
+                    className="flex-row items-center px-6 py-2 rounded-lg"
                     onPress={onUpload}
                 >
-                    <Upload size={18} color="#2563EB" />
-                    <Text className="text-blue-600 font-medium ml-2">Upload</Text>
+                    <Upload size={18} color="#C37125" />
+                    <Text style={{ color: '#C37125' }} className="font-medium ml-2">Upload</Text>
                 </TouchableOpacity>
             )}
         </View>
@@ -116,17 +117,17 @@ export default function DataUploadScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             <View className="px-6 py-4 flex-row items-center">
                 <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-                    <ArrowLeft size={24} color="#1F2937" />
+                    <ArrowLeft size={24} color={theme.text} />
                 </TouchableOpacity>
-                <Text className="text-xl font-bold text-gray-900">Import Data</Text>
+                <Text style={{ color: theme.text }} className="text-xl font-bold">Import Data</Text>
             </View>
 
             {/* Progress Bar */}
             <View className="flex-row px-6 mb-8 gap-2">
-                <View className="h-1 bg-green-500 flex-1 rounded-full" />
-                <View className="h-1 bg-green-500 flex-1 rounded-full" />
-                <View className="h-1 bg-green-500 flex-1 rounded-full" />
-                <View className="h-1 bg-green-500 flex-1 rounded-full" />
+                <View style={{ backgroundColor: theme.primary }} className="h-1 flex-1 rounded-full" />
+                <View style={{ backgroundColor: theme.primary }} className="h-1 flex-1 rounded-full" />
+                <View style={{ backgroundColor: theme.primary }} className="h-1 flex-1 rounded-full" />
+                <View style={{ backgroundColor: theme.primary }} className="h-1 flex-1 rounded-full" />
             </View>
 
             <ScrollView className="px-6 flex-1">

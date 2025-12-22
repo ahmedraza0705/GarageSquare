@@ -164,7 +164,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
           {/* Header Section */}
           <View style={[styles.header, { backgroundColor: theme.drawerBackground }]}>
             <View style={styles.headerTopRow}>
-              <Text style={styles.languageText}>{language}</Text>
+              <Text style={[styles.languageText, { color: theme.primary }]}>{language}</Text>
               <TouchableOpacity style={styles.editIcon}>
                 <Ionicons name="pencil" size={18} color="#EAB308" />
               </TouchableOpacity>
@@ -186,8 +186,8 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
                   style={[
                     styles.menuItem,
                     isActive && {
-                      backgroundColor: themeName === 'dark' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.1)',
-                      borderLeftColor: '#3B82F6',
+                      backgroundColor: theme.tabIconBg,
+                      borderLeftColor: theme.primary,
                     },
                     isActive && styles.menuItemActiveBorder
                   ]}
@@ -195,7 +195,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
                 >
                   <Text style={[
                     styles.menuItemText,
-                    { color: isActive ? '#3B82F6' : theme.text }
+                    { color: isActive ? theme.primary : theme.text }
                   ]}>
                     {item.label}
                   </Text>
@@ -258,7 +258,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   languageText: {
-    color: '#3b82f6', // Blueish
     fontSize: 14,
     fontWeight: '600',
   },

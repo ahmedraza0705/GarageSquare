@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarChart } from 'react-native-chart-kit';
 import {
@@ -17,6 +18,7 @@ const screenWidth = Dimensions.get('window').width;
 type TimePeriod = 'Today' | 'Week' | 'Month' | 'Quarter' | 'Year';
 
 export default function ReportsScreen() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('Month');
   const [loading, setLoading] = useState(true);
@@ -71,9 +73,10 @@ export default function ReportsScreen() {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: '#ffffff',
-    backgroundGradientTo: '#ffffff',
+    backgroundGradientFrom: theme.surface,
+    backgroundGradientTo: theme.surface,
     color: (opacity = 1) => `rgba(74, 144, 226, ${opacity})`,
+    labelColor: (opacity = 1) => theme.textMuted,
     strokeWidth: 2,
     barPercentage: 0.6,
     useShadowColorFromDataset: false,
@@ -84,7 +87,7 @@ export default function ReportsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#F5F5F5' }}>
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
         {/* Time Period Tabs */}
         <View className="flex-row mb-4">
@@ -94,14 +97,14 @@ export default function ReportsScreen() {
               onPress={() => setSelectedPeriod(period)}
               className="flex-1 py-2 mx-1 rounded-lg items-center"
               style={{
-                backgroundColor: selectedPeriod === period ? '#4A90E2' : '#FFFFFF',
+                backgroundColor: selectedPeriod === period ? theme.primary : theme.surface,
                 borderWidth: 1,
-                borderColor: selectedPeriod === period ? '#4A90E2' : '#E0E0E0',
+                borderColor: selectedPeriod === period ? theme.primary : theme.border,
               }}
             >
               <Text
                 className="font-medium text-sm"
-                style={{ color: selectedPeriod === period ? '#FFFFFF' : '#000000' }}
+                style={{ color: selectedPeriod === period ? '#FFFFFF' : theme.text }}
               >
                 {period}
               </Text>
@@ -112,7 +115,7 @@ export default function ReportsScreen() {
         {/* Loading State */}
         {loading ? (
           <View className="items-center justify-center py-20">
-            <ActivityIndicator size="large" color="#4A90E2" />
+            <ActivityIndicator size="large" color={theme.primary} />
             <Text className="text-sm mt-4" style={{ color: '#9E9E9E' }}>
               Loading reports...
             </Text>
@@ -126,7 +129,7 @@ export default function ReportsScreen() {
             </Text>
             <TouchableOpacity
               className="px-6 py-3 rounded-lg"
-              style={{ backgroundColor: '#4A90E2' }}
+              style={{ backgroundColor: theme.primary }}
               onPress={loadReports}
             >
               <Text className="text-white font-semibold">Retry</Text>
@@ -135,10 +138,10 @@ export default function ReportsScreen() {
         ) : (
           <>
             {/* Total Revenue Card */}
-            <View className="bg-white rounded-lg p-4 mb-4 flex-row justify-between items-center" style={{ borderWidth: 1, borderColor: '#E0E0E0' }}>
+            <View className="rounded-lg p-4 mb-4 flex-row justify-between items-center" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
               <View>
-                <Text className="text-sm" style={{ color: '#757575' }}>Total Revenue</Text>
-                <Text className="text-2xl font-bold mt-1" style={{ color: '#000000' }}>
+                <Text className="text-sm" style={{ color: theme.textMuted }}>Total Revenue</Text>
+                <Text className="text-2xl font-bold mt-1" style={{ color: theme.text }}>
                   {formatCurrency(totalRevenue)}
                 </Text>
               </View>
@@ -146,7 +149,7 @@ export default function ReportsScreen() {
 
             {/* Revenue Trend Chart */}
             {revenueTrendData.labels.length > 0 && (
-              <View className="bg-white rounded-lg p-3 mb-4" style={{ borderWidth: 1, borderColor: '#E0E0E0' }}>
+              <View className="rounded-lg p-3 mb-4" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
                 <BarChart
                   data={revenueTrendData}
                   width={screenWidth - 48}
@@ -163,7 +166,7 @@ export default function ReportsScreen() {
 
             {/* Branch Comparison Chart */}
             {branchComparisonData.labels.length > 0 && (
-              <View className="bg-white rounded-lg p-3 mb-4">
+              <View className="rounded-lg p-3 mb-4" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
                 <BarChart
                   data={branchComparisonData}
                   width={screenWidth - 48}
@@ -184,58 +187,58 @@ export default function ReportsScreen() {
             {/* Stats Row */}
             <View className="flex-row gap-3 mb-4">
               {/* Return vs New Customer */}
-              <View className="flex-1 bg-white rounded-lg p-4" style={{ borderWidth: 1, borderColor: '#E0E0E0' }}>
-                <Text className="font-semibold mb-3" style={{ color: '#000000' }}>Return VS New Customer</Text>
+              <View className="flex-1 rounded-lg p-4" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
+                <Text className="font-semibold mb-3" style={{ color: theme.text }}>Return VS New Customer</Text>
 
                 <View className="mb-3">
                   <View className="flex-row justify-between mb-1">
-                    <Text className="text-xs" style={{ color: '#FFFFFF', backgroundColor: '#4A90E2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text className="text-xs" style={{ color: '#FFFFFF', backgroundColor: theme.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
                       Return
                     </Text>
-                    <Text className="text-xs font-semibold">{returnCustomerPercent}%</Text>
+                    <Text className="text-xs font-semibold" style={{ color: theme.text }}>{returnCustomerPercent}%</Text>
                   </View>
-                  <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <View className="h-full rounded-full" style={{ width: `${returnCustomerPercent}%`, backgroundColor: '#4A90E2' }} />
+                  <View className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: theme.surfaceAlt }}>
+                    <View className="h-full rounded-full" style={{ width: `${returnCustomerPercent}%`, backgroundColor: theme.primary }} />
                   </View>
                 </View>
 
                 <View>
                   <View className="flex-row justify-between mb-1">
-                    <Text className="text-xs" style={{ color: '#FFFFFF', backgroundColor: '#4A90E2', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text className="text-xs" style={{ color: '#FFFFFF', backgroundColor: theme.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
                       New Customer
                     </Text>
-                    <Text className="text-xs font-semibold">{newCustomerPercent}%</Text>
+                    <Text className="text-xs font-semibold" style={{ color: theme.text }}>{newCustomerPercent}%</Text>
                   </View>
-                  <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <View className="h-full rounded-full" style={{ width: `${newCustomerPercent}%`, backgroundColor: '#4A90E2' }} />
+                  <View className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: theme.surfaceAlt }}>
+                    <View className="h-full rounded-full" style={{ width: `${newCustomerPercent}%`, backgroundColor: theme.primary }} />
                   </View>
                 </View>
               </View>
 
               {/* Customers Card */}
-              <View className="bg-white rounded-lg p-4 items-center justify-center" style={{ borderWidth: 1, borderColor: '#E0E0E0', minWidth: 120 }}>
-                <Text className="text-sm mb-2" style={{ color: '#757575' }}>Customers</Text>
-                <Text className="text-3xl font-bold" style={{ color: '#000000' }}>{totalCustomers}</Text>
+              <View className="rounded-lg p-4 items-center justify-center" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, minWidth: 120 }}>
+                <Text className="text-sm mb-2" style={{ color: theme.textMuted }}>Customers</Text>
+                <Text className="text-3xl font-bold" style={{ color: theme.text }}>{totalCustomers}</Text>
               </View>
             </View>
 
             {/* Branch-Wise Revenue Table */}
-            <View className="bg-white rounded-lg p-4 mb-20" style={{ borderWidth: 1, borderColor: '#E0E0E0' }}>
-              <Text className="font-semibold mb-3" style={{ color: '#000000' }}>Branch-Wise Revenue</Text>
+            <View className="rounded-lg p-4 mb-20" style={{ backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }}>
+              <Text className="font-semibold mb-3" style={{ color: theme.text }}>Branch-Wise Revenue</Text>
 
               {/* Table Header */}
-              <View className="flex-row pb-2 border-b" style={{ borderBottomColor: '#E0E0E0' }}>
-                <Text className="flex-1 font-semibold text-xs" style={{ color: '#757575' }}>Branch</Text>
-                <Text className="w-16 font-semibold text-xs text-center" style={{ color: '#757575' }}>Jobs</Text>
-                <Text className="w-24 font-semibold text-xs text-right" style={{ color: '#757575' }}>Revenue</Text>
+              <View className="flex-row pb-2 border-b" style={{ borderBottomColor: theme.border }}>
+                <Text className="flex-1 font-semibold text-xs" style={{ color: theme.textMuted }}>Branch</Text>
+                <Text className="w-16 font-semibold text-xs text-center" style={{ color: theme.textMuted }}>Jobs</Text>
+                <Text className="w-24 font-semibold text-xs text-right" style={{ color: theme.textMuted }}>Revenue</Text>
               </View>
 
               {/* Table Rows */}
               {branchRevenue.map((item, index) => (
-                <View key={index} className="flex-row py-3 border-b" style={{ borderBottomColor: '#F0F0F0' }}>
-                  <Text className="flex-1 text-sm" style={{ color: '#000000' }}>{item.branch}</Text>
-                  <Text className="w-16 text-sm text-center" style={{ color: '#000000' }}>{item.jobs}</Text>
-                  <Text className="w-24 text-sm text-right" style={{ color: '#000000' }}>
+                <View key={index} className="flex-row py-3 border-b" style={{ borderBottomColor: theme.surfaceAlt }}>
+                  <Text className="flex-1 text-sm" style={{ color: theme.text }}>{item.branch}</Text>
+                  <Text className="w-16 text-sm text-center" style={{ color: theme.text }}>{item.jobs}</Text>
+                  <Text className="w-24 text-sm text-right" style={{ color: theme.text }}>
                     ₹{(item.revenue / 100000).toFixed(1)}L
                   </Text>
                 </View>
@@ -254,6 +257,6 @@ export default function ReportsScreen() {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

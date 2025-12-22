@@ -70,7 +70,7 @@ export default function CustomersScreen() {
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -107,7 +107,7 @@ export default function CustomersScreen() {
             </View>
             <TouchableOpacity
               style={{
-                backgroundColor: 'rgba(53, 197, 106, 0.4)',
+                backgroundColor: theme.tabIconBg,
                 padding: 12,
                 borderRadius: 12,
                 width: 48,
@@ -115,11 +115,11 @@ export default function CustomersScreen() {
                 justifyContent: 'center',
                 alignItems: 'center',
                 borderWidth: 1,
-                borderColor: '#35C56A'
+                borderColor: theme.primary
               }}
               onPress={() => navigation.navigate('CreateCustomer' as never)}
             >
-              <Ionicons name="add" size={24} color="#000000" />
+              <Ionicons name="add" size={24} color={theme.primary} />
             </TouchableOpacity>
           </View>
 

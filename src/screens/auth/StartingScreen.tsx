@@ -3,7 +3,8 @@
 // ============================================
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/AuthNavigator';
@@ -12,14 +13,16 @@ type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
 export default function StartingScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { theme } = useTheme();
 
   return (
-    <View className="flex-1">
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <StatusBar barStyle={theme.statusBarStyle} />
       {/* Background - Using gradient as placeholder for garage image */}
       <View style={styles.backgroundContainer}>
         {/* Garage-like background color (gray tones) */}
         <View style={styles.backgroundGradient} />
-        
+
         {/* Dark Overlay */}
         <View style={styles.darkOverlay} />
 
@@ -35,27 +38,27 @@ export default function StartingScreen() {
                   {/* Star in center */}
                   <Text style={styles.star}>⭐</Text>
                 </View>
-                
+
                 {/* Gear teeth - positioned around the circle */}
                 <View style={[styles.gearTooth, styles.gearToothTop]} />
                 <View style={[styles.gearTooth, styles.gearToothBottom]} />
                 <View style={[styles.gearTooth, styles.gearToothLeft]} />
                 <View style={[styles.gearTooth, styles.gearToothRight]} />
-                
+
                 {/* Wings - left */}
                 <View style={styles.wingLeft}>
-                  <View style={[styles.wingShape, { transform: [{ rotate: '-45deg' }] }]} />
+                  <View style={[styles.wingShape, { transform: [{ rotate: '-45deg' }], backgroundColor: theme.primary }]} />
                 </View>
                 {/* Wings - right */}
                 <View style={styles.wingRight}>
-                  <View style={[styles.wingShape, { transform: [{ rotate: '45deg' }] }]} />
+                  <View style={[styles.wingShape, { transform: [{ rotate: '45deg' }], backgroundColor: theme.primary }]} />
                 </View>
               </View>
 
               {/* Crossed Wrenches Below */}
               <View style={styles.wrenchesContainer}>
-                <View style={[styles.wrench, styles.wrench1]} />
-                <View style={[styles.wrench, styles.wrench2]} />
+                <View style={[styles.wrench, styles.wrench1, { backgroundColor: theme.primary }]} />
+                <View style={[styles.wrench, styles.wrench2, { backgroundColor: theme.primary }]} />
               </View>
             </View>
           </View>
@@ -65,8 +68,8 @@ export default function StartingScreen() {
             {/* Get Started Button */}
             <TouchableOpacity
               onPress={() => navigation.navigate('Login')}
-              className="bg-blue-600 py-4 rounded-lg items-center justify-center mb-4"
-              style={styles.button}
+              className="py-4 rounded-lg items-center justify-center mb-4"
+              style={[styles.button, { backgroundColor: theme.primary }]}
             >
               <Text className="text-white font-bold text-lg">Get Started</Text>
             </TouchableOpacity>
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderWidth: 4,
-    borderColor: '#2563eb',
+    borderColor: '#C37125',
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
@@ -138,13 +141,13 @@ const styles = StyleSheet.create({
   },
   star: {
     fontSize: 36,
-    color: '#2563eb',
+    color: '#C37125',
   },
   gearTooth: {
     position: 'absolute',
     width: 24,
     height: 24,
-    backgroundColor: '#2563eb',
+    backgroundColor: '#C37125',
     borderRadius: 12,
   },
   gearToothTop: {
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
   wingShape: {
     width: 64,
     height: 32,
-    backgroundColor: '#2563eb',
+    backgroundColor: '#C37125',
     borderRadius: 16,
   },
   wrenchesContainer: {
@@ -203,7 +206,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 32,
     height: 4,
-    backgroundColor: '#2563eb',
+    backgroundColor: '#C37125',
     borderRadius: 2,
   },
   wrench1: {

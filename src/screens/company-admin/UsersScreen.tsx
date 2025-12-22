@@ -519,8 +519,8 @@ export default function UsersScreen() {
                     key={branch.id}
                     onPress={() => setForm({ ...form, branch_id: branch.id })}
                     style={{
-                      backgroundColor: form.branch_id === branch.id ? '#1e40af' : theme.surface,
-                      borderColor: form.branch_id === branch.id ? '#1e40af' : theme.border,
+                      backgroundColor: form.branch_id === branch.id ? theme.primary : theme.surface,
+                      borderColor: form.branch_id === branch.id ? theme.primary : theme.border,
                       borderWidth: 1
                     }}
                     className={`mr-2 px-4 py-3 rounded-xl`}
@@ -543,13 +543,14 @@ export default function UsersScreen() {
             <TouchableOpacity
               onPress={handleSave}
               disabled={saving}
-              className={`w-full py-4 rounded-xl items-center flex-row justify-center ${saving ? 'bg-blue-400' : 'bg-blue-600'}`}
+              style={{ backgroundColor: saving ? theme.primary + '80' : theme.primary }}
+              className="w-full py-4 rounded-xl items-center flex-row justify-center"
             >
               {saving ? (
                 <Text className="text-white font-bold text-lg">Saving...</Text>
               ) : (
                 <>
-                  <Check size={20} color="white" className="mr-2" />
+                  <Check size={20} color="white" />
                   <Text className="text-white font-bold text-lg ml-2">
                     {editingUser ? 'Save Changes' : 'Create User'}
                   </Text>

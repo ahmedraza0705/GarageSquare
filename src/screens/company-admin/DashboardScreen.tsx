@@ -116,11 +116,11 @@ export default function CompanyAdminDashboard() {
       <View style={styles.chartContainer}>
         <View style={styles.chartLegend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#2563eb' }]} />
+            <View style={[styles.legendColor, { backgroundColor: '#4682B4' }]} />
             <Text style={[styles.legendText, { color: theme.text }]}>branch 1</Text>
           </View>
           <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: '#10b981' }]} />
+            <View style={[styles.legendColor, { backgroundColor: '#C37125' }]} />
             <Text style={[styles.legendText, { color: theme.text }]}>branch 2</Text>
           </View>
         </View>
@@ -149,7 +149,7 @@ export default function CompanyAdminDashboard() {
                   <View
                     style={[
                       styles.bar,
-                      { height: (item.branch2 / maxValue) * 120, backgroundColor: '#35C56A' },
+                      { height: (item.branch2 / maxValue) * 120, backgroundColor: theme.primary },
                     ]}
                   />
                 </View>
@@ -167,7 +167,7 @@ export default function CompanyAdminDashboard() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4682B4" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
         }
       >
         <View style={styles.container}>
@@ -239,7 +239,11 @@ export default function CompanyAdminDashboard() {
             </TouchableOpacity>
 
             {/* Revenue Card */}
-            <View style={[styles.largeCard, styles.revenueCard]}>
+            <TouchableOpacity
+              style={[styles.largeCard, styles.revenueCard]}
+              onPress={() => navigation.navigate('ReportsTab' as never)}
+              activeOpacity={0.8}
+            >
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={[styles.cardTitle, styles.whiteText]}>Revenue</Text>
@@ -250,7 +254,7 @@ export default function CompanyAdminDashboard() {
                   <Ionicons name="cash-outline" size={32} color="#ffffff" />
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Bar Chart Card */}
@@ -317,7 +321,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 10,
     paddingBottom: 100, // Space for bottom navigation
   },
   cardRow: {
@@ -367,7 +372,7 @@ const styles = StyleSheet.create({
   },
   cardTrend: {
     fontSize: 12,
-    color: '#10b981',
+    color: '#C37125',
     fontWeight: '500',
   },
   whiteText: {
