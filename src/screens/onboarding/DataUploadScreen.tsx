@@ -99,28 +99,10 @@ export default function DataUploadScreen() {
                 onboarding_completed: true
             });
 
-            // 3. Navigate to Dashboard (RoleBasedNavigator should pick up the change, 
-            // but we might need to force a reload or navigation reset if state doesn't update immediately).
-            // Simplest is to navigate to Root/App, or rely on state update.
-            // Since RoleBasedNavigator checks 'onboarding_completed' from a fresh fetch or hook, 
-            // we might need to refresh the user profile/company data in context?
-            // For now, let's assume the "loading" or re-render handles it, or explicit push.
-            // But usually RoleBasedNavigator is the parent. 
-            // We can just reset navigation state updates.
-
-            // Actually, we need to make sure the "onboarding_completed" check updates.
-            // We might need a global context update for company, but for now let's hope the re-render triggers.
-            // A simple hack is reloading the app or just navigating to "App" root.
-
-            // NOTE: Since the RoleBasedNavigator logic will be wrapped in a check, 
-            // once we toggle this, the re-render should show the dashboard.
-            // However, we are INSIDE the OnboardingNavigator stack.
-            // We need to reset to Root.
-
-            // For now, simple alert + reload trigger (or let logic handle it)
+            // 3. Navigate to Dashboard
             navigation.reset({
                 index: 0,
-                routes: [{ name: 'App' }], // Assuming App is the main stack in RootNavigator
+                routes: [{ name: 'App' }],
             });
 
         } catch (error: any) {

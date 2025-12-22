@@ -15,6 +15,7 @@ interface MenuItem {
   screenName?: string;
   tabScreen?: string;
   params?: any; // Added params support
+  nestedScreen?: string;
   isWorking: boolean;
 }
 
@@ -28,6 +29,22 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   const location = `${user?.profile?.city || 'Surat'}, ${user?.profile?.postal_code || '395009'}, ${user?.profile?.state || 'INDIA'}`;
 
   const [activeLabel, setActiveLabel] = useState('Dashboard');
+
+  const menuItems: MenuItem[] = [
+    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
+    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
+    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
+    { label: 'Job Tasks and Assignments', screenName: 'ActiveJobs', isWorking: true },
+    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
+    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
+    { label: 'Reports', screenName: 'Reports', isWorking: true },
+    { label: 'Invoice and Billing', isWorking: false },
+    { label: 'Customers', screenName: 'MainTabs', tabScreen: 'DashboardTab', nestedScreen: 'Customers', isWorking: true },
+    { label: 'Inventory', isWorking: false },
+    { label: 'Shop Timing', isWorking: false },
+    { label: 'Privacy Policy', isWorking: false },
+    { label: 'Settings', screenName: 'Settings', isWorking: true },
+  ];
 
   const handleLogout = () => {
     Alert.alert(
@@ -50,49 +67,62 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     );
   };
 
-  const handleMenuPress = (item: MenuItem) => {
-    setActiveLabel(item.label);
+  // Determine active label based on navigation state
+  const activeRoute = props.state.routes[props.state.index];
+  const activeRouteName = activeRoute.name;
 
+  // Logic to determine active label from route
+  // Default to Dashboard if in MainTabs and can't distinguish, or just rely on route names
+  let derivedLabel = activeLabel; // Keep current if not found (or default)
+
+  // Find item matching current top-level route
+  // For 'Customers', 'Vehicles', 'JobCards', 'Reports', 'Settings' - it's direct match
+  const directMatch = menuItems.find(item => item.screenName === activeRouteName && !item.tabScreen);
+
+  if (directMatch) {
+    derivedLabel = directMatch.label;
+  } else if (activeRouteName === 'MainTabs') {
+    // For MainTabs, we could try to determine the tab, but for now stick to manual or default
+    // If we are strictly in MainTabs (not nested yet or unknown), could be Dashboard
+    // But typically we can just rely on the last clicked for Tabs if deep check is hard
+  }
+
+  // Effect to sync label when route changes (e.g. from back button)
+  React.useEffect(() => {
+    if (directMatch) {
+      setActiveLabel(directMatch.label);
+    }
+  }, [activeRouteName]);
+
+  const handleMenuPress = (item: MenuItem) => {
     if (!item.isWorking) {
       Alert.alert('Coming Soon', `${item.label} feature will be available soon.`);
       return;
     }
 
+    setActiveLabel(item.label);
+
     if (item.screenName) {
       if (item.tabScreen) {
-        // Handle nested tab navigation with params
-        props.navigation.navigate(item.screenName, {
-          screen: item.tabScreen,
-          params: item.params // Pass params if they exist (e.g. { screen: 'Vehicles' })
-        });
+        if (item.nestedScreen) {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, {
+            screen: item.tabScreen,
+            params: { screen: item.nestedScreen }
+          });
+        } else {
+          // @ts-ignore
+          props.navigation.navigate(item.screenName, { screen: item.tabScreen });
+        }
       } else {
         // @ts-ignore
-        props.navigation.navigate(item.screenName, item.params);
+        console.log('Navigating to:', item.screenName);
+        props.navigation.navigate(item.screenName);
       }
+      // props.navigation.closeDrawer() is better but dispatch works too
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
   };
-
-  const menuItems: MenuItem[] = [
-    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', isWorking: true },
-    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
-    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', screenName: 'Tasks', isWorking: true },
-    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    // Explicitly target the Vehicles screen inside the DashboardStack inside the DashboardTab
-    {
-      label: 'Vehicle Management',
-      screenName: 'MainTabs',
-      tabScreen: 'DashboardTab',
-      params: { screen: 'Vehicles' },
-      isWorking: true
-    },
-    { label: 'Reports', screenName: 'Reports', isWorking: true },
-    { label: 'Invoice and Billing', isWorking: false },
-    { label: 'Customers', screenName: 'Customers', isWorking: true },
-    { label: 'Inventory', isWorking: false },
-    { label: 'Shop Timing', isWorking: false },
-  ];
 
   const footerItems: MenuItem[] = [
     { label: 'Privacy Policy', isWorking: false },

@@ -46,16 +46,17 @@ import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
 import ProfilePopup from '@/components/navigation/ProfilePopup';
 
+
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-const DashboardStack = createNativeStackNavigator();
+const DashboardInnerStack = createNativeStackNavigator();
 
 function DashboardStackNavigator() {
   const { theme, themeName, toggleTheme } = useTheme();
 
   return (
-    <DashboardStack.Navigator
+    <DashboardInnerStack.Navigator
       screenOptions={{
         header: ({ route }) => (
           <CustomHeader
@@ -63,21 +64,25 @@ function DashboardStackNavigator() {
             theme={theme}
             themeName={themeName}
             onToggleTheme={toggleTheme}
-            showBack={route.name === 'Vehicles' ? false : false}
+            showBack={route.name !== 'DashboardHome'}
           />
         ),
         headerShown: true,
       }}
     >
-      <DashboardStack.Screen
+      <DashboardInnerStack.Screen
         name="DashboardHome"
         component={CompanyAdminDashboard}
       />
-      <DashboardStack.Screen
+      <DashboardInnerStack.Screen
         name="Vehicles"
         component={VehiclesScreen}
       />
-    </DashboardStack.Navigator>
+      <DashboardInnerStack.Screen
+        name="Customers"
+        component={CustomersScreen}
+      />
+    </DashboardInnerStack.Navigator>
   );
 }
 
@@ -97,31 +102,12 @@ function CustomHeader({
 }) {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
   const getScreenTitle = () => {
-    // Direct checks for local stack routes (DashboardStack)
-    if (route.name === 'Vehicles') return 'Vehicle Management';
-    if (route.name === 'DashboardHome') return 'Dashboard';
-
-    // Recursive function for other navigators
-    const getActiveRouteName = (route: any): string => {
-      if (!route) return 'Dashboard';
-      const routeName = getFocusedRouteNameFromRoute(route);
-
-      if (!routeName) return route.name;
-
-      // Standard recursion
-      const childRoute = route.state?.routes[route.state.index];
-      if (childRoute) {
-        return getActiveRouteName(childRoute);
-      }
-      return routeName;
-    };
-
-    const activeRoute = getActiveRouteName(route);
-
+    // 1. Check if the screen name has a direct mapping
     const titleMap: Record<string, string> = {
       // Navigators
       DashboardTab: 'Dashboard',
@@ -131,6 +117,7 @@ function CustomHeader({
       // Screens
       DashboardHome: 'Dashboard',
       Vehicles: 'Vehicle Management', // Target Title
+      Customers: 'Customers',
 
       // Tabs
       BranchesTab: 'Branches',
@@ -142,7 +129,6 @@ function CustomHeader({
       UserManagement: 'User Management',
       Reports: 'Reports',
       ActiveJobs: 'Active Jobs',
-      Customers: 'Customers',
       JobCards: 'Job Cards',
       Settings: 'Settings',
       ChangePassword: 'Change Password',
@@ -151,7 +137,26 @@ function CustomHeader({
       About: 'About GarageSquares',
     };
 
-    return titleMap[activeRoute] || 'Dashboard';
+    // 2. Try to get the deepest focused route name
+    const getDeepestRouteName = (r: any): string => {
+      const name = getFocusedRouteNameFromRoute(r);
+      if (name) {
+        // If we found a name, check if it's a tab or stack container that might have more nesting
+        if (name === 'DashboardTab' || name === 'MainTabs') {
+          // This is a bit of a hack since we don't have the state object here directly,
+          // but we can check if it exists in the route object's state
+          const state = r.state;
+          if (state && state.routes && state.index !== undefined) {
+            return getDeepestRouteName(state.routes[state.index]);
+          }
+        }
+        return name;
+      }
+      return r.name;
+    };
+
+    const routeName = getDeepestRouteName(route);
+    return titleMap[routeName] || routeName || 'Dashboard';
   };
 
   return (
@@ -216,6 +221,8 @@ function CustomHeader({
     </>
   );
 }
+
+
 
 // Bottom Tab Navigator
 function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
@@ -360,7 +367,6 @@ function CompanyAdminDrawer({
         component={CustomersScreen}
         options={{
           title: 'Customers',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
       <Drawer.Screen
@@ -379,6 +385,15 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
+      <Drawer.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          title: 'Settings',
+          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
+
     </Drawer.Navigator>
   );
 }
@@ -416,10 +431,7 @@ export default function CompanyAdminNavigator() {
         name="CustomerDetail"
         component={CustomerDetailScreen}
         options={{
-          headerShown: true,
-          title: 'Customer Details',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false,
         }}
       />
       <Stack.Screen
@@ -436,7 +448,7 @@ export default function CompanyAdminNavigator() {
         name="CreateCustomer"
         component={CreateCustomerScreen}
         options={{
-          headerShown: true,
+          headerShown: false,
           title: 'Add Customer',
           headerStyle: { backgroundColor: '#ffffff' },
           headerTintColor: '#000000',

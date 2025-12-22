@@ -11,32 +11,35 @@ export default function WelcomeScreen() {
         <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
             <View className="flex-1 items-center justify-center px-6">
                 <View className="items-center mb-8">
-                    {/* Find a better image or use a placeholder */}
-                    <View className="w-64 h-64 bg-blue-100 rounded-full items-center justify-center mb-8">
+                    <View
+                        style={{ backgroundColor: theme.primary }}
+                        className="w-64 h-64 rounded-full items-center justify-center mb-8 shadow-sm"
+                    >
                         <Text className="text-6xl">🔧</Text>
                     </View>
                 </View>
 
-                <Text className="text-2xl font-bold text-center mb-4 text-gray-900">
+                <Text className="text-3xl font-bold text-center mb-4 text-gray-900">
                     Your Workshop, Your Way
                 </Text>
 
-                <Text className="text-gray-500 text-center mb-12 px-4 leading-6">
+                <Text className="text-gray-500 text-center mb-12 px-8 leading-6 text-lg">
                     Tailored servicing for every vehicle. Track progress, approve estimates, and stay updated — all in one smooth experience.
                 </Text>
 
                 <TouchableOpacity
-                    className="w-full bg-blue-600 py-4 rounded-xl items-center mb-4 shadow-sm"
+                    style={{ backgroundColor: theme.primary }}
+                    className="w-full py-4 rounded-2xl items-center mb-4 shadow-sm"
                     onPress={() => navigation.navigate('PersonalDetails')}
                 >
-                    <Text className="text-white font-semibold text-lg">Continue</Text>
+                    <Text className="text-white font-bold text-lg">Continue</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     className="py-2"
-                    onPress={() => navigation.navigate('PersonalDetails')} // Skip behavior? Might be same as continue or skip specific steps. For now proceed.
+                    onPress={() => navigation.navigate('PersonalDetails')}
                 >
-                    <Text className="text-orange-500 font-medium">Skip</Text>
+                    <Text className="text-orange-500 font-bold text-base">Skip Now</Text>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
