@@ -11,7 +11,6 @@ import {
   TextInput,
   StyleSheet,
   Dimensions,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   LayoutAnimation,
@@ -22,6 +21,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useJobs } from '@/context/JobContext';
 import { ChevronDown, ChevronUp, Plus, Menu, Search, MapPin, Pencil, Trash2 } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
