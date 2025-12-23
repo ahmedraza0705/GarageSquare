@@ -69,11 +69,11 @@ export class BranchService {
             .from('branches')
             .insert({
                 name: branchData.name,
-                address: branchData.address,
-                phone: branchData.phone,
-                email: branchData.email,
-                manager_id: branchData.manager_id || null,
-                is_active: branchData.is_active ?? true,
+                location: branchData.address,
+                // phone: branchData.phone, // Not in schema
+                // email: branchData.email, // Not in schema
+                // manager_id: branchData.manager_id || null, // Not in schema
+                // is_active: branchData.is_active ?? true, // Not in schema
             })
             .select()
             .single();
@@ -87,9 +87,24 @@ export class BranchService {
      */
     static async updateBranch(id: string, updates: UpdateBranchData): Promise<Branch> {
         const client = ensureClient();
+
+        // Map address to location for DB and exclude others
+        const { address, phone, email, manager_id, is_active, ...others } = updates;
+        const dbUpdates: any = { ...others };
+
+        // Remove known non-schema fields if they slipped into "others"
+        delete (dbUpdates as any).phone;
+        delete (dbUpdates as any).email;
+        delete (dbUpdates as any).manager_id;
+        delete (dbUpdates as any).is_active;
+
+        if (address !== undefined) {
+            dbUpdates.location = address;
+        }
+
         const { data, error } = await client
             .from('branches')
-            .update(updates)
+            .update(dbUpdates)
             .eq('id', id)
             .select()
             .single();

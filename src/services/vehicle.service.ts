@@ -20,7 +20,7 @@ export class VehicleService {
       .from('vehicles')
       .select(`
         *,
-        customer:customers(*, branch:branches(name))
+        customer:customers(*)
       `)
       .order('created_at', { ascending: false });
 
@@ -84,7 +84,7 @@ export class VehicleService {
       .from('vehicles')
       .select(`
         *,
-        customer:customers(*, branch:branches(name))
+        customer:customers(*)
       `)
       .eq('id', id)
       .single();
