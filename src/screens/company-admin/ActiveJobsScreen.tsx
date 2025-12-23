@@ -61,14 +61,20 @@ export default function ActiveJobsScreen() {
     // Get active jobs from global context and filter based on search query
     const allActiveJobs = getJobsByStatus('active');
     const jobs = [...allActiveJobs]
-        .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+        .sort((a, b) => {
+            const aUrgent = a.priority === 'Urgent';
+            const bUrgent = b.priority === 'Urgent';
+            if (aUrgent && !bUrgent) return -1;
+            if (!aUrgent && bUrgent) return 1;
+            return (b.updatedAt || 0) - (a.updatedAt || 0);
+        })
         .filter(job => {
             const query = searchQuery.toLowerCase();
             return (
-                job.customer.toLowerCase().includes(query) ||
-                job.regNo.toLowerCase().includes(query) ||
-                job.vehicle.toLowerCase().includes(query) ||
-                job.jobId.toLowerCase().includes(query)
+                (job.customer?.toLowerCase() || '').includes(query) ||
+                (job.regNo?.toLowerCase() || '').includes(query) ||
+                (job.vehicle?.toLowerCase() || '').includes(query) ||
+                (job.jobId?.toLowerCase() || '').includes(query)
             );
         });
 
@@ -88,30 +94,68 @@ export default function ActiveJobsScreen() {
         </View>
     );
 
+    // Calculate time left from now until delivery date/time
+    const calculateTimeLeft = (dateStr?: string, timeStr?: string) => {
+        if (!dateStr || !timeStr) return timeStr || 'N/A';
+
+        try {
+            // Parse Date: DD-MM-YYYY
+            const [day, month, year] = dateStr.split('-').map(Number);
+
+            // Parse Time: HH:MM AM/PM
+            const timeParts = timeStr.toUpperCase().trim().split(' ');
+            // Handle cases like "5:00PM" (no space) or "5:00 PM"
+            let time, modifier;
+            if (timeParts.length === 1) {
+                // Try splitting by AM/PM if attached
+                if (timeParts[0].includes('PM')) {
+                    modifier = 'PM';
+                    time = timeParts[0].replace('PM', '');
+                } else if (timeParts[0].includes('AM')) {
+                    modifier = 'AM';
+                    time = timeParts[0].replace('AM', '');
+                } else {
+                    // Assume 24h or missing modifier, treat as is for 24h or default AM
+                    time = timeParts[0];
+                    modifier = 'AM'; // Default
+                }
+            } else {
+                [time, modifier] = timeParts;
+            }
+
+            let [hours, minutes] = time.split(':').map(Number);
+
+            if (isNaN(hours) || isNaN(minutes)) throw new Error('Invalid Time');
+
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+
+            const targetDate = new Date(year, month - 1, day, hours, minutes);
+            const now = new Date();
+            const diff = targetDate.getTime() - now.getTime();
+
+            if (diff <= 0) return 'Overdue';
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 0) return `${days}d ${hrs}h left`;
+            if (hrs > 0) return `${hrs}h ${mins}m left`;
+            return `${mins}m left`;
+        } catch (e) {
+            return timeStr; // Fallback to original string if parse fails
+        }
+    };
+
     return (
         <View style={styles.container}>
-            {/* Custom Header */}
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={() => navigation.openDrawer && navigation.openDrawer()} style={styles.menuButton}>
-                        <Text style={styles.menuIcon}>☰</Text>
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Active Jobs</Text>
-                </View>
-
-                <View style={styles.headerRight}>
-                    <TouchableOpacity onPress={() => setDarkMode(!darkMode)} style={styles.headerButton}>
-                        <Text style={styles.iconText}>{darkMode ? '☀️' : '🌙'}</Text>
-                    </TouchableOpacity>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                            {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-                        </Text>
-                    </View>
-                </View>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+            >
                 {/* Search Bar */}
                 <View style={styles.searchRow}>
                     <View style={styles.searchContainer}>
@@ -127,7 +171,10 @@ export default function ActiveJobsScreen() {
                             <Text style={styles.filterIcon}>Y</Text>
                         </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={styles.addButton}>
+                    <TouchableOpacity
+                        style={styles.addButton}
+                        onPress={() => navigation.navigate('CreateJobCard')}
+                    >
                         <Text style={styles.addIcon}>+</Text>
                     </TouchableOpacity>
                 </View>
@@ -142,9 +189,15 @@ export default function ActiveJobsScreen() {
                             activeOpacity={0.7}
                             onPress={() => navigation.navigate('JobCardDetail', { jobCardId: job.id })}
                         >
-                            {/* Header: Job Card No & Price */}
                             <View style={styles.cardHeader}>
-                                <Text style={styles.jobCardTitle}>Job Card {job.jobId}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    <Text style={styles.jobCardTitle}>Job Card {job.jobId}</Text>
+                                    {job.priority === 'Urgent' && (
+                                        <View style={styles.statusBadge}>
+                                            <Text style={styles.statusText}>Urgent</Text>
+                                        </View>
+                                    )}
+                                </View>
                                 <Text style={styles.priceText}>{job.amount}</Text>
                             </View>
 
@@ -183,7 +236,9 @@ export default function ActiveJobsScreen() {
                             <View style={styles.deliveryRow}>
                                 <View>
                                     <Text style={styles.deliveryLabel}>Delivery due:</Text>
-                                    <Text style={styles.deliveryTimeLeft}>{job.deliveryDue || '45m left'}</Text>
+                                    <Text style={styles.deliveryTimeLeft}>
+                                        {calculateTimeLeft(job.deliveryDate || '07-01-2026', job.deliveryDue)}
+                                    </Text>
                                 </View>
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <Text style={styles.deliveryLabel}>Delivery date:</Text>
@@ -203,67 +258,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#eff0f1', // Light gray background
     },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        backgroundColor: '#eff0f1',
-    },
-    headerLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    menuButton: {
-        padding: 4,
-    },
-    menuIcon: {
-        fontSize: 24,
-        color: '#000',
-        fontWeight: 'bold',
-    },
-    iconText: {
-        fontSize: 20,
-    },
-    headerTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#000',
-        textDecorationLine: 'underline',
-    },
-    headerRight: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    headerButton: {
-        padding: 8,
-        backgroundColor: '#d1d5db', // Gray circle
-        borderRadius: 20,
-        width: 36,
-        height: 36,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    avatar: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        backgroundColor: '#fca5a5', // Light red
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#ef4444',
-    },
-    avatarText: {
-        color: '#000',
-        fontWeight: 'bold',
-    },
     scrollContent: {
+        flexGrow: 1,
+        paddingTop: 20,
         paddingHorizontal: 16,
-        paddingBottom: 100,
+        paddingBottom: 120, // Increased extra space for tab bar
     },
     searchRow: {
         flexDirection: 'row',
@@ -429,5 +428,16 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: '#ef4444', // Red
+    },
+    statusBadge: {
+        backgroundColor: '#ef4444',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+    },
+    statusText: {
+        color: '#ffffff',
+        fontSize: 10,
+        fontWeight: 'bold',
     },
 });

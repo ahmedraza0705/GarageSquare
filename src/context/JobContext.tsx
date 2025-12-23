@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+// Define Service Detail Structure
+export interface ServiceDetail {
+    name: string;
+    cost: number;
+    estimate?: string;
+}
+
 // Define the Job type based on usage in JobTasksScreen
 export interface Job {
     id: string;
@@ -12,6 +19,7 @@ export interface Job {
     assignedTech?: string;
     deliveryDate?: string;
     deliveryDue?: string;
+    priority?: 'Normal' | 'Urgent';
 
     // Progress Flags
     workCompleted?: boolean;
@@ -27,8 +35,8 @@ export interface Job {
     odometer?: string;
     pickupAddress?: string;
     dropoffAddress?: string;
-    services?: string[]; // list of service names
-    completedServices?: string[]; // list of completed service names
+    services?: ServiceDetail[]; // Changed from string[] to ServiceDetail[]
+    completedServices?: string[]; // Keep as strings for simple checking
     otherRequirements?: string;
 
     // Persisted states for Task list and Quality Check list
@@ -39,7 +47,7 @@ export interface Job {
 
 interface JobContextType {
     jobs: Job[];
-    addJob: (job: Omit<Job, 'id' | 'status' | 'jobId'>) => void;
+    addJob: (job: Omit<Job, 'id' | 'jobId'>) => void;
     updateJobStatus: (id: string, status: string, options?: { workCompleted?: boolean, qualityCheckCompleted?: boolean, assignedTech?: string, deliveryCompleted?: boolean }) => void;
     setJobDetails: (id: string, details: Partial<Pick<Job, 'taskStatuses' | 'qualityStatuses'>>) => void;
     toggleWorkComplete: (id: string) => void;
@@ -65,8 +73,13 @@ const INITIAL_JOBS: Job[] = [
         assignedTech: 'Ahmed raza',
         deliveryDate: '09-12-2025',
         deliveryDue: '3:00 PM',
-        services: ['Engine Check', 'Oil Change', 'Filter Replacement'],
+        services: [
+            { name: 'Engine Check', cost: 2000, estimate: '30 min' },
+            { name: 'Oil Change', cost: 5000, estimate: '1 hour' },
+            { name: 'Filter Replacement', cost: 3000, estimate: '30 min' }
+        ],
         completedServices: [],
+        priority: 'Normal',
     },
     {
         id: '2',
@@ -81,8 +94,14 @@ const INITIAL_JOBS: Job[] = [
         deliveryDue: '3:00 PM',
         workCompleted: false,
         qualityCheckCompleted: false,
-        services: ['Replace Battery', 'Brake Inspection', 'Tire Rotation', 'General Service'],
+        services: [
+            { name: 'Replace Battery', cost: 7000, estimate: '20 min' },
+            { name: 'Brake Inspection', cost: 1500, estimate: '45 min' },
+            { name: 'Tire Rotation', cost: 1000, estimate: '30 min' },
+            { name: 'General Service', cost: 12000, estimate: '2 hours' }
+        ],
         completedServices: [],
+        priority: 'Urgent',
     },
     {
         id: '3',
@@ -97,8 +116,12 @@ const INITIAL_JOBS: Job[] = [
         deliveryDue: '3:00 PM',
         workCompleted: false, // Default: White button
         qualityCheckCompleted: false, // Default: White button
-        services: ['Car Wash', 'Interior Cleaning'],
+        services: [
+            { name: 'Car Wash', cost: 1000, estimate: '45 min' },
+            { name: 'Interior Cleaning', cost: 3000, estimate: '1 hour' }
+        ],
         completedServices: [],
+        priority: 'Normal',
     },
     {
         id: '4',
@@ -114,24 +137,31 @@ const INITIAL_JOBS: Job[] = [
         workCompleted: true,
         qualityCheckCompleted: true,
         deliveryCompleted: false, // Default to false (Outline)
-        services: ['Suspension Repair', 'Wheel Alignment', 'AC Service'],
+        services: [
+            { name: 'Suspension Repair', cost: 8000, estimate: '2 hours' },
+            { name: 'Wheel Alignment', cost: 2000, estimate: '1 hour' },
+            { name: 'AC Service', cost: 5000, estimate: '1.5 hours' }
+        ],
         completedServices: ['Suspension Repair', 'Wheel Alignment', 'AC Service'], // All done
+        priority: 'Normal',
     },
 ];
 
 export function JobProvider({ children }: { children: ReactNode }) {
     const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
 
-    const addJob = (job: Omit<Job, 'id' | 'status' | 'jobId'>) => {
+    const addJob = (job: Omit<Job, 'id' | 'jobId'>) => {
         const nextId = (jobs.length + 1).toString();
         const jobId = `SA${(jobs.length + 1).toString().padStart(4, '0')}`;
         setJobs(prev => [...prev, {
             ...job,
             id: nextId,
             jobId: jobId,
-            status: 'Pending',
+            status: job.status || 'Pending',
+            priority: job.priority || 'Normal',
             deliveryCompleted: false,
-            completedServices: [], // Correct type explicitly
+            completedServices: [],
+            updatedAt: Date.now(),
         }]);
     };
 
@@ -184,7 +214,7 @@ export function JobProvider({ children }: { children: ReactNode }) {
                 return s === 'urgent' || s === 'progress' || s === 'active';
             }
             if (statusTab === 'done') {
-                return s === 'done' || s === 'completed';
+                return s === 'done' || s === 'completed' || s === 'delivered';
             }
             return false;
         });

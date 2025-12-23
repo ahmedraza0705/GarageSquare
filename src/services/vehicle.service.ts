@@ -67,7 +67,7 @@ export class VehicleService {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching vehicle count:', error);
+      console.warn('Error fetching vehicle count:', JSON.stringify(error));
       return 0;
     }
 

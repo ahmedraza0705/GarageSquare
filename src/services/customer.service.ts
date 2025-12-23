@@ -49,7 +49,7 @@ export class CustomerService {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching customer count:', error);
+      console.warn('Error fetching customer count:', JSON.stringify(error));
       return 0;
     }
 

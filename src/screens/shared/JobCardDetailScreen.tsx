@@ -2,7 +2,7 @@
 // JOB CARD DETAIL SCREEN (Redesign)
 // ============================================
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Dimensions, Platform, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Trash2, Plus, ChevronDown, ChevronUp, Menu, X, Check, Undo2, LayoutDashboard, Building2, Users, FileBarChart, ChevronLeft, RotateCcw, UserCheck } from 'lucide-react-native';
@@ -41,7 +41,6 @@ interface QualityCheck {
 // --- STATIC DATA ---
 const STATIC_DATA = {
   jobCardNumber: 'SA0001',
-  isUrgent: true,
   vehicle: {
     vin: 'GJ-05-RT-2134',
     customerName: 'Ahmed Raza',
@@ -454,7 +453,7 @@ const QualityCheckItem = ({
 export default function JobCardDetailScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const { jobs, setJobDetails, deleteJob } = useJobs();
+  const { jobs, setJobDetails, deleteJob, updateJobStatus } = useJobs();
 
   // Get jobCardId from route params, default to '2' (SA0001) for demo persistence
   const jobCardId = route.params?.jobCardId || '2';
@@ -478,22 +477,92 @@ export default function JobCardDetailScreen() {
     );
   };
 
-  // Initialize statuses from Context if they exist, otherwise use static data defaults
-  const [taskStatuses, setTaskStatuses] = useState<Record<string, Task['status']>>((currentJob?.taskStatuses as any) ||
-    STATIC_DATA.tasks.reduce((acc, task) => ({
-      ...acc,
-      [task.id]: task.status
-    }), {})
-  );
+  const jobToDisplay = currentJob || {
+    ...STATIC_DATA,
+    id: 'static',
+    jobId: STATIC_DATA.jobCardNumber,
+    services: STATIC_DATA.tasks.map(t => ({ name: t.title, cost: t.cost, estimate: t.estimate })),
+    taskStatuses: {},
+    qualityStatuses: {},
+    status: 'Pending'
+  };
 
-  const [qualityStatuses, setQualityStatuses] = useState<Record<string, QualityCheck['status']>>((currentJob?.qualityStatuses as any) ||
-    STATIC_DATA.qualityChecks.reduce((acc, check) => ({
-      ...acc,
-      [check.id]: check.status
-    }), {})
-  );
+  // Derive Dynamic Tasks from Job Services
+  const dynamicTasks: Task[] = (jobToDisplay.services || []).map((service, index) => ({
+    id: service.name, // Use name as ID
+    title: service.name,
+    assignedTo: currentJob?.assignedTech ? `(${currentJob.assignedTech})` : '',
+    estimate: service.estimate || '45 min',
+    cost: service.cost || 0,
+    status: 'pending'
+  }));
 
-  // Accordion Visibility States
+  // Derive Dynamic Charges
+  const dynamicCharges: Charge[] = dynamicTasks.map((task, index) => ({
+    id: `c-${task.id}`,
+    description: task.title,
+    details: 'Service Charge',
+    cost: task.cost
+  }));
+
+  // Initialize statuses from Context if they exist, otherwise default to pending/appropriate status
+  const [taskStatuses, setTaskStatuses] = useState<Record<string, Task['status']>>(() => {
+    if (jobToDisplay.status === 'Done' || jobToDisplay.status === 'Delivered') {
+      const allDone: Record<string, Task['status']> = {};
+      dynamicTasks.forEach(t => { allDone[t.id] = 'complete'; });
+      return (jobToDisplay.taskStatuses as any) || allDone;
+    }
+    const initialStatuses: Record<string, Task['status']> = {};
+    dynamicTasks.forEach(t => {
+      // Load saved status or default to 'pending'
+      initialStatuses[t.id] = (jobToDisplay.taskStatuses as any)?.[t.id] || 'pending';
+    });
+    return initialStatuses;
+  });
+
+  // Derive Dynamic Quality Checks
+  const dynamicQualityChecks: QualityCheck[] = [
+    {
+      id: '1',
+      role: 'Technician Manager',
+      name: currentJob?.assignedTech || 'Unassigned',
+      status: 'pending'
+    },
+    {
+      id: '2',
+      role: 'Technician',
+      name: currentJob?.assignedTech || 'Unassigned',
+      status: 'pending'
+    },
+    // Adding a second technician slot if needed, or keeping generic. 
+    // For now assuming 1 main tech, but keeping structure similar to mock for visual consistency
+    {
+      id: '3',
+      role: 'Technician',
+      name: 'Ahmed', // Keeping static secondary or removal? User asked for "Technician Manager". 
+      // I will stick to the main request for Manager, and keeping Technician 1 as the assigned tech too effectively.
+      status: 'pending'
+    },
+  ];
+
+  const [qualityStatuses, setQualityStatuses] = useState<Record<string, QualityCheck['status']>>(() => {
+    if (jobToDisplay.status === 'Done' || jobToDisplay.status === 'Delivered') {
+      const allApproved: Record<string, QualityCheck['status']> = {};
+      dynamicQualityChecks.forEach(q => { allApproved[q.id] = 'approved'; });
+      return (jobToDisplay.qualityStatuses as any) || allApproved;
+    }
+    return (jobToDisplay.qualityStatuses as any) ||
+      dynamicQualityChecks.reduce((acc, check) => ({
+        ...acc,
+        [check.id]: check.status
+      }), {});
+  });
+
+  // Calculate Total dynamically from Charges
+  const calculateTotal = () => {
+    return dynamicCharges.reduce((sum, item) => sum + item.cost, 0);
+  };
+
   const [openSections, setOpenSections] = useState({
     summary: true,
     task: false,
@@ -501,6 +570,23 @@ export default function JobCardDetailScreen() {
     customer: false,
     quality: false
   });
+
+  // Auto-move to Done logic
+  useEffect(() => {
+    if (!currentJob || currentJob.status === 'Done' || currentJob.status === 'Delivered') return;
+
+    const allTasksComplete = Object.values(taskStatuses).every(status => status === 'complete');
+    const allQCApproved = Object.values(qualityStatuses).every(status => status === 'approved');
+
+    if (allTasksComplete && allQCApproved) {
+      updateJobStatus(currentJob.id, 'Done', {
+        workCompleted: true,
+        qualityCheckCompleted: true
+      });
+      // Optionally notify user
+      Alert.alert("Job Complete", `Job Card ${currentJob.jobId} has been moved to Done.`);
+    }
+  }, [taskStatuses, qualityStatuses, currentJob, updateJobStatus]);
 
   const toggleSection = (key: keyof typeof openSections) => {
     setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -532,11 +618,6 @@ export default function JobCardDetailScreen() {
     if (currentJob) {
       setJobDetails(currentJob.id, { qualityStatuses: updatedStatuses });
     }
-  };
-
-  const calculateTotal = () => {
-    // For static demo, summing the charges array
-    return STATIC_DATA.charges.reduce((sum, item) => sum + item.cost, 0);
   };
 
   // Calculate task summary statistics dynamically
@@ -581,7 +662,7 @@ export default function JobCardDetailScreen() {
           <View style={styles.bannerContainer}>
             <Text style={styles.bannerLabel}>Job Card:</Text>
             <Text style={styles.bannerValue}>{currentJob?.jobId || STATIC_DATA.jobCardNumber}</Text>
-            {STATIC_DATA.isUrgent && (
+            {currentJob?.status === 'Urgent' && (
               <View style={styles.urgentBadge}>
                 <Text style={styles.urgentText}>Urgent</Text>
               </View>
@@ -607,7 +688,7 @@ export default function JobCardDetailScreen() {
             isOpen={openSections.task}
             onToggle={() => toggleSection('task')}
           >
-            {STATIC_DATA.tasks.map(task => (
+            {dynamicTasks.map(task => (
               <TaskItem
                 key={task.id}
                 task={task}
@@ -632,7 +713,7 @@ export default function JobCardDetailScreen() {
             onToggle={() => toggleSection('charges')}
           >
             <View style={styles.chargesList}>
-              {STATIC_DATA.charges.map(charge => (
+              {dynamicCharges.map(charge => (
                 <ChargeItem key={charge.id} charge={charge} />
               ))}
             </View>
@@ -650,23 +731,23 @@ export default function JobCardDetailScreen() {
           >
             {/* Using a simple row layout for fields */}
             <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>VIN:</Text>
-              <Text style={styles.fieldValue}>{STATIC_DATA.vehicle.vin}</Text>
+              <Text style={styles.fieldLabel}>VIN / Reg No:</Text>
+              <Text style={styles.fieldValue}>{jobToDisplay.vin || jobToDisplay.regNo}</Text>
             </View>
             <View style={styles.separator} />
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>Customer :</Text>
-              <Text style={styles.fieldValue}>{STATIC_DATA.vehicle.customerName}</Text>
+              <Text style={styles.fieldValue}>{jobToDisplay.customer}</Text>
             </View>
             <View style={styles.separator} />
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>Phone No :</Text>
-              <Text style={styles.fieldValue}>{STATIC_DATA.vehicle.phone}</Text>
+              <Text style={styles.fieldValue}>{jobToDisplay.phone}</Text>
             </View>
             <View style={styles.separator} />
             <View style={styles.fieldRow}>
               <Text style={styles.fieldLabel}>Car Brand:</Text>
-              <Text style={styles.fieldValue}>{STATIC_DATA.vehicle.carBrand}</Text>
+              <Text style={styles.fieldValue}>{jobToDisplay.brand || jobToDisplay.vehicle}</Text>
             </View>
           </Accordion>
 
@@ -682,7 +763,7 @@ export default function JobCardDetailScreen() {
             ) : null}
           >
             <View style={styles.qualityContainer}>
-              {STATIC_DATA.qualityChecks.map(check => (
+              {dynamicQualityChecks.map(check => (
                 <QualityCheckItem
                   key={check.id}
                   check={check}

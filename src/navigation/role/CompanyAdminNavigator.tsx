@@ -88,12 +88,6 @@ function DashboardStackNavigator() {
       <DashboardInnerStack.Screen
         name="ActiveJobs"
         component={ActiveJobsScreen}
-        options={{ headerShown: false }} // Uses its own custom header
-      />
-      <DashboardInnerStack.Screen
-        name="JobCardDetail"
-        component={JobCardDetailScreen}
-        options={{ headerShown: false }} // Uses its own custom header
       />
     </DashboardInnerStack.Navigator>
   );
@@ -149,6 +143,7 @@ function CustomHeader({
       AccountDetails: 'Account Details',
       Notifications: 'Notifications',
       About: 'About GarageSquares',
+      CreateJobCard: 'Create Job Card',
     };
 
     // 2. Try to get the deepest focused route name
@@ -451,6 +446,12 @@ export default function CompanyAdminNavigator() {
         )}
       </Stack.Screen>
 
+      <Stack.Screen
+        name="JobCardDetail"
+        component={JobCardDetailScreen}
+        options={{ headerShown: false }}
+      />
+
       {/* 
          Removed ActiveJobs and JobCardDetail from here as they are now in DashboardStack/InnerStack
          This allows them to inherit the Drawer and Tab navigation context properly.
@@ -505,9 +506,15 @@ export default function CompanyAdminNavigator() {
         component={CreateJobCardScreen}
         options={{
           headerShown: true,
-          title: 'Create Job Card',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
         }}
       />
       <Stack.Screen

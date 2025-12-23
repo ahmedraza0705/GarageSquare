@@ -13,7 +13,7 @@ const TECHNICIAN_MANAGERS = [
 
 export default function JobTasksScreen() {
     const { theme } = useTheme();
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const { jobs, updateJobStatus, toggleWorkComplete, toggleQualityCheck, toggleDelivery, getJobsByStatus } = useJobs();
 
     const [activeTab, setActiveTab] = useState<'pending' | 'active' | 'done'>('pending');
@@ -21,16 +21,35 @@ export default function JobTasksScreen() {
     const [assignModalVisible, setAssignModalVisible] = useState(false);
     const [selectedTechnician, setSelectedTechnician] = useState<string | null>(null);
     const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+    const [technicianSearchQuery, setTechnicianSearchQuery] = useState('');
+
+    const filteredTechnicians = TECHNICIAN_MANAGERS.filter(tm =>
+        tm.toLowerCase().includes(technicianSearchQuery.toLowerCase())
+    );
 
     // Get live data from context
     const tabJobs = getJobsByStatus(activeTab);
 
-    // Filter by search query if needed
-    const filteredJobs = tabJobs.filter(job =>
-        job?.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job?.vehicle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        job?.jobId?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Filter jobs by multiple fields (Job ID, Vehicle name, Reg No, Technician name)
+    const filteredJobs = tabJobs.filter(job => {
+        const query = searchQuery.toLowerCase();
+        return (
+            (job?.jobId?.toLowerCase() || '').includes(query) ||
+            (job?.vehicle?.toLowerCase() || '').includes(query) ||
+            (job?.regNo?.toLowerCase() || '').includes(query) ||
+            (job?.assignedTech?.toLowerCase() || '').includes(query)
+        );
+    });
+
+    // Sort jobs by priority (Urgent first, then by jobId)
+    const sortedJobs = [...filteredJobs].sort((a, b) => {
+        const aUrgent = a.priority === 'Urgent';
+        const bUrgent = b.priority === 'Urgent';
+        if (aUrgent && !bUrgent) return -1;
+        if (!aUrgent && bUrgent) return 1;
+        // Secondary sort by updatedAt (newest first)
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+    });
 
     const handleAssignJob = () => {
         if (!selectedJobId || !selectedTechnician) return;
@@ -136,9 +155,7 @@ export default function JobTasksScreen() {
                 style={[
                     styles.tabButton,
                     {
-                        backgroundColor: isActive ? '#3b82f6' : '#ffffff',
-                        borderColor: '#e5e7eb',
-                        borderWidth: 1,
+                        backgroundColor: isActive ? '#4682B4' : 'transparent',
                     }
                 ]}
                 onPress={() => setActiveTab(key)}
@@ -155,6 +172,7 @@ export default function JobTasksScreen() {
 
     const getStatusColor = (status: string) => {
         switch (status.toLowerCase()) {
+            case 'pending': return '#f59e0b'; // Orange (same as Waiting)
             case 'waiting': return '#f59e0b'; // Orange
             case 'urgent': return '#ef4444'; // Red
             case 'progress': return '#3b82f6'; // Blue
@@ -164,165 +182,212 @@ export default function JobTasksScreen() {
         }
     };
 
+    // Calculate time left from now until delivery date/time
+    const calculateTimeLeft = (dateStr?: string, timeStr?: string) => {
+        if (!dateStr || !timeStr) return timeStr || 'N/A';
+
+        try {
+            // Parse Date: DD-MM-YYYY
+            const [day, month, year] = dateStr.split('-').map(Number);
+
+            // Parse Time: HH:MM AM/PM
+            const timeParts = timeStr.toUpperCase().trim().split(' ');
+            // Handle cases like "5:00PM" (no space) or "5:00 PM"
+            let time, modifier;
+            if (timeParts.length === 1) {
+                // Try splitting by AM/PM if attached
+                if (timeParts[0].includes('PM')) {
+                    modifier = 'PM';
+                    time = timeParts[0].replace('PM', '');
+                } else if (timeParts[0].includes('AM')) {
+                    modifier = 'AM';
+                    time = timeParts[0].replace('AM', '');
+                } else {
+                    // Assume 24h or missing modifier, treat as is for 24h or default AM
+                    time = timeParts[0];
+                    modifier = 'AM'; // Default
+                }
+            } else {
+                [time, modifier] = timeParts;
+            }
+
+            let [hours, minutes] = time.split(':').map(Number);
+
+            if (isNaN(hours) || isNaN(minutes)) throw new Error('Invalid Time');
+
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+
+            const targetDate = new Date(year, month - 1, day, hours, minutes);
+            const now = new Date();
+            const diff = targetDate.getTime() - now.getTime();
+
+            if (diff <= 0) return 'Overdue';
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            if (days > 0) return `${days}d ${hrs}h left`;
+            if (hrs > 0) return `${hrs}h ${mins}m left`;
+            return `${mins}m left`;
+        } catch (e) {
+            return timeStr; // Fallback to original string if parse fails
+        }
+    };
+
     const renderJobCard = (job: any) => {
+        // Calculate progress logic (from ActiveJobsScreen)
+        const calculateProgress = (job: any) => {
+            if (!job.taskStatuses) return 0;
+            const statuses = Object.values(job.taskStatuses) as string[];
+            if (statuses.length === 0) return 0;
+            const complete = statuses.filter(s => s === 'complete').length;
+            return complete / statuses.length;
+        };
+        const progress = calculateProgress(job);
+
         return (
-            <View key={job.id} style={[styles.card, { backgroundColor: '#ffffff' }]}>
-                {/* Card Header */}
+            <TouchableOpacity
+                key={job.id}
+                style={styles.card}
+                onPress={() => navigation.navigate('JobCardDetail', { jobCardId: job.id })}
+                activeOpacity={0.7}
+            >
+                {/* Header: Job Card No, Status & Price */}
                 <View style={styles.cardHeader}>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(job.status) }]}>
-                        <Text style={styles.statusText}>
-                            {job.status.toLowerCase() === 'delivered' ? 'Complete' : job.status}
-                        </Text>
-                    </View>
-                    <Text style={styles.jobId}>Job Card {job.jobId}</Text>
-                    <View style={styles.amountBadge}>
-                        <Text style={styles.amountText}>{job.amount}</Text>
-                    </View>
-                </View>
-
-                <View style={styles.divider} />
-
-                {/* Card Body */}
-                <View style={styles.cardBody}>
-                    <View style={styles.vehicleIconContainer}>
-                        <Text style={styles.vehicleIcon}>🚗</Text>
-                    </View>
-                    <View style={styles.detailsContainer}>
-                        <Text style={styles.vehicleName}>{job.vehicle}</Text>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Customer : </Text>
-                            <Text style={styles.detailValue}>{job.customer}</Text>
-                        </View>
-                        {activeTab !== 'pending' && (
-                            <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Assigned tech: </Text>
-                                <Text style={styles.detailValue}>{job.assignedTech || 'Unassigned'}</Text>
+                    <View style={styles.cardHeaderLeft}>
+                        <Text style={styles.jobId}>Job Card {job.jobId}</Text>
+                        {job.priority === 'Urgent' && (
+                            <View style={[styles.statusBadge, { backgroundColor: '#ef4444' }]}>
+                                <Text style={styles.statusText}>Urgent</Text>
+                            </View>
+                        )}
+                        {job.status?.toLowerCase() !== 'urgent' && (
+                            <View style={[styles.statusBadge, {
+                                backgroundColor: job.status?.toLowerCase() === 'waiting' ? '#f59e0b' :
+                                    activeTab === 'done' ? '#22c55e' : '#4682B4'
+                            }]}>
+                                <Text style={styles.statusText}>
+                                    {job.status?.toLowerCase() === 'waiting' || job.status?.toLowerCase() === 'pending' ? 'Pending' :
+                                        activeTab === 'done' ? 'Complete' :
+                                            (progress === 1 && !job.qualityCheckCompleted) ? 'Quality check left' : 'In progress'}
+                                </Text>
                             </View>
                         )}
                     </View>
-                    <View style={styles.regNoContainer}>
-                        <Text style={styles.regNo}>{job.regNo}</Text>
-                    </View>
-                </View>
-
-                {/* Action Buttons */}
-                <View style={styles.actionRow}>
-                    {activeTab === 'pending' && (
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.primaryButton]}
-                            onPress={() => {
-                                setSelectedJobId(job.id);
-                                setAssignModalVisible(true);
-                            }}
-                        >
-                            <Text style={styles.primaryButtonText}>Start Task</Text>
-                        </TouchableOpacity>
-                    )}
-
-                    {activeTab === 'active' && (
-                        <>
-                            {/* Complete Button Logic */}
-                            <TouchableOpacity
-                                style={[
-                                    styles.actionButton,
-                                    job.workCompleted ? styles.secondaryButton : styles.outlineButton,
-                                    !job.workCompleted && { borderColor: '#3b82f6' }
-                                ]}
-                                onPress={() => handleComplete(job.id, job.workCompleted, job.qualityCheckCompleted)}
-                            >
-                                <Text style={[
-                                    !job.workCompleted ? { color: '#3b82f6' } : styles.secondaryButtonText,
-                                    !job.workCompleted ? styles.outlineButtonText : {}
-                                ]}>
-                                    Complete
-                                </Text>
-                            </TouchableOpacity>
-
-                            {/* Quality Check Button logic */}
-                            <TouchableOpacity
-                                style={[
-                                    styles.actionButton,
-                                    job.qualityCheckCompleted ? styles.greenButton : styles.outlineButton
-                                ]}
-                                onPress={() => handleQualityCheck(job.id, job.qualityCheckCompleted, job.workCompleted)}
-                            >
-                                <Text style={[
-                                    job.qualityCheckCompleted ? styles.primaryButtonText : styles.outlineButtonText
-                                ]}>
-                                    {job.qualityCheckCompleted ? 'Quality Check Complete' : 'Quality Check Not Complete'}
-                                </Text>
-                            </TouchableOpacity>
-                        </>
-                    )}
-
-                    {activeTab === 'done' && (
-                        <TouchableOpacity
-                            style={[
-                                styles.actionButton,
-                                job.deliveryCompleted ? styles.greenButton : styles.outlineButton
-                            ]}
-                            onPress={() => handleDelivery(job.id, job.deliveryCompleted)}
-                        >
-                            <Text style={[
-                                job.deliveryCompleted ? styles.primaryButtonText : styles.outlineButtonText,
-                                !job.deliveryCompleted && { color: '#3b82f6' }
-                            ]}>
-                                {job.deliveryCompleted ? 'Delivered' : 'Delivery'}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.detailButton]}
-                        onPress={() => {
-                            navigation.navigate('JobTasksDetail', { jobId: job.id });
-                        }}
-                    >
-                        <Text style={styles.detailButtonText}>View Details</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.amountText}>{job.amount}</Text>
                 </View>
 
                 <View style={styles.divider} />
 
-                {/* Footer */}
-                <View style={styles.cardFooter}>
-                    <Text style={styles.footerText}>Delivery date: {job.deliveryDate}</Text>
-                    <Text style={styles.footerText}>Delivery due: {job.deliveryDue}</Text>
+                {/* Vehicle Info */}
+                <View style={styles.vehicleSection}>
+                    <View>
+                        <Text style={styles.vehicleName}>{job.vehicle}</Text>
+                        <Text style={styles.regNo}>{job.regNo}</Text>
+                    </View>
+                    <Text style={styles.vehicleIcon}>🚗</Text>
                 </View>
-            </View>
+
+                <View style={styles.divider} />
+
+                {/* Assignment & Progress */}
+                <View style={styles.assignmentSection}>
+                    <View style={styles.assignedRow}>
+                        <View style={styles.assignedAvatar}>
+                            <Text style={styles.avatarText}>AR</Text>
+                        </View>
+                        <Text style={styles.assignedToText}>Assigned to: {activeTab !== 'pending' && <Text style={styles.boldText}>{job.assignedTech || 'Ahmed Raza'}</Text>}</Text>
+                    </View>
+
+                    <View style={styles.progressRow}>
+                        <View style={styles.progressBarBackground}>
+                            <View style={[
+                                styles.progressBarFill,
+                                {
+                                    width: activeTab === 'done' ? '100%' : `${progress * 100}%`,
+                                    backgroundColor: activeTab === 'done' ? '#22c55e' : '#4682B4'
+                                }
+                            ]} />
+                        </View>
+                        <Text style={[
+                            styles.progressLabel,
+                            { color: activeTab === 'done' ? '#22c55e' : '#4682B4' }
+                        ]}>
+                            {activeTab === 'done' ? '100' : Math.round(progress * 100)}% completed
+                        </Text>
+                    </View>
+                </View>
+
+                {/* Delivery Info */}
+                <View style={styles.deliveryInfoRow}>
+                    <View>
+                        <Text style={styles.deliveryLabelTop}>Delivery due:</Text>
+                        <Text style={styles.deliveryValueLarge}>
+                            {activeTab === 'pending'
+                                ? (job.deliveryDue || '4:00 PM')
+                                : calculateTimeLeft(job.deliveryDate || '07-01-2026', job.deliveryDue)
+                            }
+                        </Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={styles.deliveryLabelTop}>Delivery date:</Text>
+                        <Text style={styles.deliveryValueLarge}>{job.deliveryDate || '07-01-2026'}</Text>
+                    </View>
+                </View>
+
+                {
+                    (activeTab === 'pending' || activeTab === 'done') && (
+                        <TouchableOpacity
+                            style={styles.startTaskButton}
+                            onPress={() => {
+                                if (activeTab === 'pending') {
+                                    setSelectedJobId(job.id);
+                                    setAssignModalVisible(true);
+                                } else {
+                                    handleDelivery(job.id);
+                                }
+                            }}
+                        >
+                            <Text style={styles.startTaskText}>
+                                {activeTab === 'pending' ? 'Start Task' : 'Delivery'}
+                            </Text>
+                        </TouchableOpacity>
+                    )
+                }
+            </TouchableOpacity >
         );
     };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
             {/* Tabs */}
-            <View style={styles.tabsContainer}>
-                {renderTab('Pending', 0, 'pending')}
-                {renderTab('Active', 0, 'active')}
-                {renderTab('Done', 0, 'done')}
+            <View style={styles.tabsWrapper}>
+                <View style={styles.tabsContainer}>
+                    {renderTab('Pending', 0, 'pending')}
+                    {renderTab('Active', 0, 'active')}
+                    {renderTab('Done', 0, 'done')}
+                </View>
             </View>
 
-            {/* Search Bar + Add Button */}
+            {/* Search Bar */}
             <View style={styles.searchRow}>
                 <View style={styles.searchContainer}>
                     <Text style={styles.searchIcon}>🔍</Text>
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search User"
+                        placeholderTextColor="#9ca3af"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                     />
-                    <TouchableOpacity style={styles.filterButton}>
-                        <Text style={styles.filterIcon}>⚡</Text>
-                    </TouchableOpacity>
                 </View>
-
-                {/* Floating Add Button */}
                 <TouchableOpacity
-                    style={styles.addButtonIcon}
+                    style={styles.addButton}
                     onPress={() => navigation.navigate('CreateJobCard')}
                 >
-                    <Text style={styles.addButtonIconText}>+</Text>
+                    <Text style={styles.addButtonText}>+</Text>
                 </TouchableOpacity>
             </View>
 
@@ -331,49 +396,74 @@ export default function JobTasksScreen() {
                 {filteredJobs.length === 0 ? (
                     <Text style={{ textAlign: 'center', marginTop: 20, color: '#9ca3af' }}>No jobs found</Text>
                 ) : (
-                    filteredJobs.map(renderJobCard)
+                    sortedJobs.map(renderJobCard)
                 )}
             </ScrollView>
 
             {/* Assign Modal */}
+            {/* Assign Modal */}
             <Modal
                 visible={assignModalVisible}
                 transparent={true}
-                animationType="slide"
+                animationType="fade"
                 onRequestClose={() => setAssignModalVisible(false)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Technician Manager *</Text>
-                        <TouchableOpacity style={styles.dropdown}>
-                            <Text style={{ color: selectedTechnician ? '#000' : '#9ca3af' }}>
-                                {selectedTechnician || 'Select Technician Manager'}
-                            </Text>
-                            <Text>⬇️</Text>
-                        </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setAssignModalVisible(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.modalContent}
+                        activeOpacity={1}
+                    >
+                        {/* Modal Header */}
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Technician Manager *</Text>
+                            <TouchableOpacity onPress={() => setAssignModalVisible(false)}>
+                                <Text style={styles.arrowIcon}>↑</Text>
+                            </TouchableOpacity>
+                        </View>
 
-                        <ScrollView style={{ maxHeight: 150, marginBottom: 16 }}>
-                            {TECHNICIAN_MANAGERS.map((tm, idx) => (
+                        {/* Modal Search Bar */}
+                        <View style={styles.modalSearchContainer}>
+                            <Text style={styles.searchIconSmall}>🔍</Text>
+                            <TextInput
+                                style={styles.modalSearchInput}
+                                placeholder="Search Name"
+                                placeholderTextColor="#9ca3af"
+                                value={technicianSearchQuery}
+                                onChangeText={setTechnicianSearchQuery}
+                            />
+                        </View>
+
+                        {/* Technician List */}
+                        <ScrollView style={styles.technicianList}>
+                            {filteredTechnicians.map((tm, idx) => (
                                 <TouchableOpacity
                                     key={idx}
-                                    style={{
-                                        paddingVertical: 12,
-                                        borderBottomWidth: 1,
-                                        borderBottomColor: '#f3f4f6',
-                                        backgroundColor: selectedTechnician === tm ? '#eff6ff' : 'transparent'
+                                    style={[
+                                        styles.technicianItem,
+                                        selectedTechnician === tm && styles.selectedTechnicianItem
+                                    ]}
+                                    onPress={() => {
+                                        setSelectedTechnician(tm);
                                     }}
-                                    onPress={() => setSelectedTechnician(tm)}
                                 >
-                                    <Text style={{
-                                        fontWeight: selectedTechnician === tm ? 'bold' : 'normal',
-                                        color: selectedTechnician === tm ? '#2563eb' : '#374151'
-                                    }}>
+                                    <Text style={[
+                                        styles.technicianName,
+                                        selectedTechnician === tm && styles.selectedTechnicianText
+                                    ]}>
                                         {tm}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+                            {filteredTechnicians.length === 0 && (
+                                <Text style={styles.noResultsText}>No results found</Text>
+                            )}
                         </ScrollView>
 
+                        {/* Action Buttons */}
                         <View style={styles.modalActions}>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.cancelButton]}
@@ -384,46 +474,52 @@ export default function JobTasksScreen() {
                             <TouchableOpacity
                                 style={[
                                     styles.modalButton,
-                                    styles.addButton,
+                                    styles.assignButton,
                                     !selectedTechnician && { opacity: 0.5 }
                                 ]}
                                 onPress={handleAssignJob}
                                 disabled={!selectedTechnician}
                             >
-                                <Text style={styles.addButtonText}>Add</Text>
+                                <Text style={styles.assignButtonText}>Assign</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                </View>
+                    </TouchableOpacity>
+                </TouchableOpacity>
             </Modal>
-        </View>
+        </View >
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingTop: 16,
+    },
+    tabsWrapper: {
+        backgroundColor: '#ffffff',
+        borderRadius: 25,
+        padding: 4,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
     },
     tabsContainer: {
         flexDirection: 'row',
-        marginBottom: 16,
-        borderRadius: 8,
-        overflow: 'hidden',
     },
     tabButton: {
         flex: 1,
-        paddingVertical: 8,
+        paddingVertical: 10,
         alignItems: 'center',
         justifyContent: 'center',
+        borderRadius: 22,
     },
     tabText: {
-        fontWeight: '600',
+        fontWeight: 'bold',
         fontSize: 14,
     },
     searchRow: {
         flexDirection: 'row',
-        gap: 12,
         marginBottom: 16,
     },
     searchContainer: {
@@ -431,8 +527,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#ffffff',
-        borderRadius: 8,
-        paddingHorizontal: 12,
+        borderRadius: 25,
+        paddingHorizontal: 16,
         height: 48,
         borderWidth: 1,
         borderColor: '#e5e7eb',
@@ -453,220 +549,284 @@ const styles = StyleSheet.create({
     filterIcon: {
         fontSize: 18,
         color: '#9ca3af',
-    },
-    addButtonIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 8,
-        backgroundColor: '#d97706',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    addButtonIconText: {
-        color: '#ffffff',
-        fontSize: 24,
         fontWeight: 'bold',
     },
     listContent: {
-        paddingBottom: 24,
+        paddingBottom: 40,
     },
     card: {
+        backgroundColor: '#ffffff',
         borderRadius: 12,
+        padding: 16,
         marginBottom: 16,
-        overflow: 'hidden',
         borderWidth: 1,
         borderColor: '#e5e7eb',
+        // Shadow for premium feel
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: 12,
+        marginBottom: 12,
+    },
+    cardHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    jobId: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#000',
     },
     statusBadge: {
-        paddingHorizontal: 12,
+        paddingHorizontal: 8,
         paddingVertical: 4,
-        borderRadius: 4,
+        borderRadius: 12,
     },
     statusText: {
         color: '#ffffff',
         fontWeight: 'bold',
-        fontSize: 12,
-    },
-    jobId: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 12,
-        flex: 1,
-    },
-    amountBadge: {
-        backgroundColor: '#6b7280',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
+        fontSize: 10,
     },
     amountText: {
-        color: '#ffffff',
-        fontSize: 12,
+        fontSize: 16,
         fontWeight: 'bold',
+        color: '#000',
     },
     divider: {
         height: 1,
         backgroundColor: '#e5e7eb',
+        marginVertical: 12,
     },
-    cardBody: {
-        padding: 12,
+    vehicleSection: {
         flexDirection: 'row',
-    },
-    vehicleIconContainer: {
-        width: 48,
-        height: 48,
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 12,
-    },
-    vehicleIcon: {
-        fontSize: 32,
-    },
-    detailsContainer: {
-        flex: 1,
     },
     vehicleName: {
         fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    detailRow: {
-        flexDirection: 'row',
-        marginBottom: 2,
-    },
-    detailLabel: {
-        color: '#6b7280',
-        fontSize: 12,
-    },
-    detailValue: {
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    regNoContainer: {
-        alignItems: 'flex-end',
+        fontWeight: 'bold',
+        color: '#000',
     },
     regNo: {
         fontSize: 14,
-        color: '#374151',
-        fontWeight: '500',
+        color: '#6b7280',
+        marginTop: 4,
     },
-    actionRow: {
+    vehicleIcon: {
+        fontSize: 28,
+    },
+    assignmentSection: {
+        marginBottom: 12,
+    },
+    assignedRow: {
         flexDirection: 'row',
-        padding: 12,
-        gap: 8,
-        flexWrap: 'wrap',
+        alignItems: 'center',
+        marginBottom: 12,
     },
-    actionButton: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 6,
+    assignedAvatar: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#4682B4',
         alignItems: 'center',
         justifyContent: 'center',
+        marginRight: 8,
     },
-    primaryButton: {
-        backgroundColor: '#d97706',
-    },
-    primaryButtonText: {
+    avatarText: {
         color: '#ffffff',
         fontSize: 12,
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
-    secondaryButton: {
-        backgroundColor: '#3b82f6',
+    assignedToText: {
+        fontSize: 14,
+        color: '#000',
     },
-    secondaryButtonText: {
-        color: '#ffffff',
-        fontSize: 12,
-        fontWeight: '600',
+    boldText: {
+        fontWeight: 'bold',
     },
-    greenButton: {
-        backgroundColor: '#10b981',
+    progressRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     },
-    outlineButton: {
-        borderWidth: 1,
-        borderColor: '#9ca3af',
-        backgroundColor: 'transparent',
-    },
-    outlineButtonText: {
-        color: '#6b7280',
-        fontSize: 12,
-    },
-    detailButton: {
+    progressBarBackground: {
+        flex: 1,
+        height: 8,
         backgroundColor: '#e5e7eb',
-        marginLeft: 'auto',
+        borderRadius: 4,
+        overflow: 'hidden',
     },
-    detailButtonText: {
-        color: '#374151',
-        fontSize: 12,
-        fontWeight: '600',
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#4682B4',
+        borderRadius: 4,
     },
-    cardFooter: {
+    progressLabel: {
+        fontSize: 10,
+        color: '#4682B4',
+        fontWeight: '500',
+    },
+    deliveryInfoRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        padding: 12,
-        backgroundColor: '#f9fafb',
+        marginTop: 8,
     },
-    footerText: {
-        fontSize: 11,
-        color: '#6b7280',
+    deliveryLabelTop: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#000',
+        marginBottom: 4,
+    },
+    deliveryValueLarge: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#ef4444',
+    },
+    startTaskButton: {
+        backgroundColor: '#b45309', // Brownish orange
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        alignSelf: 'flex-end',
+        marginTop: 8,
+    },
+    startTaskText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: 'bold',
     },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
+        alignItems: 'center',
         padding: 24,
     },
     modalContent: {
         backgroundColor: '#ffffff',
-        borderRadius: 12,
+        borderRadius: 25, // Large rounded corners like the pic
         padding: 24,
+        width: '100%',
+        maxWidth: 340,
+        // Shadow
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 10,
     },
-    modalTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 16,
-    },
-    dropdown: {
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
-        borderRadius: 8,
-        padding: 12,
+    modalHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 16,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000',
+    },
+    arrowIcon: {
+        fontSize: 20,
+        color: '#000',
+        fontWeight: 'bold',
+    },
+    modalSearchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f9fafb',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 44,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    searchIconSmall: {
+        fontSize: 14,
+        color: '#9ca3af',
+        marginRight: 8,
+    },
+    modalSearchInput: {
+        flex: 1,
+        fontSize: 14,
+        color: '#000',
+    },
+    technicianList: {
+        maxHeight: 200,
+        marginBottom: 16,
+    },
+    technicianItem: {
+        paddingVertical: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+    },
+    selectedTechnicianItem: {
+        backgroundColor: '#eff6ff',
+    },
+    technicianName: {
+        fontSize: 16,
+        color: '#000',
+        fontWeight: '500',
+    },
+    selectedTechnicianText: {
+        color: '#4682B4',
+        fontWeight: '700',
+    },
+    noResultsText: {
+        textAlign: 'center',
+        color: '#9ca3af',
+        marginTop: 12,
     },
     modalActions: {
         flexDirection: 'row',
         gap: 12,
-        marginTop: 8,
     },
     modalButton: {
         flex: 1,
         paddingVertical: 12,
-        borderRadius: 8,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
     },
     cancelButton: {
         backgroundColor: '#f3f4f6',
     },
-    addButton: {
-        backgroundColor: '#2563eb',
+    assignButton: {
+        backgroundColor: '#4682B4',
     },
     cancelButtonText: {
         color: '#374151',
         fontWeight: '600',
-        fontSize: 14,
     },
-    addButtonText: {
+    assignButtonText: {
         color: '#ffffff',
         fontWeight: '600',
-        fontSize: 14,
-    }
+    },
+    addButton: {
+        width: 44,
+        height: 44,
+        backgroundColor: '#a7f3d0', // Green button
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 12,
+        borderWidth: 1,
+        borderColor: '#10b981',
+    },
+    addButtonText: {
+        fontSize: 24,
+        color: '#000',
+        fontWeight: '300',
+    },
 });

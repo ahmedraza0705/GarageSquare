@@ -23,10 +23,8 @@ export class JobCardService {
         *,
         customer:customers(*),
         vehicle:vehicles(*),
-        assigned_user:user_profiles!job_cards_assigned_to_fkey(*),
-        supervisor:user_profiles!job_cards_supervisor_id_fkey(*),
         services:job_card_services(*, service:services(*)),
-        tasks:tasks(*, assigned_user:user_profiles!tasks_assigned_to_fkey(*))
+        tasks:tasks(*)
       `)
       .order('created_at', { ascending: false });
 
@@ -86,10 +84,8 @@ export class JobCardService {
         *,
         customer:customers(*),
         vehicle:vehicles(*),
-        assigned_user:user_profiles!job_cards_assigned_to_fkey(*),
-        supervisor:user_profiles!job_cards_supervisor_id_fkey(*),
         services:job_card_services(*, service:services(*)),
-        tasks:tasks(*, assigned_user:user_profiles!tasks_assigned_to_fkey(*), service:services(*))
+        tasks:tasks(*, service:services(*))
       `)
       .eq('id', id)
       .single();
