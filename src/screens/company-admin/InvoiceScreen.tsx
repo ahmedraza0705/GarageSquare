@@ -416,7 +416,7 @@ export default function InvoiceScreen() {
                     const customerInitials = customerName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
                     const avatarColors = ['#FF6B6B', '#4ECDC4', '#4A90E2', '#9B59B6', '#E74C3C', '#5C6BC0', '#66BB6A', '#FFA726'];
                     const avatarColor = avatarColors[customerName.length % avatarColors.length];
-                    const vehicleInfo = invoice.vehicle ? `${invoice.vehicle.make} ${invoice.vehicle.model}` : 'No vehicle';
+                    const vehicleInfo = invoice.vehicle ? `${invoice.vehicle.brand} ${invoice.vehicle.model}` : 'No vehicle';
 
                     return (
                         <View

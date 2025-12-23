@@ -89,52 +89,72 @@ export interface Branch {
 
 export interface UserProfile {
   id: string;
+  company_id?: string;
+  branch_id?: string;
+  role_id: string | null;
   email: string;
   full_name?: string;
   phone?: string;
-  company_name?: string;
-  company_id?: string;
-  city?: string;
-  postal_code?: string;
-  country?: string;
-  role_id: string | null;
-  branch_id?: string;
   avatar_url?: string;
-  address?: string;
-  state?: string;
   is_active: boolean;
+  last_login_at?: string;
   created_at: string;
   updated_at: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  username?: string;
+  created_by?: string;
+  deactivated_at?: string;
+  deactivated_by?: string;
+  country?: string;
+  registry_number?: string;
+  zip_code?: string;
   role?: Role;
   branch?: Branch;
   company?: Company;
 }
 
-export interface Customer {
+export interface Staff {
   id: string;
-  user_id?: string;
-  full_name: string;
-  email?: string;
-  phone: string;
-  address?: string;
-  branch_id?: string;
-  branch?: { name: string };
-  created_by?: string;
+  email: string;
+  name: string;
+  username?: string;
+  phone?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Staff {
+  id: string;
+  email: string;
+  name: string;
+  username?: string;
+  phone?: string;
+}
+
+export interface Customer {
+  id: string;
+  email?: string;
+  address?: string;
+  full_name: string;
+  username?: string;
+  phone: string;
+  alt_phone?: string;
   vehicles?: Vehicle[];
 }
 
 export interface Vehicle {
   id: string;
   customer_id: string;
-  make: string;
+  brand: string;
   model: string;
-  year?: number;
+  year_manufacture?: number;
   vin?: string;
   license_plate?: string;
   color?: string;
-  mileage?: number;
+  odometer?: number;
   fuel_type?: string;
   year_purchase?: number;
   delivery_type?: string;
@@ -298,13 +318,13 @@ export interface CreateCustomerForm {
 
 export interface CreateVehicleForm {
   customer_id: string;
-  make: string;
+  brand: string;
   model: string;
-  year?: number;
+  year_manufacture?: number;
   vin?: string;
   license_plate?: string;
   color?: string;
-  mileage?: number;
+  odometer?: number;
   fuel_type?: string;
   year_purchase?: number;
   delivery_type?: string;

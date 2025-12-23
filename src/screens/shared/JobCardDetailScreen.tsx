@@ -112,9 +112,9 @@ export default function JobCardDetailScreen() {
             vehicle: {
               id: 'vehicle_001',
               customer_id: 'customer_001',
-              make: 'Honda',
+              brand: 'Honda',
               model: 'City',
-              year: 2020,
+              year_manufacture: 2020,
               license_plate: 'GJ-05-RT-2134',
               vin: 'GJ-05-RT-2134',
               created_at: new Date().toISOString(),
@@ -240,7 +240,7 @@ export default function JobCardDetailScreen() {
 
             <View className="flex-row items-center mb-2">
               <Text style={{ color: theme.text }} className="text-lg font-semibold mr-2">
-                {jobCard.vehicle?.make} {jobCard.vehicle?.model}
+                {jobCard.vehicle?.brand} {jobCard.vehicle?.model}
               </Text>
               <Text className="text-2xl">🚗</Text>
             </View>

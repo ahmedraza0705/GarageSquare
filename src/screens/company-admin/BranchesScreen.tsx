@@ -26,6 +26,9 @@ export default function BranchesScreen() {
   const [newManagerName, setNewManagerName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [managers, setManagers] = useState<any[]>([]);
+  const [selectedManager, setSelectedManager] = useState<any>(null);
+  const [showManagerDropdown, setShowManagerDropdown] = useState(false);
 
   // Validation State
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
@@ -48,10 +51,26 @@ export default function BranchesScreen() {
     }
   };
 
-  // Load branches on mount
+  // Load branches and managers on mount
   useEffect(() => {
     fetchBranches();
+    fetchManagers();
   }, []);
+
+  const fetchManagers = async () => {
+    try {
+      // Fetch users with 'manager' role from user_profiles
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*, role:roles!inner(name)')
+        .eq('roles.name', 'manager');
+
+      if (error) throw error;
+      setManagers(data || []);
+    } catch (error) {
+      console.error('Error fetching managers:', error);
+    }
+  };
 
   // Handle new branch from navigation params
   const route = useRoute();
@@ -182,6 +201,7 @@ export default function BranchesScreen() {
     setNewManagerName('');
     setNewPhone('');
     setNewEmail('');
+    setSelectedManager(null);
     setErrors({});
   };
 
@@ -398,9 +418,63 @@ export default function BranchesScreen() {
                 <View>
                   {renderInput('Branch Name', newBranchName, setNewBranchName, 'Enter Branch Name', 'name')}
                   {renderInput('Branch Address', newBranchAddress, setNewBranchAddress, 'Enter Branch Address', 'address')}
-                  {renderInput('Branch Manager Name', newManagerName, setNewManagerName, 'Enter Manager Name', 'manager')}
-                  {renderInput('Phone No.', newPhone, setNewPhone, 'Enter Phone Number', 'phone', 'phone-pad')}
-                  {renderInput('Gmail', newEmail, setNewEmail, 'Enter Gmail', 'email', 'email-address')}
+                  {/* Manager Selection Dropdown */}
+                  <View style={{ marginBottom: 16 }}>
+                    <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 14, marginBottom: 6 }}>Branch Manager Name*</Text>
+                    <TouchableOpacity
+                      style={{
+                        borderWidth: 1,
+                        borderColor: errors.manager ? '#EF4444' : theme.border,
+                        borderRadius: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        backgroundColor: theme.background,
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                      onPress={() => setShowManagerDropdown(!showManagerDropdown)}
+                    >
+                      <Text style={{ color: selectedManager ? theme.text : '#9CA3AF' }}>
+                        {selectedManager ? selectedManager.full_name : 'Select Manager'}
+                      </Text>
+                      <Ionicons name={showManagerDropdown ? "chevron-up" : "chevron-down"} size={20} color="#9CA3AF" />
+                    </TouchableOpacity>
+
+                    {showManagerDropdown && (
+                      <View style={{
+                        marginTop: 4,
+                        maxHeight: 150,
+                        borderWidth: 1,
+                        borderColor: theme.border,
+                        borderRadius: 12,
+                        backgroundColor: theme.surface,
+                        zIndex: 1000,
+                        overflow: 'hidden'
+                      }}>
+                        <ScrollView nestedScrollEnabled={true}>
+                          {managers.map((mgr) => (
+                            <TouchableOpacity
+                              key={mgr.id}
+                              style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: theme.border }}
+                              onPress={() => {
+                                setSelectedManager(mgr);
+                                setNewManagerName(mgr.full_name);
+                                setNewPhone(mgr.phone || '');
+                                setNewEmail(mgr.email || '');
+                                setShowManagerDropdown(false);
+                              }}
+                            >
+                              <Text style={{ color: theme.text }}>{mgr.full_name}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </View>
+
+                  {renderInput('Phone No.', newPhone, setNewPhone, 'Phone number will auto-fill', 'phone', 'phone-pad')}
+                  {renderInput('Gmail', newEmail, setNewEmail, 'Email will auto-fill', 'email', 'email-address')}
                 </View>
 
                 {/* Action Buttons */}

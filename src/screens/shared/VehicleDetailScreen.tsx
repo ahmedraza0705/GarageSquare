@@ -146,7 +146,7 @@ export default function VehicleDetailScreen() {
             <View>
               <View>
                 <Text className="text-2xl font-bold leading-tight" style={{ color: theme.text }}>
-                  {vehicle.make} {vehicle.model}
+                  {vehicle.brand} {vehicle.model}
                 </Text>
                 <View className="h-[2px] w-full mt-0.5" style={{ backgroundColor: theme.textMuted }} />
               </View>
@@ -212,7 +212,7 @@ export default function VehicleDetailScreen() {
             </View>
             <View className="ml-2">
               <Text className="text-xs font-bold tracking-widest mb-1" style={{ color: theme.textMuted }}>Last Odometer Reading</Text>
-              <Text className="text-xl font-bold" style={{ color: theme.text }}>{vehicle.mileage?.toLocaleString() || '0'} KM</Text>
+              <Text className="text-xl font-bold" style={{ color: theme.text }}>{vehicle.odometer?.toLocaleString() || '0'} KM</Text>
             </View>
           </View>
         </ScrollView>

@@ -70,10 +70,10 @@ export class BranchService {
             .insert({
                 name: branchData.name,
                 location: branchData.address,
-                // phone: branchData.phone, // Not in schema
-                // email: branchData.email, // Not in schema
-                // manager_id: branchData.manager_id || null, // Not in schema
-                // is_active: branchData.is_active ?? true, // Not in schema
+                phone: branchData.phone,
+                email: branchData.email,
+                manager_id: branchData.manager_id || null,
+                is_active: branchData.is_active ?? true,
             })
             .select()
             .single();
