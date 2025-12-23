@@ -71,6 +71,7 @@ export interface UserProfile {
   phone?: string;
   role_id: string | null;
   branch_id?: string;
+  company_id?: string;
   avatar_url?: string;
   address?: string;
   city?: string;
@@ -275,6 +276,36 @@ export interface CreateJobCardForm {
 export interface UpdateTaskForm {
   status: TaskStatus;
   actual_time?: number;
+  minutes?: number;
   notes?: string;
 }
+
+export interface Category {
+  id: string;
+  company_id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  company_id: string;
+  category_id?: string;
+  name: string;
+  sku?: string;
+  quantity: number;
+  unit?: string;
+  unit_price: number;
+  low_stock_threshold: number;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  category?: Category;
+  branch_id?: string;
+}
+
 

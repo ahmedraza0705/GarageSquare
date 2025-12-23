@@ -118,6 +118,7 @@ export function useAuth() {
     signUp,
     signOut,
     resetPassword,
+    refreshUser: checkSession,
     isAuthenticated: !!user,
   };
 }

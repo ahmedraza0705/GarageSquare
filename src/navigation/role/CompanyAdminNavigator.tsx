@@ -45,6 +45,12 @@ import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
 import ProfilePopup from '@/components/navigation/ProfilePopup';
+// // Inventory Screens
+import InventoryDashboardScreen from '@/screens/company-admin/InventoryDashboardScreen';
+import CategoriesScreen from '@/screens/company-admin/CategoriesScreen';
+import InventoryItemsScreen from '@/screens/company-admin/InventoryItemsScreen';
+import StockManagementScreen from '@/screens/company-admin/StockManagementScreen';
+import TransactionsScreen from '@/screens/company-admin/TransactionsScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -91,6 +97,13 @@ function CustomHeader({
       AccountDetails: 'Account Details',
       Notifications: 'Notifications',
       About: 'About GarageSquares',
+      // Inventory titles
+      Inventory: 'Inventory Management',
+      InventoryDashboard: 'Inventory Dashboard',
+      Categories: 'Categories',
+      InventoryItems: 'Inventory Items',
+      StockManagement: 'Stock Management',
+      Transactions: 'Transactions',
     };
     return titleMap[routeName] || 'Dashboard';
   };
@@ -313,6 +326,14 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
+      <Drawer.Screen
+        name="Inventory"
+        component={InventoryDashboardScreen}
+        options={{
+          title: 'Inventory',
+          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+        }}
+      />
 
     </Drawer.Navigator>
   );
@@ -464,6 +485,86 @@ export default function CompanyAdminNavigator() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="InventoryDashboard"
+        component={InventoryDashboardScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="InventoryItems"
+        component={InventoryItemsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="StockManagement"
+        component={StockManagementScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="Transactions"
+        component={TransactionsScreen}
         options={{
           headerShown: true,
           header: ({ route }) => (

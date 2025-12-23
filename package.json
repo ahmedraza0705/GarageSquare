@@ -10,6 +10,7 @@
     "clear": "expo start --clear"
   },
   "dependencies": {
+    "@react-native-picker/picker": "^2.11.4",
     "@react-navigation/bottom-tabs": "^7.8.12",
     "@react-navigation/drawer": "^7.7.9",
     "@react-navigation/native": "^7.1.25",

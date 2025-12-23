@@ -21,6 +21,7 @@ const PROFILE_SELECT = `
   postal_code,
   role_id,
   branch_id,
+  company_id,
   avatar_url,
   is_active,
   created_at,
@@ -46,6 +47,7 @@ const mapProfile = (row: any): UserProfile => ({
   postal_code: row.postal_code ?? undefined,
   role_id: row.role_id ?? null,
   branch_id: row.branch_id ?? undefined,
+  company_id: row.company_id ?? undefined,
   avatar_url: row.avatar_url ?? undefined,
   is_active: row.is_active ?? true,
   created_at: row.created_at,
@@ -299,6 +301,9 @@ export class AuthService {
    */
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     const client = ensureClient();
+    console.log('Fetching profile for:', userId);
+
+    // Debug: Check if column exists or query fails
     const { data, error } = await client
       .from('user_profiles')
       .select(PROFILE_SELECT)
@@ -306,10 +311,16 @@ export class AuthService {
       .maybeSingle();
 
     if (error) {
+      console.error('SUPABASE ERROR in getUserProfile:', error);
       throw error;
     }
 
-    if (!data) return null;
+    if (!data) {
+      console.warn('SUPABASE: No profile found for user:', userId);
+      return null;
+    }
+
+    console.log('SUPABASE: Profile found:', JSON.stringify(data, null, 2));
     return mapProfile(data);
   }
 

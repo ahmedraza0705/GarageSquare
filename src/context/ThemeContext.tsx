@@ -10,6 +10,8 @@ export type ThemeColors = {
   surfaceAlt: string;
   text: string;
   textMuted: string;
+  textSecondary: string; // Added for inventory screens
+  card: string; // Added for inventory screens
   border: string;
   notification: string;
   onPrimary: string;
@@ -39,6 +41,8 @@ export const themes: Record<ThemeName, ThemeColors> = {
     surfaceAlt: '#f1f5f9',
     text: '#0f172a',
     textMuted: '#475569',
+    textSecondary: '#6B7280',
+    card: '#ffffff',
     border: '#e2e8f0',
     notification: '#ef4444',
     onPrimary: '#ffffff',
@@ -66,6 +70,8 @@ export const themes: Record<ThemeName, ThemeColors> = {
     surfaceAlt: '#111827',
     text: '#e5e7eb',
     textMuted: '#94a3b8',
+    textSecondary: '#9CA3AF',
+    card: '#1F2937',
     border: '#1f2937',
     notification: '#f87171',
     onPrimary: '#0b1220',
