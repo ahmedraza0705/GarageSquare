@@ -1,52 +1,74 @@
 -- ============================================
--- FIX RLS INFINITE RECURSION
+-- FIX: RECURSIVE RLS POLICIES (AUTHENTICATED SESSIONS)
 -- ============================================
 
--- Create a security definer function to check user roles
--- This avoids RLS recursion by running with elevated privileges
-CREATE OR REPLACE FUNCTION public.is_company_admin(user_id UUID DEFAULT auth.uid())
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM user_profiles
-    WHERE id = user_id
-    AND role_id = (SELECT id FROM roles WHERE name = 'company_admin')
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE FUNCTION public.get_user_role(user_id UUID DEFAULT auth.uid())
-RETURNS TEXT AS $$
-DECLARE
-  role_name TEXT;
-BEGIN
-  SELECT r.name INTO role_name
-  FROM user_profiles up
-  JOIN roles r ON up.role_id = r.id
-  WHERE up.id = user_id;
+/* 
+  EXPLANATION:
+  "Infinite recursion" occurs when a policy on `user_profiles` tries to 
+  SELECT from `user_profiles` to check the `company_id`.
   
-  RETURN role_name;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+  FIX: 
+  We will use `auth.jwt() -> 'app_metadata' -> 'company_id'` OR a more direct check.
+  Alternatively, for `user_profiles`, we check the ID directly.
+*/
 
--- Update RLS policies to use the security definer functions
--- Drop existing problematic policies
-DROP POLICY IF EXISTS "Company admins can view all profiles" ON user_profiles;
-DROP POLICY IF EXISTS "Company admins can update any profile" ON user_profiles;
-DROP POLICY IF EXISTS "Company admins can insert any profile" ON user_profiles;
+-- 1. FIX USER_PROFILES
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Profiles isolation" ON public.user_profiles;
+DROP POLICY IF EXISTS "Company isolation for profiles" ON public.user_profiles;
 
--- Recreate policies using the security definer functions
-CREATE POLICY "Company admins can view all profiles"
-  ON user_profiles FOR SELECT
-  USING (public.is_company_admin());
+CREATE POLICY "Profiles isolation" ON public.user_profiles
+  FOR ALL TO authenticated
+  USING (
+    -- BYPASS RECURSION: Allow if the profile is the user's own
+    id = auth.uid() 
+    OR 
+    -- Company-wide check (using subquery safely)
+    company_id IN (
+      SELECT company_id FROM public.user_profiles 
+      WHERE id = auth.uid() 
+      AND id != user_profiles.id -- This prevents direct self-reference recursion
+    )
+  );
 
-CREATE POLICY "Company admins can update any profile"
-  ON user_profiles FOR UPDATE
-  USING (public.is_company_admin());
+-- 2. FIX CUSTOMERS
+ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Customers isolation policy" ON public.customers;
+DROP POLICY IF EXISTS "Customers isolation" ON public.customers;
+DROP POLICY IF EXISTS "Customers company isolation" ON public.customers;
 
-CREATE POLICY "Company admins can insert any profile"
-  ON user_profiles FOR INSERT
-  WITH CHECK (public.is_company_admin());
+CREATE POLICY "Customers isolation" ON public.customers
+  FOR ALL TO authenticated
+  USING (
+    company_id = (auth.jwt() -> 'app_metadata' ->> 'company_id')::uuid
+  )
+  WITH CHECK (
+    company_id = (auth.jwt() -> 'app_metadata' ->> 'company_id')::uuid
+  );
 
--- Note: Branches table policies will be fixed when you run the full schema.sql
--- For now, this fixes the user_profiles infinite recursion issue
+-- 3. FIX STAFF
+ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Staff isolation" ON public.staff;
+DROP POLICY IF EXISTS "Staff company isolation" ON public.staff;
+
+CREATE POLICY "Staff isolation" ON public.staff
+  FOR ALL TO authenticated
+  USING (
+    id IN (
+      SELECT up.id FROM public.user_profiles up 
+      WHERE up.company_id = (auth.jwt() -> 'app_metadata' ->> 'company_id')::uuid
+    )
+  );
+
+-- 4. FIX VEHICLES
+ALTER TABLE public.vehicles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Vehicles isolation policy" ON public.vehicles;
+
+CREATE POLICY "Vehicles isolation policy" ON public.vehicles
+  FOR ALL TO authenticated
+  USING (
+    company_id = (auth.jwt() -> 'app_metadata' ->> 'company_id')::uuid
+  )
+  WITH CHECK (
+    company_id = (auth.jwt() -> 'app_metadata' ->> 'company_id')::uuid
+  );
