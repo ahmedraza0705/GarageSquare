@@ -71,6 +71,7 @@ export interface UserProfile {
   phone?: string;
   role_id: string | null;
   branch_id?: string;
+  company_id?: string;
   avatar_url?: string;
   address?: string;
   city?: string;
