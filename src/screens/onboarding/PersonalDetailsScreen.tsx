@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
-import { AuthService } from '@/services/auth.service';
+import { AuthService } from '@/services/auth_v2.service';
 
 export default function PersonalDetailsScreen() {
     const navigation = useNavigation<any>();

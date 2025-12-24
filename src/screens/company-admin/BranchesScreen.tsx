@@ -7,8 +7,10 @@ import { View, Text, ScrollView, TouchableOpacity, RefreshControl, Modal, TextIn
 import { supabase } from '@/lib/supabase';
 import { BranchService } from '@/services/branch.service';
 import { Branch } from '@/types';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function BranchesScreen() {
+  const { user } = useAuth();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -62,6 +64,7 @@ export default function BranchesScreen() {
         address: formData.address,
         phone: formData.phone,
         email: formData.email,
+        company_id: user?.profile?.company_id,
         is_active: true,
       });
 

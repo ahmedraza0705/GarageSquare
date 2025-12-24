@@ -2,8 +2,6 @@
 // JOB CARD SERVICE
 // ============================================
 
-// COMMENTED OUT - Supabase removed
-// import { supabase } from '@/lib/supabase';
 import { JobCard, CreateJobCardForm, JobCardStatus } from '@/types';
 
 export class JobCardService {
@@ -15,134 +13,146 @@ export class JobCardService {
     status?: JobCardStatus;
     assigned_to?: string;
     customer_id?: string;
-  }) {
-    // COMMENTED OUT - Supabase removed
-    // let query = supabase
-    //   .from('job_cards')
-    //   .select(`
-    //     *,
-    //     customer:customers(*),
-    //     vehicle:vehicles(*),
-    //     assigned_user:user_profiles!job_cards_assigned_to_fkey(*),
-    //     supervisor:user_profiles!job_cards_supervisor_id_fkey(*),
-    //     services:job_card_services(*, service:services(*)),
-    //     tasks:tasks(*, assigned_user:user_profiles!tasks_assigned_to_fkey(*))
-    //   `)
-    //   .order('created_at', { ascending: false });
+  }): Promise<JobCard[]> {
+    const { supabase } = await import('@/lib/supabase');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
 
-    // if (filters?.branch_id) {
-    //   query = query.eq('branch_id', filters.branch_id);
-    // }
-    // if (filters?.status) {
-    //   query = query.eq('status', filters.status);
-    // }
-    // if (filters?.assigned_to) {
-    //   query = query.eq('assigned_to', filters.assigned_to);
-    // }
-    // if (filters?.customer_id) {
-    //   query = query.eq('customer_id', filters.customer_id);
-    // }
+    let query = supabase
+      .from('job_cards')
+      .select(`
+        *,
+        customer:customers(*),
+        vehicle:vehicles(*),
+        assigned_user:user_profiles!job_cards_assigned_to_fkey(*),
+        supervisor:user_profiles!job_cards_supervisor_id_fkey(*),
+        services:job_card_services(*, service:services(*)),
+        tasks:tasks(*, assigned_user:user_profiles!tasks_assigned_to_fkey(*))
+      `)
+      .order('created_at', { ascending: false });
 
-    // const { data, error } = await query;
-    // if (error) throw error;
-    // return data as JobCard[];
-    throw new Error('Supabase is disabled - job card service not available');
+    if (filters?.branch_id) {
+      query = query.eq('branch_id', filters.branch_id);
+    }
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.assigned_to) {
+      query = query.eq('assigned_to', filters.assigned_to);
+    }
+    if (filters?.customer_id) {
+      query = query.eq('customer_id', filters.customer_id);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data as JobCard[];
   }
 
   /**
    * Get job card by ID
    */
-  static async getById(id: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('job_cards')
-    //   .select(`
-    //     *,
-    //     customer:customers(*),
-    //     vehicle:vehicles(*),
-    //     assigned_user:user_profiles!job_cards_assigned_to_fkey(*),
-    //     supervisor:user_profiles!job_cards_supervisor_id_fkey(*),
-    //     services:job_card_services(*, service:services(*)),
-    //     tasks:tasks(*, assigned_user:user_profiles!tasks_assigned_to_fkey(*), service:services(*))
-    //   `)
-    //   .eq('id', id)
-    //   .single();
+  static async getById(id: string): Promise<JobCard> {
+    const { supabase } = await import('@/lib/supabase');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
 
-    // if (error) throw error;
-    // return data as JobCard;
-    throw new Error('Supabase is disabled - job card service not available');
+    const { data, error } = await supabase
+      .from('job_cards')
+      .select(`
+        *,
+        customer:customers(*),
+        vehicle:vehicles(*),
+        assigned_user:user_profiles!job_cards_assigned_to_fkey(*),
+        supervisor:user_profiles!job_cards_supervisor_id_fkey(*),
+        services:job_card_services(*, service:services(*)),
+        tasks:tasks(*, assigned_user:user_profiles!tasks_assigned_to_fkey(*), service:services(*))
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data as JobCard;
   }
 
   /**
    * Create new job card
    */
-  static async create(formData: CreateJobCardForm, userId: string, branchId: string) {
-    // COMMENTED OUT - Supabase removed
-    // // Generate job number
-    // const jobNumber = await this.generateJobNumber(branchId);
+  static async create(formData: CreateJobCardForm, userId: string, branchId: string): Promise<JobCard> {
+    const { supabase } = await import('@/lib/supabase');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
 
-    // // Create job card
-    // const { data: jobCard, error: jobCardError } = await supabase
-    //   .from('job_cards')
-    //   .insert({
-    //     job_number: jobNumber,
-    //     customer_id: formData.customer_id,
-    //     vehicle_id: formData.vehicle_id,
-    //     branch_id: branchId,
-    //     description: formData.description,
-    //     priority: formData.priority,
-    //     estimated_cost: formData.estimated_cost,
-    //     estimated_time: formData.estimated_time,
-    //     created_by: userId,
-    //     status: 'pending',
-    //   })
-    //   .select()
-    //   .single();
+    // Generate job number
+    const jobNumber = await this.generateJobNumber(branchId);
 
-    // if (jobCardError) throw jobCardError;
+    // Create job card
+    const { data: jobCard, error: jobCardError } = await supabase
+      .from('job_cards')
+      .insert({
+        job_number: jobNumber,
+        customer_id: formData.customer_id,
+        vehicle_id: formData.vehicle_id,
+        branch_id: branchId,
+        description: formData.description,
+        priority: formData.priority,
+        estimated_cost: formData.estimated_cost,
+        estimated_time: formData.estimated_time,
+        created_by: userId,
+        status: 'pending',
+      })
+      .select()
+      .single();
 
-    // // Add services if provided
-    // if (formData.service_ids && formData.service_ids.length > 0) {
-    //   const services = await supabase
-    //     .from('services')
-    //     .select('id, base_price')
-    //     .in('id', formData.service_ids);
+    if (jobCardError) throw jobCardError;
 
-    //   if (services.data) {
-    //     const jobCardServices = services.data.map(service => ({
-    //       job_card_id: jobCard.id,
-    //       service_id: service.id,
-    //       quantity: 1,
-    //       unit_price: service.base_price,
-    //       total_price: service.base_price,
-    //     }));
+    // Add services if provided
+    if (formData.service_ids && formData.service_ids.length > 0) {
+      const services = await supabase
+        .from('services')
+        .select('id, base_price')
+        .in('id', formData.service_ids);
 
-    //     await supabase.from('job_card_services').insert(jobCardServices);
-    //   }
-    // }
+      if (services.data) {
+        const jobCardServices = services.data.map(service => ({
+          job_card_id: jobCard.id,
+          service_id: service.id,
+          quantity: 1,
+          unit_price: service.base_price,
+          total_price: service.base_price,
+        }));
 
-    // return this.getById(jobCard.id);
-    throw new Error('Supabase is disabled - job card service not available');
+        await supabase.from('job_card_services').insert(jobCardServices);
+      }
+    }
+
+    return this.getById(jobCard.id);
   }
 
   /**
    * Update job card
    */
-  static async update(id: string, updates: Partial<JobCard>) {
-    // COMMENTED OUT - Supabase removed
-    // const { data, error } = await supabase
-    //   .from('job_cards')
-    //   .update({
-    //     ...updates,
-    //     updated_at: new Date().toISOString(),
-    //   })
-    //   .eq('id', id)
-    //   .select()
-    //   .single();
+  static async update(id: string, updates: Partial<JobCard>): Promise<JobCard> {
+    const { supabase } = await import('@/lib/supabase');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
 
-    // if (error) throw error;
-    // return data as JobCard;
-    throw new Error('Supabase is disabled - job card service not available');
+    const { data, error } = await supabase
+      .from('job_cards')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as JobCard;
   }
 
   /**
@@ -171,36 +181,42 @@ export class JobCardService {
    * Generate unique job number
    */
   static async generateJobNumber(branchId: string): Promise<string> {
-    // COMMENTED OUT - Supabase removed
-    // const date = new Date();
-    // const year = date.getFullYear();
-    // const month = String(date.getMonth() + 1).padStart(2, '0');
-    // const day = String(date.getDate()).padStart(2, '0');
-    // const prefix = `JC-${year}${month}${day}-`;
+    const { supabase } = await import('@/lib/supabase');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
 
-    // // Get count of job cards today
-    // const { count } = await supabase
-    //   .from('job_cards')
-    //   .select('*', { count: 'exact', head: true })
-    //   .like('job_number', `${prefix}%`);
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const prefix = `JC-${year}${month}${day}-`;
 
-    // const sequence = String((count || 0) + 1).padStart(4, '0');
-    // return `${prefix}${sequence}`;
-    throw new Error('Supabase is disabled - job card service not available');
+    // Get count of job cards today
+    const { count } = await supabase
+      .from('job_cards')
+      .select('*', { count: 'exact', head: true })
+      .like('job_number', `${prefix}%`);
+
+    const sequence = String((count || 0) + 1).padStart(4, '0');
+    return `${prefix}${sequence}`;
   }
 
   /**
    * Delete job card
    */
-  static async delete(id: string) {
-    // COMMENTED OUT - Supabase removed
-    // const { error } = await supabase
-    //   .from('job_cards')
-    //   .delete()
-    //   .eq('id', id);
+  static async delete(id: string): Promise<void> {
+    const { supabase } = await import('@/lib/supabase');
+    if (!supabase) {
+      throw new Error('Supabase client not initialized');
+    }
 
-    // if (error) throw error;
-    throw new Error('Supabase is disabled - job card service not available');
+    const { error } = await supabase
+      .from('job_cards')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 }
 

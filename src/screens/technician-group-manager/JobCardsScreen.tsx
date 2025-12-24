@@ -90,7 +90,7 @@ export default function TechnicianGroupManagerJobCardsScreen() {
             )}
             
             <TouchableOpacity
-              onPress={() => navigation.navigate('JobCardDetail' as never, { jobCardId: jobCard.id } as never)}
+              onPress={() => (navigation as any).navigate('JobCardDetail', { jobCardId: jobCard.id })}
             >
               <Text className="text-primary-600 text-sm font-medium mt-2">
                 View Details →
@@ -108,4 +108,5 @@ export default function TechnicianGroupManagerJobCardsScreen() {
     </ScrollView>
   );
 }
+
 

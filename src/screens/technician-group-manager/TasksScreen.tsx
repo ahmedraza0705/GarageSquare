@@ -85,7 +85,7 @@ export default function TechnicianGroupManagerTasksScreen() {
             )}
             
             <TouchableOpacity
-              onPress={() => navigation.navigate('TaskDetail' as never, { taskId: task.id } as never)}
+              onPress={() => (navigation as any).navigate('TaskDetail', { taskId: task.id })}
             >
               <Text className="text-primary-600 text-sm font-medium">
                 View Details →
@@ -103,4 +103,5 @@ export default function TechnicianGroupManagerTasksScreen() {
     </ScrollView>
   );
 }
+
 

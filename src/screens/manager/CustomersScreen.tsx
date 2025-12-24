@@ -52,7 +52,7 @@ export default function CustomersScreen() {
           <TouchableOpacity
             key={customer.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('CustomerDetail' as never, { customerId: customer.id } as never)}
+            onPress={() => (navigation as any).navigate('CustomerDetail', { customerId: customer.id })}
           >
             <Text className="text-lg font-semibold text-gray-900 mb-2">
               {customer.full_name}
@@ -77,4 +77,5 @@ export default function CustomersScreen() {
     </ScrollView>
   );
 }
+
 

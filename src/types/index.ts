@@ -33,6 +33,34 @@ export type PaymentMethod = 'cash' | 'card' | 'bank_transfer' | 'mobile_payment'
 // DATABASE MODELS
 // ============================================
 
+export interface Company {
+  id: string;
+  name: string;
+  onboarding_completed: boolean;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zip_code?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  onboarding_completed: boolean;
+  registry_number?: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  zip_code?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Role {
   id: string;
   name: RoleName;
@@ -78,10 +106,13 @@ export interface UserProfile {
   state?: string;
   postal_code?: string;
   is_active: boolean;
+  deactivated_at?: string;
+  deactivated_by?: string;
   created_at: string;
   updated_at: string;
   role?: Role;
   branch?: Branch;
+  company?: Company;
 }
 
 export interface Customer {
@@ -235,6 +266,7 @@ export interface SignupData {
   email: string;
   password: string;
   full_name: string;
+  username?: string;
   phone?: string;
   role_id?: string;
   branch_id?: string;

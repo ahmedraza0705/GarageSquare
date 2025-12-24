@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
-import { AuthService } from '@/services/auth.service';
+import { AuthService } from '@/services/auth_v2.service';
 
 export default function AccountDetailsScreen() {
     const navigation = useNavigation();

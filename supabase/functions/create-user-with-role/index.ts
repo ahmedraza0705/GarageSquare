@@ -6,18 +6,26 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.42.5';
 
+interface CreateUserRequest {
+  email: string;
+  password: string;
+  full_name?: string;
+  phone?: string;
+  role: string;
+}
+
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
 
   try {
-    const body = await req.json();
-    const { email, password, full_name, phone, role } = body ?? {};
+    const body = await req.json() as CreateUserRequest;
+    const { email, password, full_name, phone, role } = body;
 
     if (!email || !password || !role) {
       return new Response(JSON.stringify({ error: 'email, password, and role are required' }), {
@@ -53,7 +61,7 @@ serve(async (req) => {
       .from('roles')
       .select('id')
       .eq('name', role)
-      .maybeSingle();
+      .maybeSingle<{ id: string }>();
     if (roleErr || !roleRow?.id) {
       return new Response(JSON.stringify({ error: roleErr?.message || 'Role not found' }), {
         status: 400,
@@ -83,8 +91,9 @@ serve(async (req) => {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err?.message || 'Unexpected error' }), {
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Unexpected error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

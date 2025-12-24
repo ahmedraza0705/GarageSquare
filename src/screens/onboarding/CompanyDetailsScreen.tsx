@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
 import { ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/hooks/useAuth';
+import { AuthService } from '@/services/auth_v2.service';
 import { CompanyService } from '@/services/company.service';
 
 export default function CompanyDetailsScreen() {
@@ -21,25 +22,43 @@ export default function CompanyDetailsScreen() {
     const [loading, setLoading] = useState(false);
 
     const handleNext = async () => {
-        if (!companyName || !user?.profile?.company_id) {
-            if (!user?.profile?.company_id) {
-                Alert.alert('Error', 'No company associated with this user.');
-                return;
-            }
-            Alert.alert('Error', 'Please fill in required fields');
+        if (!companyName) {
+            Alert.alert('Error', 'Please enter a company name');
             return;
         }
 
         try {
             setLoading(true);
-            await CompanyService.updateCompany(user.profile.company_id, {
+            let currentCompanyId = user?.profile?.company_id;
+
+            // 1. Create company if missing
+            if (!currentCompanyId && user?.id) {
+                console.log('No company_id found, auto-linking using user.id:', user.id);
+                const newCompany = await CompanyService.createCompany(companyName, user.id);
+                if (!newCompany) throw new Error('Failed to create company');
+                currentCompanyId = newCompany.id;
+
+                // 2. Link user to company
+                await AuthService.updateProfile(user.id, {
+                    company_id: currentCompanyId
+                });
+                console.log('Linked user to company:', currentCompanyId);
+            }
+
+            if (!currentCompanyId) {
+                throw new Error('Not linked with company and failed to create one.');
+            }
+
+            // 3. Update company details
+            await CompanyService.updateCompany(currentCompanyId, {
                 name: companyName,
                 registry_number: registerNumber,
                 description: description,
-                // phone: companyPhone // If company schema has phone
             });
+
             navigation.navigate('CompanyAddress');
         } catch (error: any) {
+            console.error('Error in CompanyDetails handleNext:', error);
             Alert.alert('Error', error.message);
         } finally {
             setLoading(false);

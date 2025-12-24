@@ -3,7 +3,7 @@
 // ============================================
 
 import { useState, useEffect } from 'react';
-import { AuthService } from '@/services/auth.service';
+import { AuthService } from '@/services/auth_v2.service';
 import { AuthUser, LoginCredentials, SignupData, RoleName } from '@/types';
 
 export function useAuth() {

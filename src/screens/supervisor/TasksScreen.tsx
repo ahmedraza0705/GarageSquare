@@ -54,7 +54,7 @@ export default function SupervisorTasksScreen() {
           <TouchableOpacity
             key={task.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('TaskDetail' as never, { taskId: task.id } as never)}
+            onPress={() => (navigation as any).navigate('TaskDetail', { taskId: task.id })}
           >
             <View className="flex-row justify-between items-start mb-2">
               <Text className="text-lg font-semibold text-gray-900 flex-1">
@@ -89,4 +89,5 @@ export default function SupervisorTasksScreen() {
     </ScrollView>
   );
 }
+
 

@@ -45,6 +45,8 @@ import AccountDetailsScreen from '@/screens/shared/AccountDetailsScreen';
 import NotificationsScreen from '@/screens/shared/NotificationsScreen';
 import AboutScreen from '@/screens/shared/AboutScreen';
 import ProfilePopup from '@/components/navigation/ProfilePopup';
+import AddUserScreen from '@/screens/company-admin/AddUserScreen';
+import UserDetailScreen from '@/screens/company-admin/UserDetailScreen';
 
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
@@ -91,6 +93,8 @@ function CustomHeader({
       AccountDetails: 'Account Details',
       Notifications: 'Notifications',
       About: 'About GarageSquares',
+      AddUser: 'Add New User',
+      UserDetail: 'User Details',
     };
     return titleMap[routeName] || 'Dashboard';
   };
@@ -464,6 +468,38 @@ export default function CompanyAdminNavigator() {
       <Stack.Screen
         name="Settings"
         component={SettingsScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="AddUser"
+        component={AddUserScreen}
+        options={{
+          headerShown: true,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
+        }}
+      />
+      <Stack.Screen
+        name="UserDetail"
+        component={UserDetailScreen}
         options={{
           headerShown: true,
           header: ({ route }) => (

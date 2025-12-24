@@ -62,7 +62,7 @@ export default function CustomerMyVehiclesScreen() {
           <TouchableOpacity
             key={vehicle.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never)}
+            onPress={() => (navigation as any).navigate('VehicleDetail', { vehicleId: vehicle.id })}
           >
             <Text className="text-lg font-semibold text-gray-900 mb-2">
               {vehicle.make} {vehicle.model}
@@ -94,4 +94,5 @@ export default function CustomerMyVehiclesScreen() {
     </ScrollView>
   );
 }
+
 

@@ -11,6 +11,7 @@ export interface CreateBranchData {
     phone?: string;
     email?: string;
     manager_id?: string;
+    company_id?: string;
     is_active?: boolean;
 }
 
@@ -73,6 +74,7 @@ export class BranchService {
                 phone: branchData.phone,
                 email: branchData.email,
                 manager_id: branchData.manager_id || null,
+                company_id: branchData.company_id || null,
                 is_active: branchData.is_active ?? true,
             })
             .select()

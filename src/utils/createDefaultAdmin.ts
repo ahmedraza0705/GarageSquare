@@ -3,7 +3,7 @@
 // ============================================
 
 import * as SecureStore from 'expo-secure-store';
-import { AuthService } from '@/services/auth.service';
+import { AuthService } from '@/services/auth_v2.service';
 
 const STORAGE_KEYS = {
   USERS: 'garage_square_users',
@@ -18,7 +18,7 @@ export async function getAllUsers() {
     if (!usersJson) {
       return [];
     }
-    
+
     const users: Array<{ email: string; password: string; userData: any }> = JSON.parse(usersJson);
     return users.map(u => ({
       email: u.email,
@@ -42,7 +42,7 @@ export async function createDefaultAdmin() {
     // Check if admin already exists
     const users = await getAllUsers();
     const adminExists = users.some(u => u.email.toLowerCase() === 'varun2@gmail.com');
-    
+
     if (adminExists) {
       console.log('Company Admin (varun2@gmail.com) already exists!');
       return { success: false, message: 'Company Admin already exists' };
@@ -60,7 +60,7 @@ export async function createDefaultAdmin() {
     console.log('Default Company Admin created successfully!');
     console.log('Email: varun2@gmail.com');
     console.log('Password: 123456');
-    
+
     return { success: true, message: 'Default admin created', user: result };
   } catch (error: any) {
     console.error('Error creating default admin:', error);

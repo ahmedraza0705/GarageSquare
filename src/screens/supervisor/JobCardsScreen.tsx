@@ -67,7 +67,7 @@ export default function SupervisorJobCardsScreen() {
           <TouchableOpacity
             key={jobCard.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('JobCardDetail' as never, { jobCardId: jobCard.id } as never)}
+            onPress={() => (navigation as any).navigate('JobCardDetail', { jobCardId: jobCard.id })}
           >
             <View className="flex-row justify-between items-start mb-2">
               <Text className="text-lg font-semibold text-gray-900">
@@ -102,4 +102,5 @@ export default function SupervisorJobCardsScreen() {
     </ScrollView>
   );
 }
+
 
