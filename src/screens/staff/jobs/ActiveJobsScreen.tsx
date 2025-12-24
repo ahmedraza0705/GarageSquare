@@ -147,11 +147,11 @@ export default function ActiveJobsScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
+          <Image source={require('../../../assets/Arrow.png')} style={styles.backIcon} />
         </TouchableOpacity>
-        
+
         <Text style={styles.headerTitle}>Active Jobs</Text>
-        
+
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => setDarkMode(!darkMode)}
@@ -186,7 +186,7 @@ export default function ActiveJobsScreen() {
                 <Text style={styles.filterIcon}>🔽</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.addButton}
               onPress={() => {
                 // @ts-ignore

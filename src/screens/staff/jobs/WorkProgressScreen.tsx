@@ -29,7 +29,7 @@ export default function WorkProgressScreen() {
             {/* Header */}
             <View className="px-4 py-4 border-b border-gray-100 flex-row items-center">
                 <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-                    <Image source={require('../../assets/Arrow.png')} className="w-6 h-6 tint-gray-900" />
+                    <Image source={require('../../../assets/Arrow.png')} className="w-6 h-6 tint-gray-900" />
                 </TouchableOpacity>
                 <View className="flex-1">
                     <Text className="text-xl font-bold text-gray-900">Work Progress</Text>

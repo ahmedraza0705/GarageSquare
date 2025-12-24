@@ -77,11 +77,13 @@ export default function JobCardDetailScreen() {
   const loadJobCard = async () => {
     try {
       setLoading(true);
-      
+
       // Try to load from service first
       try {
         const data = await JobCardService.getById(jobCardId);
-        setJobCard(data);
+        if (data) {
+          setJobCard(data);
+        }
       } catch (serviceError) {
         // If service fails, use static data for demo
         console.log('Service unavailable, using static data');
@@ -129,7 +131,7 @@ export default function JobCardDetailScreen() {
             },
           },
         ];
-        
+
         const foundJobCard = staticJobCards.find(jc => jc.id === jobCardId);
         if (foundJobCard) {
           setJobCard(foundJobCard);
@@ -192,7 +194,7 @@ export default function JobCardDetailScreen() {
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           >
-            <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
+            <Image source={require('../../../assets/Arrow.png')} style={styles.backIcon} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Active Jobs</Text>
           <View style={styles.headerRight}>
@@ -226,7 +228,7 @@ export default function JobCardDetailScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
+          <Image source={require('../../../assets/Arrow.png')} style={styles.backIcon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Active Jobs</Text>
         <View style={styles.headerRight}>
@@ -265,7 +267,7 @@ export default function JobCardDetailScreen() {
               <Text style={styles.infoLabel}>VIN:</Text>
               <Text style={styles.infoValue}>{jobCard.vehicle?.license_plate || jobCard.vehicle?.vin || 'N/A'}</Text>
             </View>
-            
+
             <View style={styles.vehicleRow}>
               <Text style={styles.vehicleModel}>
                 {jobCard.vehicle?.make} {jobCard.vehicle?.model}
@@ -294,11 +296,11 @@ export default function JobCardDetailScreen() {
             {/* Left Column - Job Tasks */}
             <View style={styles.leftColumn}>
               <Text style={styles.sectionTitle}>Job Tasks</Text>
-              
+
               {mockTasks.map((task) => {
                 const statusBadge = getTaskStatusBadge(task.status);
                 const actionButton = getTaskActionButton(task.status);
-                
+
                 return (
                   <View key={task.id} style={styles.taskItem}>
                     <View style={styles.taskHeader}>

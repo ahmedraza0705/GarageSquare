@@ -11,8 +11,8 @@ import MyVehiclesScreen from '@/screens/customer/MyVehiclesScreen';
 import MyJobCardsScreen from '@/screens/customer/MyJobCardsScreen';
 import MyPaymentsScreen from '@/screens/customer/MyPaymentsScreen';
 import SettingsScreen from '@/screens/shared/SettingsScreen';
-import VehicleDetailScreen from '@/screens/shared/VehicleDetailScreen';
-import JobCardDetailScreen from '@/screens/shared/JobCardDetailScreen';
+import VehicleDetailScreen from '@/screens/staff/operations/VehicleDetailScreen';
+import JobCardDetailScreen from '@/screens/staff/jobs/JobCardDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();

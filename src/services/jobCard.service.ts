@@ -52,7 +52,7 @@ export class JobCardService {
   /**
    * Get job card by ID
    */
-  static async getById(id: string) {
+  static async getById(id: string): Promise<JobCard | null> {
     // COMMENTED OUT - Supabase removed
     // const { data, error } = await supabase
     //   .from('job_cards')

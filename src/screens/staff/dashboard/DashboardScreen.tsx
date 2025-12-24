@@ -1,15 +1,17 @@
 // ============================================
-// COMPANY ADMIN DASHBOARD
+// DASHBOARD SCREEN
 // ============================================
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
+import TechnicianDashboard from './TechnicianDashboard';
 import * as SecureStore from 'expo-secure-store';
 
-export default function CompanyAdminDashboard() {
+function CompanyAdminDashboard() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const [stats, setStats] = useState({
@@ -266,6 +268,17 @@ export default function CompanyAdminDashboard() {
       </ScrollView>
     </View>
   );
+}
+
+// MAIN DASHBOARD SCREEN EXPORT
+export default function DashboardScreen() {
+  const { isTechnician } = useRole();
+
+  if (isTechnician) {
+    return <TechnicianDashboard />;
+  }
+
+  return <CompanyAdminDashboard />;
 }
 
 const styles = StyleSheet.create({

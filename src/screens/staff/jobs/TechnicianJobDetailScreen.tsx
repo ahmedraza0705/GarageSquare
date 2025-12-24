@@ -78,7 +78,7 @@ export default function TechnicianJobDetailScreen() {
             <View className="bg-white px-4 pt-12 pb-4 border-b border-gray-200">
                 <View className="flex-row items-center justify-between mb-4">
                     <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 -ml-2">
-                        <Image source={require('../../assets/Arrow.png')} className="w-6 h-6 tint-gray-800" />
+                        <Image source={require('../../../assets/Arrow.png')} className="w-6 h-6 tint-gray-800" />
                     </TouchableOpacity>
                     <Text className="text-lg font-bold text-gray-900">{jobData.job_number}</Text>
                     <View className="w-8" />
