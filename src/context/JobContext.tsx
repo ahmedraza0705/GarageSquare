@@ -112,6 +112,11 @@ export function JobProvider({ children }: { children: ReactNode }) {
                 updatedAt: jc.updated_at ? new Date(jc.updated_at).getTime() : Date.now(),
             }));
             setJobs(mappedJobs);
+
+            // DEBUG LOGGING
+            if (mappedJobs.length > 0) {
+                console.log('[JobContext] First mapped job services:', JSON.stringify(mappedJobs[0].services, null, 2));
+            }
         } catch (error) {
             console.error('Error loading jobs from DB:', error);
         } finally {

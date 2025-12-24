@@ -50,6 +50,15 @@ export class JobCardService {
       console.error('Error fetching job cards:', error);
       throw error;
     }
+
+    // DEBUG LOGGING
+    if (data && data.length > 0) {
+      console.log('[JobCardService] First job card raw services:', JSON.stringify(data[0].services, null, 2));
+      console.log('[JobCardService] First job card raw tasks:', JSON.stringify(data[0].tasks, null, 2));
+    } else {
+      console.log('[JobCardService] No job cards found or empty data');
+    }
+
     return data as JobCard[];
   }
 

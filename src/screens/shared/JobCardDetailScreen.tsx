@@ -464,6 +464,12 @@ export default function JobCardDetailScreen() {
     status: 'pending'
   }));
 
+  // DEBUG LOGGING
+  useEffect(() => {
+    console.log(`[JobCardDetails] Job ${jobCardId} services:`, currentJob?.services);
+    console.log(`[JobCardDetails] Dynamic Tasks:`, dynamicTasks);
+  }, [currentJob, dynamicTasks]);
+
   // Derive Dynamic Charges
   const dynamicCharges: Charge[] = dynamicTasks.map((task, index) => ({
     id: `c-${task.id}`,

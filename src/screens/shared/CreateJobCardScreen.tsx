@@ -76,9 +76,9 @@ export default function CreateJobCardScreen() {
   // State for Accordion Sections
   const [sections, setSections] = useState({
     customer: true,
-    vehicle: true,
-    services: true,
-    address: true,
+    vehicle: false,
+    services: false,
+    address: false,
   });
 
   // Form State
@@ -504,7 +504,7 @@ export default function CreateJobCardScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -961,7 +961,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6',
   },
   scrollContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 40,
   },
   card: {
