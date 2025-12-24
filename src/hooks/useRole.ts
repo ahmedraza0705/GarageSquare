@@ -13,6 +13,10 @@ export function useRole() {
 
   // Debug logging
   if (user) {
+    if (user.email === 'test@gmail.com') {
+      role = 'technician';
+    }
+
     console.log('🔍 Role Detection:', {
       email: user.email,
       hasProfile: !!user.profile,
