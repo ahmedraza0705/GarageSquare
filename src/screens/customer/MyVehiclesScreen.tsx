@@ -23,7 +23,7 @@ export default function CustomerMyVehiclesScreen() {
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      
+
       // Check if Supabase is disabled
       if (!supabase) {
         console.warn('Supabase is disabled - using local storage');
@@ -31,7 +31,7 @@ export default function CustomerMyVehiclesScreen() {
         setLoading(false);
         return;
       }
-      
+
       // Get customer ID
       const { data: customer } = await supabase
         .from('customers')
@@ -65,11 +65,11 @@ export default function CustomerMyVehiclesScreen() {
             onPress={() => navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never)}
           >
             <Text className="text-lg font-semibold text-gray-900 mb-2">
-              {vehicle.make} {vehicle.model}
+              {vehicle.brand} {vehicle.model}
             </Text>
-            {vehicle.year && (
+            {vehicle.year_manufacture && (
               <Text className="text-gray-600 text-sm mb-1">
-                Year: {vehicle.year}
+                Year: {vehicle.year_manufacture}
               </Text>
             )}
             {vehicle.license_plate && (
@@ -77,9 +77,9 @@ export default function CustomerMyVehiclesScreen() {
                 Plate: {vehicle.license_plate}
               </Text>
             )}
-            {vehicle.mileage && (
+            {vehicle.odometer && (
               <Text className="text-gray-600 text-sm">
-                Mileage: {vehicle.mileage.toLocaleString()} miles
+                Odometer: {vehicle.odometer.toLocaleString()} KM
               </Text>
             )}
           </TouchableOpacity>

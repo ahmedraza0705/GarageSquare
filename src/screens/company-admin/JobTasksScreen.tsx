@@ -76,7 +76,9 @@ export default function JobTasksScreen() {
         // Check if all tasks are completed
         const services = job.services || [];
         const completedServices = job.completedServices || [];
-        const allTasksDone = services.length > 0 && services.every(s => completedServices.includes(s));
+        const allTasksDone = services.length > 0 && services.every((s: any) =>
+            completedServices.includes(typeof s === 'string' ? s : s.name)
+        );
 
         // If trying to mark as complete (turning it true), enforce validation
         if (!currentStatus && !allTasksDone) {
@@ -136,7 +138,7 @@ export default function JobTasksScreen() {
                         // 2. Visual Toggle (Blue Button)
                         toggleDelivery(jobId);
 
-                        // 3. Remove from list after delay (Archiving)
+                        // 3. Update status to Delivered (job will disappear from Done tab)
                         setTimeout(() => {
                             updateJobStatus(jobId, 'Delivered', { deliveryCompleted: true });
                         }, 1000);
@@ -257,13 +259,13 @@ export default function JobTasksScreen() {
                 {/* Header: Job Card No, Status & Price */}
                 <View style={styles.cardHeader}>
                     <View style={styles.cardHeaderLeft}>
-                        <Text style={styles.jobId}>Job Card {job.jobId}</Text>
+                        <Text style={styles.jobId}>{job.jobId}</Text>
                         {job.priority === 'Urgent' && (
                             <View style={[styles.statusBadge, { backgroundColor: '#ef4444' }]}>
                                 <Text style={styles.statusText}>Urgent</Text>
                             </View>
                         )}
-                        {job.status?.toLowerCase() !== 'urgent' && (
+                        {job.priority !== 'Urgent' && job.status?.toLowerCase() !== 'urgent' && (
                             <View style={[styles.statusBadge, {
                                 backgroundColor: job.status?.toLowerCase() === 'waiting' ? '#f59e0b' :
                                     activeTab === 'done' ? '#22c55e' : '#4682B4'
@@ -326,14 +328,14 @@ export default function JobTasksScreen() {
                         <Text style={styles.deliveryLabelTop}>Delivery due:</Text>
                         <Text style={styles.deliveryValueLarge}>
                             {activeTab === 'pending'
-                                ? (job.deliveryDue || '4:00 PM')
-                                : calculateTimeLeft(job.deliveryDate || '07-01-2026', job.deliveryDue)
+                                ? (job.deliveryDue || '')
+                                : calculateTimeLeft(job.deliveryDate || '', job.deliveryDue)
                             }
                         </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                         <Text style={styles.deliveryLabelTop}>Delivery date:</Text>
-                        <Text style={styles.deliveryValueLarge}>{job.deliveryDate || '07-01-2026'}</Text>
+                        <Text style={styles.deliveryValueLarge}>{job.deliveryDate || ''}</Text>
                     </View>
                 </View>
 

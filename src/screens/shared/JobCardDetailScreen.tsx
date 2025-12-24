@@ -3,13 +3,37 @@
 // ============================================
 
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Dimensions, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Image, Dimensions, Platform, Alert, Modal, TextInput, Keyboard } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Trash2, Plus, ChevronDown, ChevronUp, Menu, X, Check, Undo2, LayoutDashboard, Building2, Users, FileBarChart, ChevronLeft, RotateCcw, UserCheck } from 'lucide-react-native';
 import Svg, { Circle, G, Text as SvgText } from 'react-native-svg';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useJobs } from '../../context/JobContext';
+import { useJobs, Job, ServiceDetail } from '../../context/JobContext';
+
+// --- CONSTANTS ---
+const COMMON_SERVICES = [
+  'Oil Change',
+  'Brake Pad Replacement',
+  'Battery Replacement',
+  'Tire Rotation',
+  'AC Recharge',
+  'Wheel Alignment',
+  'Suspension Repair',
+  'Engine Diagnostics',
+  'Alternator Repair',
+  'Spark Plug Replacement',
+  'Exhaust Leak Repair',
+  'Transmission Flush',
+  'Wheel Balancing',
+  'Radiator Flush',
+  'Belt Replacement',
+  'Headlight Restoration',
+  'Fuel Filter Replacement',
+  'Clutch Repair',
+  'Power Steering Flush',
+  'Cabin Air Filter Change',
+];
 
 // Screen Dimensions
 const { width } = Dimensions.get('window');
@@ -37,79 +61,6 @@ interface QualityCheck {
   name: string;
   status: 'pending' | 'approved' | 'rejected';
 }
-
-// --- STATIC DATA ---
-const STATIC_DATA = {
-  jobCardNumber: 'SA0001',
-  vehicle: {
-    vin: 'GJ-05-RT-2134',
-    customerName: 'Ahmed Raza',
-    phone: '+91 9890938291',
-    carBrand: 'Honda City',
-  },
-  tasks: [
-    {
-      id: '1',
-      title: 'Replace Battery',
-      assignedTo: '(Saafir)',
-      estimate: '20 min',
-      cost: 7000,
-      status: 'pending',
-    },
-    {
-      id: '2',
-      title: 'Engine oil change',
-      assignedTo: '(varun)',
-      estimate: '30 min',
-      cost: 2000,
-      status: 'pending',
-    },
-    {
-      id: '3',
-      title: 'Paint Job',
-      assignedTo: '',
-      estimate: '1 hour',
-      cost: 50000,
-      status: 'pending',
-    },
-    {
-      id: '4',
-      title: 'Change Tires',
-      assignedTo: '',
-      estimate: '30 min',
-      cost: 50000,
-      status: 'pending',
-    },
-    // Adding dummy tasks to match "6 Total task" in mockup
-    {
-      id: '5',
-      title: 'AC repair',
-      assignedTo: '',
-      estimate: '45 min',
-      cost: 1500,
-      status: 'pending',
-    },
-    {
-      id: '6',
-      title: 'Washing',
-      assignedTo: '',
-      estimate: '20 min',
-      cost: 500,
-      status: 'pending',
-    }
-  ] as Task[],
-  charges: [
-    { id: '1', description: 'Replace Battery', details: 'Items: Battery x 1', cost: 7000 },
-    { id: '2', description: 'Engine oil change', details: 'Items: Purl Synt x 5 Quantity', cost: 2000 },
-    { id: '3', description: 'Paint Job', details: 'Ref: Purl White x 2 Quantity', cost: 10000 },
-    { id: '4', description: 'AC repair', details: 'Ref: Part Name x Quantity', cost: 1500 },
-  ] as Charge[],
-  qualityChecks: [
-    { id: '1', role: 'Technician Manager', name: 'Varun', status: 'pending' },
-    { id: '2', role: 'Technician', name: 'Varun', status: 'pending' },
-    { id: '3', role: 'Technician', name: 'Ahmed', status: 'pending' },
-  ] as QualityCheck[]
-};
 
 // --- COMPONENTS ---
 
@@ -455,6 +406,15 @@ export default function JobCardDetailScreen() {
   const route = useRoute<any>();
   const { jobs, setJobDetails, deleteJob, updateJobStatus } = useJobs();
 
+  // Add Service Modal State
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newEstimateHour, setNewEstimateHour] = useState('');
+  const [newEstimateMin, setNewEstimateMin] = useState('');
+  const [newCost, setNewCost] = useState('');
+  const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+  const [stagedServices, setStagedServices] = useState<ServiceDetail[]>([]);
+
   // Get jobCardId from route params, default to '2' (SA0001) for demo persistence
   const jobCardId = route.params?.jobCardId || '2';
   const currentJob = jobs.find(j => j.id === jobCardId);
@@ -468,9 +428,13 @@ export default function JobCardDetailScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => {
-            deleteJob(jobCardId);
-            navigation.goBack();
+          onPress: async () => {
+            try {
+              await deleteJob(jobCardId);
+              navigation.goBack();
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete job card. Please try again.");
+            }
           }
         }
       ]
@@ -478,17 +442,20 @@ export default function JobCardDetailScreen() {
   };
 
   const jobToDisplay = currentJob || {
-    ...STATIC_DATA,
-    id: 'static',
-    jobId: STATIC_DATA.jobCardNumber,
-    services: STATIC_DATA.tasks.map(t => ({ name: t.title, cost: t.cost, estimate: t.estimate })),
+    id: jobCardId,
+    jobId: 'N/A',
+    services: [],
     taskStatuses: {},
     qualityStatuses: {},
-    status: 'Pending'
-  };
+    status: 'Pending',
+    customer: 'Loading...',
+    vehicle: 'Loading...',
+    regNo: 'N/A',
+    amount: '₹0'
+  } as Job;
 
   // Derive Dynamic Tasks from Job Services
-  const dynamicTasks: Task[] = (jobToDisplay.services || []).map((service, index) => ({
+  const dynamicTasks: Task[] = (jobToDisplay.services || []).map((service: ServiceDetail, index: number) => ({
     id: service.name, // Use name as ID
     title: service.name,
     assignedTo: currentJob?.assignedTech ? `(${currentJob.assignedTech})` : '',
@@ -505,20 +472,17 @@ export default function JobCardDetailScreen() {
     cost: task.cost
   }));
 
-  // Initialize statuses from Context if they exist, otherwise default to pending/appropriate status
-  const [taskStatuses, setTaskStatuses] = useState<Record<string, Task['status']>>(() => {
-    if (jobToDisplay.status === 'Done' || jobToDisplay.status === 'Delivered') {
-      const allDone: Record<string, Task['status']> = {};
-      dynamicTasks.forEach(t => { allDone[t.id] = 'complete'; });
-      return (jobToDisplay.taskStatuses as any) || allDone;
-    }
-    const initialStatuses: Record<string, Task['status']> = {};
+  // Derive statuses directly from Job object to ensure live updates
+  const taskStatuses = (() => {
+    const statuses = { ...(jobToDisplay.taskStatuses || {}) } as Record<string, Task['status']>;
+    // Ensure all dynamic tasks have at least a 'pending' status if not set
     dynamicTasks.forEach(t => {
-      // Load saved status or default to 'pending'
-      initialStatuses[t.id] = (jobToDisplay.taskStatuses as any)?.[t.id] || 'pending';
+      if (!statuses[t.id]) {
+        statuses[t.id] = (jobToDisplay.status === 'Done' || jobToDisplay.status === 'Delivered') ? 'complete' : 'pending';
+      }
     });
-    return initialStatuses;
-  });
+    return statuses;
+  })();
 
   // Derive Dynamic Quality Checks
   const dynamicQualityChecks: QualityCheck[] = [
@@ -534,29 +498,17 @@ export default function JobCardDetailScreen() {
       name: currentJob?.assignedTech || 'Unassigned',
       status: 'pending'
     },
-    // Adding a second technician slot if needed, or keeping generic. 
-    // For now assuming 1 main tech, but keeping structure similar to mock for visual consistency
-    {
-      id: '3',
-      role: 'Technician',
-      name: 'Ahmed', // Keeping static secondary or removal? User asked for "Technician Manager". 
-      // I will stick to the main request for Manager, and keeping Technician 1 as the assigned tech too effectively.
-      status: 'pending'
-    },
   ];
 
-  const [qualityStatuses, setQualityStatuses] = useState<Record<string, QualityCheck['status']>>(() => {
-    if (jobToDisplay.status === 'Done' || jobToDisplay.status === 'Delivered') {
-      const allApproved: Record<string, QualityCheck['status']> = {};
-      dynamicQualityChecks.forEach(q => { allApproved[q.id] = 'approved'; });
-      return (jobToDisplay.qualityStatuses as any) || allApproved;
-    }
-    return (jobToDisplay.qualityStatuses as any) ||
-      dynamicQualityChecks.reduce((acc, check) => ({
-        ...acc,
-        [check.id]: check.status
-      }), {});
-  });
+  const qualityStatuses = (() => {
+    const statuses = { ...(jobToDisplay.qualityStatuses || {}) } as Record<string, QualityCheck['status']>;
+    dynamicQualityChecks.forEach(q => {
+      if (!statuses[q.id]) {
+        statuses[q.id] = (jobToDisplay.status === 'Done' || jobToDisplay.status === 'Delivered') ? 'approved' : 'pending';
+      }
+    });
+    return statuses;
+  })();
 
   // Calculate Total dynamically from Charges
   const calculateTotal = () => {
@@ -572,13 +524,21 @@ export default function JobCardDetailScreen() {
   });
 
   // Auto-move to Done logic
+  // Auto-move to Done logic
   useEffect(() => {
     if (!currentJob || currentJob.status === 'Done' || currentJob.status === 'Delivered') return;
 
-    const allTasksComplete = Object.values(taskStatuses).every(status => status === 'complete');
+    const statuses = Object.values(taskStatuses);
+    // Filter out rejected tasks - they don't count towards completion requirement
+    const validStatuses = statuses.filter(s => s !== 'rejected');
+    const allTasksComplete = validStatuses.length > 0 && validStatuses.every(status => status === 'complete');
+
+    // If all tasks are rejected, we can also consider it complete (nothing left to do)
+    const isTotallyRejected = statuses.length > 0 && validStatuses.length === 0;
+
     const allQCApproved = Object.values(qualityStatuses).every(status => status === 'approved');
 
-    if (allTasksComplete && allQCApproved) {
+    if ((allTasksComplete || isTotallyRejected) && allQCApproved) {
       updateJobStatus(currentJob.id, 'Done', {
         workCompleted: true,
         qualityCheckCompleted: true
@@ -598,7 +558,6 @@ export default function JobCardDetailScreen() {
       ...taskStatuses,
       [taskId]: newStatus
     };
-    setTaskStatuses(updatedStatuses);
 
     // Persist to Global Context
     if (currentJob) {
@@ -612,7 +571,6 @@ export default function JobCardDetailScreen() {
       ...qualityStatuses,
       [checkId]: newStatus
     };
-    setQualityStatuses(updatedStatuses);
 
     // Persist to Global Context
     if (currentJob) {
@@ -620,14 +578,75 @@ export default function JobCardDetailScreen() {
     }
   };
 
+  const filteredServices = COMMON_SERVICES.filter(service =>
+    service.toLowerCase().includes(newServiceName.toLowerCase())
+  );
+
+  const handleAddServiceManual = () => {
+    if (!newServiceName || !newCost) {
+      Alert.alert('Error', 'Please enter service name and cost');
+      return;
+    }
+
+    const timeStr = `${newEstimateHour || '0'}h ${newEstimateMin || '0'}m`;
+    const newService = {
+      name: newServiceName,
+      cost: parseFloat(newCost),
+      estimate: timeStr
+    };
+
+    setStagedServices(prev => [...prev, newService]);
+
+    // Reset inputs but keep modal open
+    setNewServiceName('');
+    setNewEstimateHour('');
+    setNewEstimateMin('');
+    setNewCost('');
+    Keyboard.dismiss();
+  };
+
+  const handleRemoveStagedService = (index: number) => {
+    setStagedServices(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitStagedServices = () => {
+    if (stagedServices.length === 0) {
+      Alert.alert('Error', 'Please add at least one service');
+      return;
+    }
+
+    if (currentJob) {
+      const updatedServices = [...(currentJob.services || []), ...stagedServices];
+
+      // Update task statuses for all new services
+      const newTaskStatuses = { ...taskStatuses };
+      stagedServices.forEach(s => {
+        newTaskStatuses[s.name] = 'pending';
+      });
+
+      setJobDetails(currentJob.id, {
+        services: updatedServices,
+        taskStatuses: newTaskStatuses
+      });
+
+      setStagedServices([]);
+      setModalVisible(false);
+      Alert.alert('Success', `${stagedServices.length} service(s) added successfully`);
+    }
+  };
+
   // Calculate task summary statistics dynamically
   const calculateTaskSummary = () => {
     const statuses = Object.values(taskStatuses);
-    const total = statuses.length;
+    const totalRaw = statuses.length;
     const complete = statuses.filter(status => status === 'complete').length;
     const rejected = statuses.filter(status => status === 'rejected').length;
 
-    return { total, complete, rejected };
+    // Adjusted Total: Exclude rejected from the denominator so percentage hits 100%
+    // If 6 tasks, 1 rejected, 5 complete -> Total should be considered 5 for the chart.
+    const effectiveTotal = totalRaw - rejected;
+
+    return { total: effectiveTotal, complete, rejected };
   };
 
   const taskSummary = calculateTaskSummary();
@@ -650,7 +669,10 @@ export default function JobCardDetailScreen() {
             >
               <Trash2 size={18} color="#000" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconButton, { backgroundColor: '#a7f3d0' }]}>
+            <TouchableOpacity
+              style={[styles.iconButton, { backgroundColor: '#a7f3d0' }]}
+              onPress={() => setModalVisible(true)}
+            >
               <Plus size={18} color="#000" />
             </TouchableOpacity>
           </View>
@@ -660,8 +682,7 @@ export default function JobCardDetailScreen() {
 
           {/* Job Card Banner */}
           <View style={styles.bannerContainer}>
-            <Text style={styles.bannerLabel}>Job Card:</Text>
-            <Text style={styles.bannerValue}>{currentJob?.jobId || STATIC_DATA.jobCardNumber}</Text>
+            <Text style={styles.bannerValue}>{jobToDisplay.jobId}</Text>
             {currentJob?.status === 'Urgent' && (
               <View style={styles.urgentBadge}>
                 <Text style={styles.urgentText}>Urgent</Text>
@@ -776,6 +797,147 @@ export default function JobCardDetailScreen() {
 
         </ScrollView>
 
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => {
+              setModalVisible(false);
+              setShowServiceDropdown(false);
+            }}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.modalContainer}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Services:</Text>
+                <TouchableOpacity onPress={() => setModalVisible(false)}>
+                  <ChevronDown size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.modalContentStyle}
+              >
+                <Text style={styles.modalFieldLabel}>Service Details</Text>
+                <View style={styles.inputSearchWrapper}>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="select service"
+                    placeholderTextColor="#9ca3af"
+                    value={newServiceName}
+                    onChangeText={(text) => {
+                      setNewServiceName(text);
+                      setShowServiceDropdown(true);
+                    }}
+                    onFocus={() => setShowServiceDropdown(true)}
+                  />
+                  {showServiceDropdown && filteredServices.length > 0 && (
+                    <View style={styles.dropdownContainer}>
+                      <ScrollView
+                        style={{ maxHeight: 150 }}
+                        keyboardShouldPersistTaps="handled"
+                        nestedScrollEnabled={true}
+                      >
+                        {filteredServices.map((service, index) => (
+                          <TouchableOpacity
+                            key={index}
+                            style={styles.dropdownItem}
+                            onPress={() => {
+                              setNewServiceName(service);
+                              setShowServiceDropdown(false);
+                              Keyboard.dismiss();
+                            }}
+                          >
+                            <Text style={styles.dropdownItemText}>{service}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.modalEstimateRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalFieldLabel}>Estimate:</Text>
+                    <Text style={styles.modalSubLabel}>Time</Text>
+                    <View style={styles.timeInputs}>
+                      <TextInput
+                        style={[styles.modalInput, { flex: 1, marginRight: 8 }]}
+                        placeholder="Hour"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="numeric"
+                        value={newEstimateHour}
+                        onChangeText={setNewEstimateHour}
+                      />
+                      <TextInput
+                        style={[styles.modalInput, { flex: 1 }]}
+                        placeholder="Minute"
+                        placeholderTextColor="#9ca3af"
+                        keyboardType="numeric"
+                        value={newEstimateMin}
+                        onChangeText={setNewEstimateMin}
+                      />
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.modalCostRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalFieldLabel}>Cost:</Text>
+                    <TextInput
+                      style={styles.modalInput}
+                      placeholder="Cost"
+                      placeholderTextColor="#9ca3af"
+                      keyboardType="numeric"
+                      value={newCost}
+                      onChangeText={setNewCost}
+                    />
+                  </View>
+                  <TouchableOpacity
+                    style={styles.modalAddButton}
+                    onPress={handleAddServiceManual}
+                  >
+                    <Text style={styles.modalAddButtonText}>add</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Staged Services List */}
+                {stagedServices.length > 0 && (
+                  <View style={styles.stagedServicesContainer}>
+                    <Text style={[styles.modalFieldLabel, { marginTop: 20 }]}>Staged Services:</Text>
+                    {stagedServices.map((service, index) => (
+                      <View key={index} style={styles.stagedServiceItem}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.stagedServiceName}>{service.name}</Text>
+                          <Text style={styles.stagedServiceDetail}>{service.estimate} • ₹{service.cost}</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => handleRemoveStagedService(index)}>
+                          <Trash2 size={20} color="#ef4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+
+                    <TouchableOpacity
+                      style={styles.modalSubmitButton}
+                      onPress={handleSubmitStagedServices}
+                    >
+                      <Text style={styles.modalSubmitButtonText}>Submit {stagedServices.length} Service(s)</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </GestureHandlerRootView>
   );
@@ -784,7 +946,151 @@ export default function JobCardDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e5e7eb', // Light gray bg
+    backgroundColor: '#e5e7eb',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', // Center it a bit, or keep it bottom like accordion
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 25,
+    padding: 20,
+    maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: '#9ca3af',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  modalContentStyle: {
+    paddingBottom: 20,
+  },
+  modalFieldLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 5,
+  },
+  modalSubLabel: {
+    fontSize: 14,
+    color: '#000',
+    marginBottom: 5,
+  },
+  modalInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#000',
+    marginBottom: 10,
+  },
+  inputSearchWrapper: {
+    position: 'relative',
+    zIndex: 1000,
+  },
+  dropdownContainer: {
+    position: 'absolute',
+    top: 55,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    zIndex: 1001,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#000',
+  },
+  modalEstimateRow: {
+    marginBottom: 15,
+  },
+  timeInputs: {
+    flexDirection: 'row',
+  },
+  modalCostRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 15,
+  },
+  modalAddButton: {
+    backgroundColor: '#4682B4',
+    paddingHorizontal: 25,
+    paddingVertical: 12,
+    borderRadius: 8,
+    height: 48,
+    justifyContent: 'center',
+  },
+  modalAddButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  stagedServicesContainer: {
+    marginTop: 10,
+  },
+  stagedServiceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  stagedServiceName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  stagedServiceDetail: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginTop: 2,
+  },
+  modalSubmitButton: {
+    backgroundColor: '#22c55e',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: 'center',
+    shadowColor: '#22c55e',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  modalSubmitButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   header: {
     flexDirection: 'row',
@@ -1060,7 +1366,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   },
   qualityLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#000'
   },

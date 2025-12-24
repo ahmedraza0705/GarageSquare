@@ -277,6 +277,17 @@ export class AuthService {
       if (error.name === 'AuthSessionMissingError') {
         return null;
       }
+
+      // Handle "Invalid Refresh Token" crash
+      // Supabase throws this when the refresh token in storage is stale/invalid/revoked.
+      // Instead of crashing the app (Red Box), we should safely log the user out.
+      const msg = error.message.toLowerCase();
+      if (msg.includes('refresh token') || msg.includes('not found')) {
+        console.warn(`[AuthService] Refresh token invalid (${error.message}). Logging out safely.`);
+        await this.signOut();
+        return null;
+      }
+
       throw error;
     }
 

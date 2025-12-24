@@ -485,20 +485,14 @@ export default function CompanyAdminNavigator() {
         name="CreateCustomer"
         component={CreateCustomerScreen}
         options={{
-          headerShown: true,
-          title: 'Add Customer',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name="CreateVehicle"
         component={CreateVehicleScreen}
         options={{
-          headerShown: true,
-          title: 'Add Vehicle',
-          headerStyle: { backgroundColor: '#ffffff' },
-          headerTintColor: '#000000',
+          headerShown: false,
         }}
       />
       <Stack.Screen

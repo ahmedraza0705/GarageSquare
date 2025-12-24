@@ -125,9 +125,9 @@ export default function CreateVehicleScreen() {
 
       await VehicleService.create({
         customer_id: customerId,
-        make: vehicleData.brand,
+        brand: vehicleData.brand,
         model: vehicleData.model,
-        year: vehicleData.year_manufacture,
+        year_manufacture: vehicleData.year_manufacture,
         year_purchase: vehicleData.year_purchase,
         fuel_type: vehicleData.fuel_type,
         delivery_type: vehicleData.delivery_type,

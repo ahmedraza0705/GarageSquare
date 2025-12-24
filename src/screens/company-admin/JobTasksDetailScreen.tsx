@@ -120,7 +120,7 @@ export default function JobTasksDetailScreen() {
                 <View style={styles.card}>
                     {/* Top Info */}
                     <View style={styles.jobHeader}>
-                        <Text style={styles.jobTitle}>Job Card: {jobData.id}</Text>
+                        <Text style={styles.jobTitle}>{jobData.id}</Text>
                         {jobData.priority === 'Urgent' && (
                             <View style={styles.urgentBadge}><Text style={styles.urgentText}>{jobData.priority}</Text></View>
                         )}

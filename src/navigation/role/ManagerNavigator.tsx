@@ -90,8 +90,8 @@ export default function ManagerNavigator() {
       <Stack.Screen name="CustomerDetail" component={CustomerDetailScreen} options={{ title: 'Customer Details' }} />
       <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} options={{ title: 'Vehicle Details' }} />
       <Stack.Screen name="JobCardDetail" component={JobCardDetailScreen} options={{ title: 'Job Card Details' }} />
-      <Stack.Screen name="CreateCustomer" component={CreateCustomerScreen} options={{ title: 'Add Customer' }} />
-      <Stack.Screen name="CreateVehicle" component={CreateVehicleScreen} options={{ title: 'Add Vehicle' }} />
+      <Stack.Screen name="CreateCustomer" component={CreateCustomerScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="CreateVehicle" component={CreateVehicleScreen} options={{ headerShown: false }} />
       <Stack.Screen name="CreateJobCard" component={CreateJobCardScreen} options={{ title: 'Create Job Card' }} />
     </Stack.Navigator>
   );

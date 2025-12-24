@@ -2,7 +2,7 @@
 // CREATE JOB CARD SCREEN (Premium Redesign)
 // ============================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useJobs } from '@/context/JobContext';
-import { ChevronDown, ChevronUp, Plus, Menu, Search, MapPin, Pencil, Trash2 } from 'lucide-react-native';
+import { CustomerService } from '@/services/customer.service';
+import { VehicleService } from '@/services/vehicle.service';
+import { JobCardService } from '@/services/jobCard.service';
+import { useAuth } from '@/hooks/useAuth';
+import { Customer, Vehicle } from '@/types';
+import { ChevronDown, ChevronUp, Plus, Menu, Search, MapPin, Pencil, Trash2, User } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -62,40 +67,11 @@ const COMMON_SERVICES = [
   'Cabin Air Filter Change',
 ];
 
-const STATIC_CUSTOMERS = [
-  {
-    name: 'Ahmed Raza',
-    phone: '9876543210',
-    brand: 'Toyota',
-    model: 'Camry',
-    licensePlate: 'ABC-1234',
-  },
-  {
-    name: 'John Doe',
-    phone: '1234567890',
-    brand: 'Honda',
-    model: 'Civic',
-    licensePlate: 'XYZ-5678',
-  },
-  {
-    name: 'Jane Smith',
-    phone: '5551234444',
-    brand: 'Ford',
-    model: 'Mustang',
-    licensePlate: 'FAST-99',
-  },
-  {
-    name: 'Sara Khan',
-    phone: '9988776655',
-    brand: 'Maruti',
-    model: 'Swift',
-    licensePlate: 'DL-01-AB-1234',
-  },
-];
 
 export default function CreateJobCardScreen() {
   const navigation = useNavigation<any>();
   const { addJob } = useJobs();
+  const { user } = useAuth();
 
   // State for Accordion Sections
   const [sections, setSections] = useState({
@@ -116,7 +92,8 @@ export default function CreateJobCardScreen() {
     pickupAddress: '',
     dropoffAddress: '',
     deliveryDate: '',
-    deliveryTime: '' // Added deliveryTime field
+    deliveryTime: '',
+    otherRequirements: ''
   });
 
   const [priority, setPriority] = useState<'Normal' | 'Urgent'>('Normal');
@@ -127,6 +104,82 @@ export default function CreateJobCardScreen() {
   const [newEstimateHour, setNewEstimateHour] = useState('');
   const [newEstimateMin, setNewEstimateMin] = useState('');
   const [newCost, setNewCost] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Database State
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+
+  useEffect(() => {
+    loadCustomers();
+  }, []);
+
+  const loadCustomers = async () => {
+    try {
+      setLoading(true);
+      const data = await CustomerService.getAll();
+      setCustomers(data);
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.customerName) {
+      const filtered = customers.filter(c =>
+        c.full_name.toLowerCase().includes(formData.customerName.toLowerCase()) ||
+        c.phone.includes(formData.customerName)
+      );
+      setFilteredCustomers(filtered);
+    } else {
+      // Show all customers (or recent ones) when input is empty
+      setFilteredCustomers(customers);
+    }
+  }, [formData.customerName, customers]);
+
+  const handleCustomerSelect = async (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setFormData({
+      ...formData,
+      customerName: customer.full_name,
+      phone: customer.phone,
+    });
+    setShowCustomerDropdown(false);
+    Keyboard.dismiss();
+
+    // Fetch customer's vehicles
+    try {
+      const vehicles = await VehicleService.getAll({ customer_id: customer.id });
+      if (vehicles.length > 0) {
+        handleVehicleSelect(vehicles[0]);
+      } else {
+        setSelectedVehicle(null);
+        setFormData(prev => ({
+          ...prev,
+          brand: '',
+          model: '',
+          licensePlate: '',
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading vehicles:', error);
+    }
+  };
+
+  const handleVehicleSelect = (vehicle: Vehicle) => {
+    setSelectedVehicle(vehicle);
+    setFormData(prev => ({
+      ...prev,
+      brand: vehicle.brand,
+      model: vehicle.model,
+      licensePlate: vehicle.license_plate || '',
+    }));
+  };
 
   // Time Picker State
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -181,25 +234,13 @@ export default function CreateJobCardScreen() {
     s.toLowerCase().includes(newServiceName.toLowerCase())
   );
 
-  const filteredCustomers = STATIC_CUSTOMERS.filter(c =>
-    c.name.toLowerCase().includes(formData.customerName.toLowerCase())
-  );
-
   const toggleSection = (section: keyof typeof sections) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleCustomerSelect = (customer: typeof STATIC_CUSTOMERS[0]) => {
-    setFormData({
-      ...formData,
-      customerName: customer.name,
-      phone: customer.phone,
-      brand: customer.brand,
-      model: customer.model,
-      licensePlate: customer.licensePlate,
-    });
-    setShowCustomerDropdown(false);
+  const calculateTotal = () => {
+    return selectedServices.reduce((sum, s) => sum + s.cost, 0);
   };
 
   const handleAddService = (nameOverride?: string) => {
@@ -251,10 +292,12 @@ export default function CreateJobCardScreen() {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     // Basic validation
-    if (!formData.customerName || !formData.phone || !formData.brand || !formData.model) {
-      Alert.alert('Incomplete Form', 'Please fill in all required fields marked with *');
+    if (!formData.customerName || !formData.brand || !formData.model) {
+      Alert.alert('Incomplete Form', 'Please provide Customer name, Vehicle Brand and Model');
       return;
     }
 
@@ -266,42 +309,114 @@ export default function CreateJobCardScreen() {
     }
 
     // Validate Delivery Time Format (HH:MM AM/PM)
-    // Matches 1:00 AM to 12:59 PM (case insensitive)
     const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9] [APap][Mm]$/;
     if (formData.deliveryTime && !timeRegex.test(formData.deliveryTime)) {
       Alert.alert('Invalid Time', 'Please enter delivery time in HH:MM AM/PM format (e.g., 5:00 PM)');
       return;
     }
 
-    const totalCost = selectedServices.reduce((sum, s) => sum + s.cost, 0);
+    try {
+      if (!user) {
+        Alert.alert('Error', 'User session not found');
+        return;
+      }
 
-    addJob({
-      customer: formData.customerName,
-      phone: formData.phone,
-      vehicle: `${formData.brand} ${formData.model}`,
-      regNo: formData.licensePlate || 'Pending',
-      brand: formData.brand,
-      model: formData.model,
-      odometer: formData.odometer,
-      pickupAddress: formData.pickupAddress,
-      dropoffAddress: formData.dropoffAddress,
-      deliveryDate: formData.deliveryDate,
-      deliveryDue: formData.deliveryTime, // Map deliveryTime to deliveryDue
-      services: selectedServices.map(s => ({
-        name: s.name,
-        cost: s.cost,
-        estimate: s.time
-      })),
-      amount: `₹${totalCost.toLocaleString()}`,
-      status: 'Pending',
-      priority: priority,
-    });
+      setIsSubmitting(true);
+      const branchId = user.profile?.branch_id || undefined;
+      let finalCustomerId = selectedCustomer?.id;
+      let finalVehicleId = selectedVehicle?.id;
 
-    Alert.alert(
-      'Success',
-      'Job Card created successfully!',
-      [{ text: 'OK', onPress: () => navigation.goBack() }]
-    );
+      // 1. Create/Find Customer if not selected
+      if (!finalCustomerId) {
+        // Double check if customer already exists by phone to avoid duplicates
+        const existingCustomers = await CustomerService.getAll({ search: formData.phone });
+        const match = existingCustomers.find(c => c.phone === formData.phone);
+
+        if (match) {
+          finalCustomerId = match.id;
+        } else {
+          const newCustomer = await CustomerService.create({
+            full_name: formData.customerName,
+            phone: formData.phone || '',
+            email: '',
+            address: formData.pickupAddress || '', // Fallback address
+          }, user.id, branchId);
+          finalCustomerId = newCustomer.id;
+        }
+      }
+
+      // 2. Create/Find Vehicle if not selected
+      if (!finalVehicleId && finalCustomerId) {
+        // Check if vehicle already exists by license plate
+        const existingVehicles = await VehicleService.getAll({ customer_id: finalCustomerId });
+        const match = existingVehicles.find(v => v.license_plate?.toUpperCase() === formData.licensePlate?.toUpperCase());
+
+        if (match) {
+          finalVehicleId = match.id;
+        } else {
+          const newVehicle = await VehicleService.create({
+            customer_id: finalCustomerId,
+            brand: formData.brand,
+            model: formData.model,
+            license_plate: formData.licensePlate || '',
+            odometer: parseInt(formData.odometer) || 0,
+            color: '',
+            year_manufacture: new Date().getFullYear(),
+          }, branchId);
+          finalVehicleId = newVehicle.id;
+        }
+      }
+
+      if (!finalCustomerId || !finalVehicleId) {
+        Alert.alert('Error', 'Could not prepare Customer or Vehicle data');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare task statuses (all pending initially)
+      const taskStatuses: Record<string, string> = {};
+      selectedServices.forEach(s => {
+        taskStatuses[s.name] = 'pending';
+      });
+
+      const createForm: any = {
+        customer_id: finalCustomerId,
+        vehicle_id: finalVehicleId,
+        description: formData.otherRequirements,
+        priority: priority.toLowerCase() as any,
+        estimated_cost: calculateTotal(),
+        estimated_time: '',
+        odometer: parseInt(formData.odometer) || 0,
+        pickup_address: formData.pickupAddress,
+        dropoff_address: formData.dropoffAddress,
+        delivery_date: formData.deliveryDate,
+        delivery_due: formData.deliveryTime,
+        other_requirements: formData.otherRequirements,
+        task_statuses: taskStatuses,
+        quality_statuses: {},
+        manual_services: selectedServices.map(s => ({
+          name: s.name,
+          cost: s.cost,
+          time: s.time
+        })),
+      };
+
+      await JobCardService.create(createForm, user.id, branchId);
+
+      // Update local context
+      if (addJob) {
+        addJob({} as any); // Trigger refresh
+      }
+
+      Alert.alert('Success', 'Job Card created successfully', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error: any) {
+      console.error('Error creating job card:', error);
+      Alert.alert('Error', error.message || 'Failed to create Job Card');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /* Helper to format date input with hyphens */
@@ -319,6 +434,58 @@ export default function CreateJobCardScreen() {
     }
 
     setFormData({ ...formData, deliveryDate: formatted });
+  };
+
+  /* Helper to format license plate automatically */
+  const formatLicensePlate = (text: string) => {
+    // 1. Remove existing hyphens/spaces and convert to uppercase
+    const clean = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
+    // 2. Logic: State(2) - Dist(2) - Series(Var) - Number(Var)
+    // We can't determine the split between Series (letters) and Number (digits) easily 
+    // without regex lookahead or manual parsing because user is typing.
+
+    // Simple heuristic for partial typing:
+    // 0-2 chars: State (Letters)
+    // 2-4 chars: District (Numbers)
+    // 4+ chars: Series (Letters) until Numbers start
+
+    let formatted = clean;
+
+    if (clean.length > 2) {
+      formatted = clean.slice(0, 2) + '-' + clean.slice(2);
+    }
+    if (clean.length > 4) {
+      // We have State-Dist... now we need to handle the Series-Number split
+      // The slice(2) above gave us "05AA1234" (example)
+      // Let's re-construct from full clean string
+      const part1 = clean.slice(0, 2); // GJ
+      const part2 = clean.slice(2, 4); // 05
+      const remainder = clean.slice(4); // AA1234...
+
+      // Find where letters end and numbers begin in the remainder (Series vs Number)
+      const match = remainder.match(/^([A-Z]*)([0-9]*)$/);
+
+      if (match) {
+        const series = match[1];
+        const num = match[2];
+
+        if (series && num) {
+          // We have both series and number -> "GJ-05-AA-1234"
+          formatted = `${part1}-${part2}-${series}-${num}`;
+        } else if (series) {
+          // We have series but no number yet -> "GJ-05-AA"
+          formatted = `${part1}-${part2}-${series}`;
+        } else {
+          // No series letters? (Unusual but possible for old cars) or just typing numbers??
+          // Standard format implies series. If just numbers, maybe "GJ-05-1234" (Old format)
+          // Let's just append
+          formatted = `${part1}-${part2}-${remainder}`;
+        }
+      }
+    }
+
+    setFormData(prev => ({ ...prev, licensePlate: formatted }));
   };
 
   const renderSectionHeader = (title: string, section: keyof typeof sections) => (
@@ -363,7 +530,12 @@ export default function CreateJobCardScreen() {
                       setFormData({ ...formData, customerName: text });
                       setShowCustomerDropdown(true);
                     }}
-                    onFocus={() => setShowCustomerDropdown(true)}
+                    onFocus={() => {
+                      setShowCustomerDropdown(true);
+                      // If empty, ensure we show the list
+                      if (!formData.customerName) setFilteredCustomers(customers);
+                    }}
+                    onSubmitEditing={() => Keyboard.dismiss()}
                   />
                   <TouchableOpacity
                     style={styles.inputInnerIcon}
@@ -374,23 +546,20 @@ export default function CreateJobCardScreen() {
 
                   {showCustomerDropdown && filteredCustomers.length > 0 && (
                     <View style={styles.dropdownContainer}>
-                      <ScrollView
-                        style={{ maxHeight: 200 }}
-                        keyboardShouldPersistTaps="handled"
-                        nestedScrollEnabled={true}
-                        persistentScrollbar={true}
-                        showsVerticalScrollIndicator={true}
-                      >
-                        {filteredCustomers.map((customer, index) => (
+                      <ScrollView style={{ maxHeight: 200 }} keyboardShouldPersistTaps="handled">
+                        {filteredCustomers.map((customer) => (
                           <TouchableOpacity
-                            key={index}
+                            key={customer.id}
                             style={styles.dropdownItem}
                             onPress={() => handleCustomerSelect(customer)}
                           >
-                            <Text style={styles.dropdownItemText}>{customer.name}</Text>
-                            <Text style={{ fontSize: 12, color: '#6b7280' }}>
-                              {customer.phone} - {customer.brand} {customer.model}
-                            </Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                              <User size={16} color="#6b7280" style={{ marginRight: 8 }} />
+                              <View>
+                                <Text style={styles.dropdownItemText}>{customer.full_name}</Text>
+                                <Text style={styles.dropdownSubtext}>{customer.phone}</Text>
+                              </View>
+                            </View>
                           </TouchableOpacity>
                         ))}
                       </ScrollView>
@@ -407,6 +576,7 @@ export default function CreateJobCardScreen() {
                     keyboardType="phone-pad"
                     value={formData.phone}
                     onChangeText={text => setFormData({ ...formData, phone: text })}
+                    onSubmitEditing={() => Keyboard.dismiss()}
                   />
                 </View>
               </View>
@@ -418,31 +588,36 @@ export default function CreateJobCardScreen() {
             {renderSectionHeader('Vehicle Details:', 'vehicle')}
             {sections.vehicle && (
               <View style={styles.sectionBody}>
-                <Text style={styles.fieldLabel}>Vehicle Brand*</Text>
+                <Text style={styles.fieldLabel}>Vehicle Brand</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="enter details"
                   placeholderTextColor="#9ca3af"
                   value={formData.brand}
                   onChangeText={text => setFormData({ ...formData, brand: text })}
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
 
-                <Text style={styles.fieldLabel}>Vehicle Model*</Text>
+                <Text style={styles.fieldLabel}>Vehicle Model</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="enter details"
                   placeholderTextColor="#9ca3af"
                   value={formData.model}
                   onChangeText={text => setFormData({ ...formData, model: text })}
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
 
                 <Text style={styles.fieldLabel}>Vehicle License Plate</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="enter license plate"
+                  placeholder="GJ-01-AB-1234"
                   placeholderTextColor="#9ca3af"
                   value={formData.licensePlate}
-                  onChangeText={text => setFormData({ ...formData, licensePlate: text })}
+                  onChangeText={formatLicensePlate}
+                  maxLength={13} // Reasonable max length even with dashes
+                  autoCapitalize="characters"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
               </View>
             )}
@@ -461,6 +636,7 @@ export default function CreateJobCardScreen() {
                   keyboardType="numeric"
                   value={formData.odometer}
                   onChangeText={text => setFormData({ ...formData, odometer: text })}
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
 
                 {/* Selected Services List */}
@@ -501,6 +677,7 @@ export default function CreateJobCardScreen() {
                       setShowServiceDropdown(true);
                     }}
                     onTouchEnd={() => setShowServiceDropdown(!showServiceDropdown)}
+                    onSubmitEditing={() => Keyboard.dismiss()}
                   />
 
                   {showServiceDropdown && filteredServices.length > 0 && (
@@ -542,6 +719,7 @@ export default function CreateJobCardScreen() {
                         keyboardType="numeric"
                         value={newEstimateHour}
                         onChangeText={setNewEstimateHour}
+                        onSubmitEditing={() => Keyboard.dismiss()}
                       />
                       <TextInput
                         style={[styles.input, { flex: 1 }]}
@@ -550,6 +728,7 @@ export default function CreateJobCardScreen() {
                         keyboardType="numeric"
                         value={newEstimateMin}
                         onChangeText={setNewEstimateMin}
+                        onSubmitEditing={() => Keyboard.dismiss()}
                       />
                     </View>
                   </View>
@@ -565,6 +744,7 @@ export default function CreateJobCardScreen() {
                       keyboardType="numeric"
                       value={newCost}
                       onChangeText={setNewCost}
+                      onSubmitEditing={() => Keyboard.dismiss()}
                     />
                   </View>
                   <TouchableOpacity
@@ -590,6 +770,7 @@ export default function CreateJobCardScreen() {
                   placeholderTextColor="#9ca3af"
                   value={formData.pickupAddress}
                   onChangeText={text => setFormData({ ...formData, pickupAddress: text })}
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
 
                 <Text style={styles.fieldLabel}>Drop-off Address</Text>
@@ -599,6 +780,7 @@ export default function CreateJobCardScreen() {
                   placeholderTextColor="#9ca3af"
                   value={formData.dropoffAddress}
                   onChangeText={text => setFormData({ ...formData, dropoffAddress: text })}
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
 
                 <Text style={styles.fieldLabel}>Delivery Date</Text>
@@ -649,6 +831,7 @@ export default function CreateJobCardScreen() {
                   onChangeText={handleDateChange}
                   maxLength={10}
                   keyboardType="numeric"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
 
                 <Text style={styles.fieldLabel}>Delivery Time</Text>
@@ -757,10 +940,13 @@ export default function CreateJobCardScreen() {
 
           {/* SUBMIT BUTTON */}
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]}
             onPress={handleSubmit}
+            disabled={isSubmitting}
           >
-            <Text style={styles.submitButtonText}>Submit</Text>
+            <Text style={styles.submitButtonText}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </Text>
           </TouchableOpacity>
 
         </ScrollView>
@@ -1031,5 +1217,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  dropdownSubtext: {
+    fontSize: 12,
+    color: '#6b7280',
   }
 });

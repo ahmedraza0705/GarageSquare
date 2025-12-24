@@ -9,47 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LayoutDashboard, Building2, Users, FileBarChart } from 'lucide-react-native';
 import { useJobs } from '../../context/JobContext';
 
-// Static Data Interface
-interface StaticJobCard {
-    id: string;
-    jobNumber: string;
-    price: string;
-    make: string;
-    model: string;
-    licensePlate: string;
-    assignedTo: string;
-    progress: number;
-    deliveryDate: string;
-    timeLeft: string;
-}
-
-// Static Data
-const staticJobCards: StaticJobCard[] = [
-    {
-        id: '1',
-        jobNumber: 'SA0004',
-        price: '15,000',
-        make: 'Hyundai',
-        model: 'Creta',
-        licensePlate: 'GJ-05-RT-4534',
-        assignedTo: 'Ahmed Raza',
-        progress: 0.7,
-        deliveryDate: '07-01-2026',
-        timeLeft: '45m left',
-    },
-    {
-        id: '2',
-        jobNumber: 'SA0001',
-        price: '15,000',
-        make: 'Hyundai',
-        model: 'Creta',
-        licensePlate: 'GJ-05-RT-4356',
-        assignedTo: 'Ahmed Raza',
-        progress: 1.0,
-        deliveryDate: '07-01-2026',
-        timeLeft: '45m left',
-    },
-];
+// --- STATIC DATA REMOVED ---
 
 export default function ActiveJobsScreen() {
     const navigation = useNavigation<any>();
@@ -78,13 +38,22 @@ export default function ActiveJobsScreen() {
             );
         });
 
-    // Helper to calculate progress percentage
+    // Helper to calculate progress percentage (Excluding Rejected)
     const calculateProgress = (job: any) => {
         if (!job.taskStatuses) return 0;
         const statuses = Object.values(job.taskStatuses) as string[];
         if (statuses.length === 0) return 0;
+
+        const totalValid = statuses.filter(s => s !== 'rejected').length;
         const complete = statuses.filter(s => s === 'complete').length;
-        return complete / statuses.length;
+
+        // If everyone is rejected, technically there's no work left, so 100%?
+        // Or if there are no valid tasks, progress is 0?
+        // User request: "if total task is 6 and 1 is rejected then also the %complete should be 100%" implies 100% if remaining are done.
+        // If ALL are rejected, we can consider it 100% complete (nothing left to do).
+        if (totalValid === 0) return statuses.length > 0 ? 1 : 0;
+
+        return complete / totalValid;
     };
 
     // Simple progress bar component since ProgressBarAndroid is Android only
@@ -191,7 +160,7 @@ export default function ActiveJobsScreen() {
                         >
                             <View style={styles.cardHeader}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                    <Text style={styles.jobCardTitle}>Job Card {job.jobId}</Text>
+                                    <Text style={styles.jobCardTitle}>{job.jobId}</Text>
                                     {job.priority === 'Urgent' && (
                                         <View style={styles.statusBadge}>
                                             <Text style={styles.statusText}>Urgent</Text>
@@ -237,12 +206,12 @@ export default function ActiveJobsScreen() {
                                 <View>
                                     <Text style={styles.deliveryLabel}>Delivery due:</Text>
                                     <Text style={styles.deliveryTimeLeft}>
-                                        {calculateTimeLeft(job.deliveryDate || '07-01-2026', job.deliveryDue)}
+                                        {calculateTimeLeft(job.deliveryDate || '', job.deliveryDue)}
                                     </Text>
                                 </View>
                                 <View style={{ alignItems: 'flex-end' }}>
                                     <Text style={styles.deliveryLabel}>Delivery date:</Text>
-                                    <Text style={styles.deliveryDate}>{job.deliveryDate || '07-01-2026'}</Text>
+                                    <Text style={styles.deliveryDate}>{job.deliveryDate || ''}</Text>
                                 </View>
                             </View>
                         </TouchableOpacity>

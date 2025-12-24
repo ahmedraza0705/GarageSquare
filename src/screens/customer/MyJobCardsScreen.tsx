@@ -23,7 +23,7 @@ export default function CustomerMyJobCardsScreen() {
   const loadJobCards = async () => {
     try {
       setLoading(true);
-      
+
       // Check if Supabase is disabled
       if (!supabase) {
         console.warn('Supabase is disabled - using local storage');
@@ -31,7 +31,7 @@ export default function CustomerMyJobCardsScreen() {
         setLoading(false);
         return;
       }
-      
+
       // Get customer ID
       const { data: customer } = await supabase
         .from('customers')
@@ -85,10 +85,10 @@ export default function CustomerMyJobCardsScreen() {
                 </Text>
               </View>
             </View>
-            
+
             {jobCard.vehicle && (
               <Text className="text-gray-600 text-sm mb-1">
-                {jobCard.vehicle.make} {jobCard.vehicle.model}
+                {jobCard.vehicle.brand} {jobCard.vehicle.model}
               </Text>
             )}
             {jobCard.estimated_cost && (

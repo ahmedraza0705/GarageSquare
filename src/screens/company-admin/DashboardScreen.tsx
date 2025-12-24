@@ -11,6 +11,7 @@ import * as SecureStore from 'expo-secure-store';
 import { CustomerService } from '@/services/customer.service';
 import { VehicleService } from '@/services/vehicle.service';
 import { JobCardService } from '@/services/jobCard.service';
+import { UserService } from '@/services/user.service';
 import { useJobs } from '../../context/JobContext';
 
 // Bar Chart Component (Moved outside to prevent unnecessary remounts)
@@ -62,11 +63,17 @@ export default function CompanyAdminDashboard() {
     activeJobs: 0,
     customers: 0,
     vehicles: 0,
-    revenue: 24.5,
-    checkIn: 12,
-    processing: 20,
-    delivery: 40,
-    newCustomers: 12,
+    revenue: 0,
+    checkIn: 0,
+    processing: 0,
+    delivery: 0,
+    newCustomers: 0,
+    staff: {
+      branchManager: 0,
+      supervisor: 0,
+      technicianManager: 0,
+      technician: 0,
+    }
   });
 
   const [refreshing, setRefreshing] = useState(false);
@@ -88,22 +95,39 @@ export default function CompanyAdminDashboard() {
 
   const loadStats = useCallback(async () => {
     try {
-      const [vehicleCount, customerCount, activeJobCount] = await Promise.all([
+      const branchId = user?.profile?.branch_id || undefined;
+
+      const [
+        vehicleCount,
+        customerCount,
+        activeJobCount,
+        dashboardStats,
+        staffStats,
+        newCustomersCount
+      ] = await Promise.all([
         VehicleService.getCount(),
         CustomerService.getCount(),
-        JobCardService.getActiveCount()
+        JobCardService.getActiveCount(),
+        JobCardService.getDashboardStats(branchId),
+        UserService.getStaffStats(branchId),
+        CustomerService.getNewCustomersCount(branchId)
       ]);
 
-      setStats(prev => ({
-        ...prev,
+      setStats({
         vehicles: vehicleCount,
         customers: customerCount,
-        activeJobs: activeJobCount
-      }));
+        activeJobs: activeJobCount,
+        checkIn: dashboardStats.checkIn,
+        processing: dashboardStats.processing,
+        delivery: dashboardStats.delivery,
+        revenue: dashboardStats.revenue,
+        staff: staffStats,
+        newCustomers: newCustomersCount
+      });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
-  }, []);
+  }, [user]);
 
   const showLoginCredentials = useCallback(async () => {
     try {
@@ -138,6 +162,7 @@ export default function CompanyAdminDashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles' }, () => loadStats())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => loadStats())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'job_cards' }, () => loadStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadStats())
       .subscribe();
 
     return () => {
@@ -230,7 +255,7 @@ export default function CompanyAdminDashboard() {
               <View style={styles.cardContent}>
                 <View style={styles.cardTextContainer}>
                   <Text style={[styles.cardTitle, styles.whiteText]}>Revenue</Text>
-                  <Text style={[styles.cardValue, styles.whiteText]}>₹{stats.revenue}L</Text>
+                  <Text style={[styles.cardValue, styles.whiteText]}>₹{stats.revenue >= 100000 ? `${(stats.revenue / 100000).toFixed(1)}L` : stats.revenue.toLocaleString()}</Text>
                   <Text style={[styles.cardTrend, styles.whiteText]}>+10%</Text>
                 </View>
                 <View style={styles.cardIcon}>
@@ -265,19 +290,19 @@ export default function CompanyAdminDashboard() {
               <View style={styles.staffList}>
                 <View style={styles.staffItem}>
                   <Text style={styles.staffLabel}>Branch Manager:</Text>
-                  <Text style={styles.staffValue}>{staffData.branchManager}</Text>
+                  <Text style={styles.staffValue}>{stats.staff.branchManager}</Text>
                 </View>
                 <View style={styles.staffItem}>
                   <Text style={styles.staffLabel}>Supervisor:</Text>
-                  <Text style={styles.staffValue}>{staffData.supervisor}</Text>
+                  <Text style={styles.staffValue}>{stats.staff.supervisor}</Text>
                 </View>
                 <View style={styles.staffItem}>
                   <Text style={styles.staffLabel}>Technician Manager:</Text>
-                  <Text style={styles.staffValue}>{staffData.technicianManager}</Text>
+                  <Text style={styles.staffValue}>{stats.staff.technicianManager}</Text>
                 </View>
                 <View style={styles.staffItem}>
                   <Text style={styles.staffLabel}>Technician:</Text>
-                  <Text style={styles.staffValue}>{staffData.technician}</Text>
+                  <Text style={styles.staffValue}>{stats.staff.technician}</Text>
                 </View>
               </View>
             </View>

@@ -31,8 +31,14 @@ export default function JobCardsScreen() {
       setLoading(true);
       const data = await JobCardService.getAll();
       setJobCards(data);
-    } catch (error) {
-      console.error('Error loading job cards:', error);
+    } catch (error: any) {
+      // If table doesn't exist, just use JobContext data (no error shown)
+      if (error?.code === 'PGRST205' || error?.message?.includes('schema cache')) {
+        console.log('Job cards table not found in database, using JobContext data only');
+        setJobCards([]);
+      } else {
+        console.error('Error loading job cards:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,7 +93,7 @@ export default function JobCardsScreen() {
         <View style={styles.detailsRow}>
           <Text style={styles.label}>Vehicle:</Text>
           <Text style={styles.value}>
-            {isContextJob ? job.vehicle : `${job.vehicle?.make} ${job.vehicle?.model}`}
+            {isContextJob ? job.vehicle : `${job.vehicle?.brand} ${job.vehicle?.model}`}
           </Text>
         </View>
 
