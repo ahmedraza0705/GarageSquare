@@ -7,6 +7,8 @@ import { useRole } from '@/hooks/useRole';
 import { useAuth } from '@/hooks/useAuth';
 import StaffNavigator from './StaffNavigator';
 import CustomerNavigator from './role/CustomerNavigator';
+import TechnicianNavigator from '../roles/technician/navigation/TechnicianNavigator';
+import GroupManagerNavigator from '../roles/technicianGroupManager/navigation/GroupManagerNavigator';
 
 export default function RoleBasedNavigator() {
   const { role } = useRole();
@@ -29,13 +31,16 @@ export default function RoleBasedNavigator() {
     case 'company_admin':
     case 'manager':
     case 'supervisor':
-    case 'technician_group_manager':
-    case 'technician':
       return <StaffNavigator />;
+    case 'technician_group_manager':
+      return <GroupManagerNavigator />;
+    case 'technician':
+      return <TechnicianNavigator />;
     case 'customer':
       return <CustomerNavigator />;
     default:
       // Default to StaffNavigator (likely technician view restricted by RBAC) for testing
+      // For safety during dev, maybe default to Technician if unknown? Or keep Staff
       return <StaffNavigator />;
   }
 }

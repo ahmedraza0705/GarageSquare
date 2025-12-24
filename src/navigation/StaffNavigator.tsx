@@ -120,11 +120,17 @@ export default function StaffNavigator() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: '#1E1E1E',
-                    borderTopColor: '#333',
+                    backgroundColor: '#4e86c0', // Blue color from image
+                    borderTopWidth: 0,
+                    height: 60,
+                    paddingBottom: 8,
+                    paddingTop: 8,
+                    borderTopLeftRadius: 20,
+                    borderTopRightRadius: 20,
                 },
-                tabBarActiveTintColor: '#3B82F6',
-                tabBarInactiveTintColor: '#888',
+                tabBarActiveTintColor: '#ffffff',
+                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
+                tabBarShowLabel: false, // Image shows icons only? Or maybe user wants labels. keeping false for cleaner look like image
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: keyof typeof Ionicons.glyphMap = 'help-circle';
 
@@ -132,19 +138,15 @@ export default function StaffNavigator() {
                         iconName = focused ? 'grid' : 'grid-outline';
                     } else if (route.name === 'Jobs') {
                         iconName = focused ? 'briefcase' : 'briefcase-outline';
-                    } else if (route.name === 'Users') {
-                        iconName = focused ? 'people' : 'people-outline';
-                    } else if (route.name === 'Reports') {
-                        iconName = focused ? 'bar-chart' : 'bar-chart-outline';
                     } else if (route.name === 'Operations') {
-                        iconName = focused ? 'car-sport' : 'car-sport-outline';
+                        iconName = focused ? 'car-sport' : 'car-sport-outline'; // Vehicles
                     } else if (route.name === 'Invoices') {
                         iconName = focused ? 'receipt' : 'receipt-outline';
                     } else if (route.name === 'Profile') {
-                        iconName = focused ? 'person-circle' : 'person-circle-outline';
+                        iconName = focused ? 'person' : 'person-outline';
                     }
 
-                    return <Ionicons name={iconName} size={size} color={color} />;
+                    return <Ionicons name={iconName} size={28} color={color} />;
                 },
             })}
         >
@@ -158,18 +160,13 @@ export default function StaffNavigator() {
                 <Tab.Screen
                     name="Operations"
                     component={OperationsStack}
-                    options={{ title: role === 'technician' ? 'Vehicles' : 'Operations' }}
+                    options={{ title: 'Vehicles' }}
                 />
             )}
-            {permissions.includes(PERMISSIONS.VIEW_INVOICES) && (
-                <Tab.Screen name="Invoices" component={InvoiceStack} />
-            )}
-            {permissions.includes(PERMISSIONS.MANAGE_USERS) && (
-                <Tab.Screen name="Users" component={UsersStack} />
-            )}
-            {permissions.includes(PERMISSIONS.VIEW_REPORTS) && (
-                <Tab.Screen name="Reports" component={ReportsStack} />
-            )}
+            {/* {permissions.includes(PERMISSIONS.VIEW_INVOICES) && ( */}
+            <Tab.Screen name="Invoices" component={InvoiceStack} />
+            {/* )} */}
+
             {permissions.includes(PERMISSIONS.VIEW_PROFILE) && (
                 <Tab.Screen
                     name="Profile"
@@ -177,6 +174,15 @@ export default function StaffNavigator() {
                     options={{ title: 'Profile' }}
                 />
             )}
+
+            {/* Hidden Tabs (Requested to remove from main nav list, but might need permission checks/removal)
+            {permissions.includes(PERMISSIONS.MANAGE_USERS) && (
+                <Tab.Screen name="Users" component={UsersStack} />
+            )}
+            {permissions.includes(PERMISSIONS.VIEW_REPORTS) && (
+                <Tab.Screen name="Reports" component={ReportsStack} />
+            )}
+            */}
         </Tab.Navigator>
     );
 }

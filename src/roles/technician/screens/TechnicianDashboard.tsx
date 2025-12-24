@@ -19,18 +19,6 @@ export default function TechnicianDashboard() {
 
     const todoList = [
         {
-            id: 'jb1',
-            job_card_no: 'SA0001',
-            price: '₹21,500',
-            vehicle: { make: 'Honda', model: 'City', reg: 'GJ-05-2134' },
-            assigned_to: 'Ahmed Raza',
-            progress: 70,
-            delivery_due: '45m left',
-            delivery_date: '09-12-2025',
-            priority: 'Urgent',
-            status: 'In Progress'
-        },
-        {
             id: 'jb2',
             job_card_no: 'SA0004',
             price: '₹15,000',
