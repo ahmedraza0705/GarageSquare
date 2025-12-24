@@ -87,21 +87,22 @@ export class CustomerService {
     // but not yet in user_profiles.
     const { data: profile } = await supabase
       .from('user_profiles')
-      .select('id')
+      .select('id, company_id') // Fix: Added company_id to select
       .eq('id', userId)
       .maybeSingle();
 
     const insertData: any = {
       ...formData,
-      user_id: userId, // Link to the user who created it
+      id: userId, // CRITICAL: Link ID 1:1 with UserProfile
       branch_id: branchId,
     };
 
-    console.log('Final Customer Insert Data:', insertData);
-
+    // Get company_id from profile to ensure multi-tenancy
     if (profile) {
-      insertData.created_by = userId;
+      insertData.company_id = profile.company_id;
     }
+
+    console.log('Final Customer Insert Data:', insertData);
 
     const { data, error } = await supabase
       .from('customers')

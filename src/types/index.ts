@@ -321,14 +321,12 @@ export interface CreateVehicleForm {
   brand: string;
   model: string;
   year_manufacture?: number;
-  vin?: string;
   license_plate?: string;
   color?: string;
   odometer?: number;
   fuel_type?: string;
   year_purchase?: number;
   delivery_type?: string;
-  notes?: string;
 }
 
 export interface CreateJobCardForm {

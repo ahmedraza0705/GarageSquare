@@ -37,7 +37,7 @@ export const themes: Record<ThemeName, ThemeColors> = {
     background: '#F1F5F9', // Steel bluish gray for background
     surface: '#FFFFFF',
     surfaceAlt: '#E2E8F0',
-    text: '#1F2937',
+    text: '#272727',
     textMuted: '#64748B',
     border: '#E2E8F0',
     notification: '#EF4444',

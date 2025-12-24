@@ -46,7 +46,7 @@ export class VehicleService {
     if (filters?.search) {
       const lowerSearch = filters.search.toLowerCase();
       vehicles = vehicles.filter((v: any) =>
-        v.make?.toLowerCase().includes(lowerSearch) ||
+        v.brand?.toLowerCase().includes(lowerSearch) ||
         v.model?.toLowerCase().includes(lowerSearch) ||
         v.license_plate?.toLowerCase().includes(lowerSearch) ||
         v.customer?.full_name?.toLowerCase().includes(lowerSearch)
@@ -102,13 +102,29 @@ export class VehicleService {
   static async create(formData: CreateVehicleForm, branchId?: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
 
-    // Filter out fields that don't exist in the database schema
-    const { vin, ...validFields } = formData;
+    // 1. Get current user profile for company_id
+    const { data: { user } } = await supabase.auth.getUser();
+    let companyId = null;
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('company_id')
+        .eq('id', user.id)
+        .maybeSingle();
+      companyId = profile?.company_id;
+    }
+
+    // 2. Handle Schema Mapping: make -> brand and remove vin
+    const { vin, make, ...cleanFields } = formData as any;
+    const finalBrand = cleanFields.brand || make;
 
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
-        ...validFields,
+        ...cleanFields,
+        brand: finalBrand,
+        company_id: companyId,
         branch_id: branchId,
       })
       .select()

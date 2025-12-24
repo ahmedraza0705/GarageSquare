@@ -46,33 +46,16 @@ export default function BranchFileUploadScreen() {
             const createdBranch = await BranchService.createBranch(newBranchData);
 
 
-            // 2. Create Manager Profile
-            if (branchData.manager_id && branchData.email) {
+            // 2. Update Manager Profile if needed (to associate them with this branch)
+            if (branchData.manager_id && branchData.manager_id.includes('-')) { // Assuming it's a UUID
                 try {
-                    // Use a temporary password for new managers
-                    const tempPassword = 'Manager@' + Math.random().toString(36).slice(-8);
-
-                    const managerResult = await AuthService.createUserWithProfile({
-                        email: branchData.email,
-                        password: tempPassword,
-                        full_name: branchData.manager_id, // manager_id field in form holds the name
-                        phone: branchData.phone,
-                        role: 'manager',
-                        branch_id: createdBranch.id,
-                        company_id: branchData.company_id
+                    await AuthService.updateProfile(branchData.manager_id, {
+                        branch_id: createdBranch.id
                     });
-
-                    if (managerResult.success) {
-                        // Updated branch with the new manager_id
-                        await BranchService.updateBranch(createdBranch.id, {
-                            manager_id: managerResult.userId
-                        });
-                        // Update createdBranch object for navigation
-                        createdBranch.manager_id = managerResult.userId;
-                    }
-                } catch (mgrError) {
-                    console.error('Error creating manager profile:', mgrError);
-                    // Don't fail the whole branch creation
+                    // Update createdBranch object for navigation
+                    createdBranch.manager_id = branchData.manager_id;
+                } catch (updateError) {
+                    console.error('Error updating manager branch association:', updateError);
                 }
             }
 

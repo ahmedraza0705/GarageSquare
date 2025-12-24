@@ -100,8 +100,9 @@ export default function BranchesScreen() {
     if (!newBranchName) newErrors.name = true;
     if (!newBranchAddress) newErrors.address = true;
     if (!newManagerName) newErrors.manager = true;
-    if (!newPhone) newErrors.phone = true;
-    if (!newEmail) newErrors.email = true;
+    // Phone and email are now optional/informational as they come from the existing profile
+    // if (!newPhone) newErrors.phone = true;
+    // if (!newEmail) newErrors.email = true;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -115,7 +116,7 @@ export default function BranchesScreen() {
     const tempBranchData = {
       name: newBranchName,
       address: newBranchAddress,
-      manager_id: newManagerName,
+      manager_id: selectedManager?.id || newManagerName, // Use ID if selected, name if fallback
       phone: newPhone,
       is_active: true,
       email: newEmail
@@ -147,37 +148,20 @@ export default function BranchesScreen() {
         email: newEmail,
         is_active: true,
         company_id: companyId,
-        manager_id: undefined
+        manager_id: selectedManager?.id || null, // Link directly to existing user profile ID
       };
 
       const createdBranch = await BranchService.createBranch(newBranchData);
 
-      // 2. Create Manager Profile
-      if (newManagerName && newEmail) {
+      // 2. Update Manager Profile if needed (to associate them with this branch if not already)
+      if (selectedManager?.id) {
         try {
-          // Use a temporary password for new managers
-          const tempPassword = 'Manager@' + Math.random().toString(36).slice(-8);
-
-          const managerResult = await AuthService.createUserWithProfile({
-            email: newEmail,
-            password: tempPassword,
-            full_name: newManagerName,
-            phone: newPhone,
-            role: 'manager',
-            branch_id: createdBranch.id,
-            company_id: companyId
+          await AuthService.updateProfile(selectedManager.id, {
+            branch_id: createdBranch.id
           });
-
-          if (managerResult.success) {
-            // Updated branch with the new manager_id
-            await BranchService.updateBranch(createdBranch.id, {
-              manager_id: managerResult.userId
-            });
-          }
-        } catch (mgrError) {
-          console.error('Error creating manager profile:', mgrError);
-          // Don't fail the whole branch creation if manager creation fails (e.g. email exists)
-          Alert.alert('Warning', 'Branch created, but manager profile could not be created. They might already have an account.');
+        } catch (updateError) {
+          console.error('Error updating manager branch association:', updateError);
+          // Non-blocking warning
         }
       }
 
@@ -435,10 +419,10 @@ export default function BranchesScreen() {
                       }}
                       onPress={() => setShowManagerDropdown(!showManagerDropdown)}
                     >
-                      <Text style={{ color: selectedManager ? theme.text : '#9CA3AF' }}>
+                      <Text style={{ color: selectedManager ? theme.text : '#272727' }}>
                         {selectedManager ? selectedManager.full_name : 'Select Manager'}
                       </Text>
-                      <Ionicons name={showManagerDropdown ? "chevron-up" : "chevron-down"} size={20} color="#9CA3AF" />
+                      <Ionicons name={showManagerDropdown ? "chevron-up" : "chevron-down"} size={20} color="#272727" />
                     </TouchableOpacity>
 
                     {showManagerDropdown && (
