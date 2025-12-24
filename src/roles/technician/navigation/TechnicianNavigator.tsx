@@ -39,15 +39,14 @@ export default function TechnicianNavigator() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: '#ffffff',
-                    borderTopWidth: 1,
-                    borderTopColor: '#e2e8f0',
+                    backgroundColor: '#4682b4', // Steel Blue from image
+                    borderTopWidth: 0,
                     height: 60,
                     paddingBottom: 8,
                     paddingTop: 8,
                 },
-                tabBarActiveTintColor: '#3b82f6',
-                tabBarInactiveTintColor: '#94a3b8',
+                tabBarActiveTintColor: '#ffffff',
+                tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: any;
 

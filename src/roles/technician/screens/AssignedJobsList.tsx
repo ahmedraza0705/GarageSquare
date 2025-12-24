@@ -99,32 +99,6 @@ export default function AssignedJobsList() {
     const [jobCards] = useState<JobCard[]>(staticJobCards);
     const [darkMode, setDarkMode] = useState(false);
 
-    const getStatusBadge = (status: string, priority?: string) => {
-        if (priority === 'urgent') {
-            return { label: 'Urgent', color: '#ffffff', bgColor: '#ef4444' };
-        }
-        if (status === 'in_progress') {
-            return { label: 'Progress', color: '#ffffff', bgColor: '#2563eb' };
-        }
-        if (status === 'completed') {
-            return { label: 'Ready', color: '#ffffff', bgColor: '#10b981' };
-        }
-        return { label: 'Pending', color: '#ffffff', bgColor: '#6b7280' };
-    };
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-    };
-
-    const formatTime = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    };
-
     const handleJobCardPress = (jobCard: JobCard) => {
         // @ts-ignore
         navigation.navigate('JobCardDetail', { jobCardId: jobCard.id });
@@ -146,24 +120,22 @@ export default function AssignedJobsList() {
             {/* Custom Header */}
             <View style={styles.header}>
                 <TouchableOpacity
-                    onPress={() => navigation.goBack()}
+                    onPress={() => (navigation as any).toggleDrawer?.()}
                     style={styles.backButton}
                 >
-                    {/* Changed path to match new directory depth: roles/technician/screens is 3 levels deep from src? No, src/roles/technician/screens */}
-                    {/* Previous was src/screens/staff/jobs (3 deep) */}
-                    {/* src (1/2) roles(3) technician(4) screens(5) -> ../../../../assets/Arrow.png */}
-                    {/* <Image source={require('../../../../assets/Arrow.png')} style={styles.backIcon} /> */}
-                    <Ionicons name="arrow-back" size={24} color="#000" />
+                    <Ionicons name="menu" size={28} color="#000" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>Active Jobs</Text>
+                <Text style={styles.headerTitle}>My Jobs</Text>
 
                 <View style={styles.headerRight}>
                     <TouchableOpacity
                         onPress={() => setDarkMode(!darkMode)}
                         style={styles.headerButton}
                     >
-                        <Text style={styles.darkModeIcon}>{darkMode ? '☀️' : '🌙'}</Text>
+                        <View style={styles.themeIconContainer}>
+                            <Ionicons name="moon" size={18} color="#000" />
+                        </View>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.avatarButton}>
                         <View style={styles.avatar}>
@@ -180,7 +152,7 @@ export default function AssignedJobsList() {
                 <View style={styles.searchContainer}>
                     <View style={styles.searchBarRow}>
                         <View style={styles.searchBar}>
-                            <Text style={styles.searchIcon}>🔍</Text>
+                            <Ionicons name="search" size={20} color="#000" />
                             <TextInput
                                 style={styles.searchInput}
                                 placeholder="Search User"
@@ -189,7 +161,7 @@ export default function AssignedJobsList() {
                                 onChangeText={setSearchQuery}
                             />
                             <TouchableOpacity style={styles.filterButton}>
-                                <Text style={styles.filterIcon}>🔽</Text>
+                                <Ionicons name="filter" size={20} color="#000" />
                             </TouchableOpacity>
                         </View>
                         <TouchableOpacity
@@ -199,7 +171,7 @@ export default function AssignedJobsList() {
                                 navigation.navigate('CreateJobCard'); // Placeholder
                             }}
                         >
-                            <Text style={styles.addIcon}>+</Text>
+                            <Ionicons name="add" size={24} color="#000" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -207,63 +179,67 @@ export default function AssignedJobsList() {
                 {/* Job Cards */}
                 <View style={styles.cardsContainer}>
                     {filteredJobCards.map((jobCard) => {
-                        const badge = getStatusBadge(jobCard.status, jobCard.priority);
-                        const deliveryDate = new Date();
-                        deliveryDate.setDate(deliveryDate.getDate() + 2);
-                        const deliveryTime = '3:00 PM';
+                        // Mock progress and delivery for design matching
+                        const progress = jobCard.status === 'completed' ? 100 : 70;
+                        const progressColor = progress === 100 ? '#22c55e' : '#3b82f6';
 
                         return (
                             <TouchableOpacity
                                 key={jobCard.id}
                                 style={styles.jobCard}
                                 onPress={() => handleJobCardPress(jobCard)}
-                                activeOpacity={0.7}
+                                activeOpacity={0.9}
                             >
-                                {/* Top Row: Status, Job Number, Price */}
-                                <View style={styles.topRow}>
-                                    {/* Status Badge */}
-                                    <View style={[styles.statusBadge, { backgroundColor: badge.bgColor }]}>
-                                        <Text style={[styles.statusBadgeText, { color: badge.color }]}>
-                                            {badge.label}
+                                {/* Row 1: ID and Price */}
+                                <View style={styles.cardHeaderRow}>
+                                    <Text style={styles.jobNumber}>Job Card {jobCard.job_number}</Text>
+                                    <Text style={styles.priceText}>₹{jobCard.estimated_cost?.toLocaleString('en-IN') || '0'}</Text>
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Row 2: Vehicle */}
+                                <View style={styles.vehicleRow}>
+                                    <View>
+                                        <Text style={styles.vehicleModel}>{jobCard.vehicle?.make} {jobCard.vehicle?.model}</Text>
+                                        <Text style={styles.licensePlate}>{jobCard.vehicle?.license_plate}</Text>
+                                    </View>
+                                    <Ionicons name="car-sport" size={28} color="#000" />
+                                </View>
+
+                                <View style={styles.divider} />
+
+                                {/* Row 3: Assigned To */}
+                                <View style={styles.assignedRow}>
+                                    <View style={styles.assignedAvatar}>
+                                        <Text style={styles.assignedAvatarText}>
+                                            {jobCard.assigned_user?.full_name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                                         </Text>
                                     </View>
+                                    <Text style={styles.assignedText}>
+                                        <Text style={{ fontWeight: 'bold' }}>Assigned to: </Text>
+                                        {jobCard.assigned_user?.full_name}
+                                    </Text>
+                                </View>
 
-                                    {/* Job Card Number - Centered */}
-                                    <Text style={styles.jobNumber}>Job Card {jobCard.job_number}</Text>
-
-                                    {/* Price Tag */}
-                                    <View style={styles.priceTag}>
-                                        <Text style={styles.priceText}>₹{jobCard.estimated_cost?.toLocaleString('en-IN') || '0'}</Text>
+                                {/* Row 4: Progress */}
+                                <View style={styles.progressRow}>
+                                    <View style={styles.progressBarBg}>
+                                        <View style={[styles.progressBarFill, { width: `${progress}%`, backgroundColor: progressColor }]} />
                                     </View>
+                                    <Text style={styles.progressText}>{progress}% completed</Text>
                                 </View>
 
-                                {/* Vehicle Section with Icon */}
-                                <View style={styles.vehicleSection}>
-                                    <Text style={styles.carIcon}>🚗</Text>
-                                    <View style={styles.vehicleInfo}>
-                                        <Text style={styles.vehicleModel}>{jobCard.vehicle?.model || 'N/A'}</Text>
-                                        <Text style={styles.licensePlate}>{jobCard.vehicle?.license_plate || 'N/A'}</Text>
+                                {/* Row 5: Delivery */}
+                                <View style={styles.deliveryContainer}>
+                                    <View style={styles.deliveryItem}>
+                                        <Text style={styles.deliveryLabel}>Delivery due:</Text>
+                                        <Text style={styles.deliveryValueRed}>45m left</Text>
                                     </View>
-                                </View>
-
-                                {/* Customer and Technician Info */}
-                                <View style={styles.infoSection}>
-                                    <Text style={styles.infoText}>
-                                        Customer : {jobCard.customer?.full_name || 'N/A'}
-                                    </Text>
-                                    <Text style={styles.infoText}>
-                                        Assigned tech: {jobCard.assigned_user?.full_name || 'N/A'}
-                                    </Text>
-                                </View>
-
-                                {/* Delivery Info */}
-                                <View style={styles.deliveryRow}>
-                                    <Text style={styles.deliveryText}>
-                                        Delivery date: {formatDate(deliveryDate.toISOString())}
-                                    </Text>
-                                    <Text style={styles.deliveryText}>
-                                        Delivery due: {deliveryTime}
-                                    </Text>
+                                    <View style={styles.deliveryItem}>
+                                        <Text style={styles.deliveryLabel}>Delivery date:</Text>
+                                        <Text style={styles.deliveryValueRed}>07-01-2026</Text>
+                                    </View>
                                 </View>
                             </TouchableOpacity>
                         );
@@ -283,89 +259,80 @@ export default function AssignedJobsList() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: '#eef2f6',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        backgroundColor: '#ffffff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
-        marginTop: 40,
-    },
-    headerButton: {
-        padding: 8,
+        paddingHorizontal: 20,
+        paddingTop: 50,
+        paddingBottom: 12,
+        backgroundColor: '#eef2f6',
     },
     backButton: {
-        padding: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    backIcon: {
-        width: 32,
-        height: 32,
-        resizeMode: 'contain',
+        padding: 4,
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: '#000000',
+        color: '#0f172a',
     },
     headerRight: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
     },
-    darkModeIcon: {
-        fontSize: 20,
+    headerButton: {
+    },
+    themeIconContainer: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#cbd5e1', // Greyish
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     avatarButton: {
-        padding: 4,
+        padding: 0,
     },
     avatar: {
         width: 36,
         height: 36,
-        borderRadius: 18,
-        backgroundColor: '#ef4444',
+        borderRadius: 12,
+        backgroundColor: '#fca5a5',
         alignItems: 'center',
         justifyContent: 'center',
     },
     avatarText: {
-        color: '#ffffff',
-        fontSize: 16,
+        color: '#000',
+        fontSize: 14,
         fontWeight: 'bold',
     },
     searchContainer: {
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 8,
-        backgroundColor: '#ffffff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        backgroundColor: '#eef2f6',
     },
     searchBarRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
     },
     searchBar: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#ffffff',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: 10,
         gap: 8,
-    },
-    searchIcon: {
-        fontSize: 18,
-        color: '#000000',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
     searchInput: {
         flex: 1,
@@ -375,119 +342,131 @@ const styles = StyleSheet.create({
     filterButton: {
         padding: 4,
     },
-    filterIcon: {
-        fontSize: 16,
-        color: '#000000',
-    },
     addButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 8,
-        backgroundColor: '#d1fae5',
-        borderWidth: 2,
-        borderColor: '#10b981',
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        backgroundColor: '#bbf7d0', // Light green
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    addIcon: {
-        fontSize: 24,
-        color: '#000000',
-        fontWeight: 'bold',
+        borderWidth: 1,
+        borderColor: '#86efac',
     },
     cardsContainer: {
-        padding: 16,
-        gap: 12,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        gap: 16,
     },
     jobCard: {
         backgroundColor: '#ffffff',
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 16,
-        marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: '#cbd5e1',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 4,
-        elevation: 3,
+        elevation: 2,
     },
-    topRow: {
+    cardHeaderRow: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 16,
-    },
-    statusBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
-        minWidth: 60,
         alignItems: 'center',
-    },
-    statusBadgeText: {
-        fontSize: 12,
-        fontWeight: '700',
-        textTransform: 'uppercase',
+        marginBottom: 8,
     },
     jobNumber: {
         fontSize: 16,
-        fontWeight: '700',
-        color: '#111827',
-        flex: 1,
-        textAlign: 'center',
-    },
-    priceTag: {
-        backgroundColor: '#6b7280',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+        fontWeight: 'bold',
+        color: '#0f172a',
     },
     priceText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#ffffff',
-    },
-    vehicleSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    carIcon: {
-        fontSize: 32,
-        marginRight: 12,
-    },
-    vehicleInfo: {
-        flex: 1,
-    },
-    vehicleModel: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
-        marginBottom: 4,
+        color: '#0f172a',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#e2e8f0',
+        marginVertical: 12,
+    },
+    vehicleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    vehicleModel: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: '#0f172a',
     },
     licensePlate: {
         fontSize: 14,
-        color: '#6b7280',
+        color: '#64748b',
+        marginTop: 2,
     },
-    infoSection: {
-        marginBottom: 12,
+    assignedRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
-    infoText: {
+    assignedAvatar: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#3b82f6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    assignedAvatarText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    assignedText: {
         fontSize: 14,
-        color: '#6b7280',
-        marginBottom: 4,
+        color: '#0f172a',
     },
-    deliveryRow: {
+    progressRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginVertical: 12,
+    },
+    progressBarBg: {
+        flex: 1,
+        height: 8,
+        backgroundColor: '#e2e8f0',
+        borderRadius: 4,
+    },
+    progressBarFill: {
+        height: '100%',
+        borderRadius: 4,
+    },
+    progressText: {
+        fontSize: 10,
+        color: '#64748b',
+        minWidth: 70,
+        textAlign: 'right',
+    },
+    deliveryContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 8,
-        paddingTop: 12,
-        borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        marginTop: 4,
     },
-    deliveryText: {
+    deliveryItem: {
+
+    },
+    deliveryLabel: {
         fontSize: 13,
-        color: '#6b7280',
+        fontWeight: '600',
+        color: '#000',
+        marginBottom: 4,
+    },
+    deliveryValueRed: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#dc2626',
     },
     emptyContainer: {
         padding: 32,
@@ -495,6 +474,6 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#6b7280',
+        color: '#64748b',
     },
 });

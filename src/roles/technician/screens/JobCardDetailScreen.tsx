@@ -9,6 +9,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -59,10 +61,11 @@ const mockCharges = [
     { id: 'c3', name: 'Paint Job', desc: 'Item: Part Name x Quantity', price: 10000 },
     { id: 'c4', name: 'AC repair', desc: 'Item: Part Name x Quantity', price: 1500 },
 ];
-
-// ----------------------------------------
-// COMPONENTS
-// ----------------------------------------
+const mockPartsRequests = [
+    { id: 'p1', name: 'Front Bumper', quantity: 1, status: 'pending', price: 15000 },
+    { id: 'p2', name: 'Headlight Bulb', quantity: 2, status: 'approved', price: 800 },
+    { id: 'p3', name: 'Wiper Blades', quantity: 1, status: 'rejected', price: 1200 },
+];
 
 // Simplified Gauge Chart Component
 const TaskGauge = ({ total, completed }: { total: number, completed: number }) => {
@@ -158,27 +161,49 @@ export default function JobCardDetailScreen() {
         setExpandedSection(expandedSection === section ? null : section);
     };
 
+    // Swipeable Action Buttons
+    const renderRightActions = (progress: any, dragX: any, task: any) => {
+        return (
+            <View style={styles.swipeActionsContainer}>
+                <TouchableOpacity
+                    style={styles.swipeActionReject}
+                    onPress={() => console.log('Reject Task', task.id)}
+                >
+                    <Ionicons name="close" size={24} color="#fff" />
+                    <Text style={styles.swipeActionText}>Reject</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.swipeActionApprove}
+                    onPress={() => console.log('Approve Task', task.id)}
+                >
+                    <Ionicons name="checkmark" size={24} color="#fff" />
+                    <Text style={styles.swipeActionText}>Done</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
     const totalCharges = mockCharges.reduce((sum, item) => sum + item.price, 0);
 
     return (
-        <View style={styles.container}>
-            {/* Custom Header Matches Dashboard */}
+        <GestureHandlerRootView style={[styles.container, { flex: 1 }]}>
+            {/* Custom Header Matches Image */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
-                    <Ionicons name="menu" size={28} color="#0f172a" />
+                    <Ionicons name="menu" size={28} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Active Jobs</Text>
                 <View style={styles.headerRight}>
                     <TouchableOpacity style={styles.iconButton}>
-                        {/* Delete Icon from image */}
-                        <View style={[styles.circleButton, { backgroundColor: '#fca5a5' }]}>
+                        {/* Delete Icon - Red Squricle */}
+                        <View style={[styles.headerIconContainer, { backgroundColor: '#fca5a5' }]}>
                             <Ionicons name="trash-outline" size={18} color="#991b1b" />
                         </View>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconButton}>
-                        {/* Add Icon from image */}
-                        <View style={[styles.circleButton, { backgroundColor: '#86efac' }]}>
-                            <Ionicons name="add-outline" size={20} color="#166534" />
+                        {/* Add Icon - Green Squricle */}
+                        <View style={[styles.headerIconContainer, { backgroundColor: '#86efac' }]}>
+                            <Ionicons name="add" size={20} color="#166534" />
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -186,8 +211,8 @@ export default function JobCardDetailScreen() {
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
 
-                {/* Main Job Card Header */}
-                <View style={styles.jobCardHeaderBg}>
+                {/* Main Job Card Header - Pill Shape */}
+                <View style={styles.jobCardPill}>
                     <View style={styles.jobCardRow}>
                         <Text style={styles.jobCardLabel}>Job Card:</Text>
                         <Text style={styles.jobCardValue}>SA0001</Text>
@@ -213,41 +238,48 @@ export default function JobCardDetailScreen() {
                     onToggle={() => toggleSection('Task')}
                 >
                     {mockTasks.map((task, index) => (
-                        <View key={task.id} style={styles.taskCard}>
-                            {/* Color Bar */}
-                            <View style={[
-                                styles.taskColorBar,
-                                task.status === 'completed' ? { backgroundColor: '#22c55e' } : // Green
-                                    task.status === 'rejected' ? { backgroundColor: '#ef4444' } : // Red
-                                        task.status === 'pending' ? { backgroundColor: '#f59e0b' } : // Orange/Yellow
-                                            { backgroundColor: '#3b82f6' } // Default Blue
-                            ]} />
+                        // Only allow swipe if not already completed/rejected ? User didn't specify, but usually yes.
+                        // For now, allow all to allow user to see feature easily.
+                        <Swipeable
+                            key={task.id}
+                            renderRightActions={(p, d) => renderRightActions(p, d, task)}
+                            containerStyle={{ backgroundColor: '#fff' }} // Fix for some potential layout issues
+                        >
+                            <View style={styles.taskCard}>
+                                {/* Color Bar */}
+                                <View style={[
+                                    styles.taskColorBar,
+                                    task.status === 'completed' ? { backgroundColor: '#22c55e' } : // Green
+                                        task.status === 'rejected' ? { backgroundColor: '#ef4444' } : // Red
+                                            task.status === 'pending' ? { backgroundColor: '#f59e0b' } : // Orange/Yellow
+                                                { backgroundColor: '#3b82f6' } // Default Blue
+                                ]} />
 
-                            {/* Content */}
-                            <View style={styles.taskContent}>
-                                <View style={styles.taskRow}>
-                                    <View>
-                                        <Text style={styles.taskTitle}>{task.title} <Text style={styles.taskSubtitle}>{task.subtitle}</Text></Text>
-                                        <Text style={styles.taskEstimate}>Estimate: {task.estimate}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={styles.taskCost}>₹{task.cost.toLocaleString()}</Text>
-                                        {task.status === 'completed' && (
-                                            <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#22c55e', borderRadius: 4 }}>
-                                                <Ionicons name="checkmark" size={16} color="#fff" />
-                                            </View>
-                                        )}
-                                        {task.status === 'rejected' && (
-                                            <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#eee', borderRadius: 4 }}>
-                                                <Ionicons name="close" size={16} color="#000" />
-                                            </View>
-                                        )}
+                                {/* Content */}
+                                <View style={styles.taskContent}>
+                                    <View style={styles.taskRow}>
+                                        <View>
+                                            <Text style={styles.taskTitle}>{task.title} <Text style={styles.taskSubtitle}>{task.subtitle}</Text></Text>
+                                            <Text style={styles.taskEstimate}>Estimate: {task.estimate}</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <Text style={styles.taskCost}>₹{task.cost.toLocaleString()}</Text>
+                                            {task.status === 'completed' && (
+                                                <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#22c55e', borderRadius: 4 }}>
+                                                    <Ionicons name="checkmark" size={16} color="#fff" />
+                                                </View>
+                                            )}
+                                            {task.status === 'rejected' && (
+                                                <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#eee', borderRadius: 4 }}>
+                                                    <Ionicons name="close" size={16} color="#000" />
+                                                </View>
+                                            )}
+                                        </View>
                                     </View>
                                 </View>
                             </View>
-                        </View>
+                        </Swipeable>
                     ))}
-
                     {/* Legend */}
                     <View style={styles.legendRow}>
                         <View style={styles.legendItem}>
@@ -269,33 +301,58 @@ export default function JobCardDetailScreen() {
                     </View>
                 </Accordion>
 
-                {/* 3. Charges Summary */}
+                {/* 3. Parts Permission */}
                 <Accordion
-                    title="Charges Summary"
-                    isOpen={expandedSection === 'Charges Summary'}
-                    onToggle={() => toggleSection('Charges Summary')}
+                    title="Parts Permission"
+                    isOpen={expandedSection === 'Parts Permission'}
+                    onToggle={() => toggleSection('Parts Permission')}
                 >
-                    {mockCharges.map((charge) => (
-                        <View key={charge.id} style={styles.chargeItem}>
-                            <View style={[styles.chargeColorBar, { backgroundColor: '#22c55e' }]} />
+                    {mockPartsRequests.map((part) => (
+                        <View key={part.id} style={styles.chargeItem}>
+                            {/* Color Bar based on status */}
+                            <View style={[
+                                styles.chargeColorBar,
+                                part.status === 'approved' ? { backgroundColor: '#22c55e' } :
+                                    part.status === 'rejected' ? { backgroundColor: '#ef4444' } :
+                                        { backgroundColor: '#f59e0b' } // Pending (Orange)
+                            ]} />
+
                             <View style={styles.chargeContent}>
                                 <View style={styles.chargeRow}>
                                     <View>
-                                        <Text style={styles.chargeName}>{charge.name}</Text>
-                                        <Text style={styles.chargeDesc}>{charge.desc}</Text>
+                                        <Text style={styles.chargeName}>{part.name}</Text>
+                                        <Text style={styles.chargeDesc}>Qty: {part.quantity}</Text>
                                     </View>
-                                    <Text style={styles.chargePrice}>₹{charge.price.toLocaleString()}</Text>
+                                    <View style={{ alignItems: 'flex-end' }}>
+                                        <Text style={styles.chargePrice}>₹{part.price.toLocaleString()}</Text>
+                                        {/* Mini Status Badge */}
+                                        <View style={{
+                                            paddingHorizontal: 6,
+                                            paddingVertical: 2,
+                                            borderRadius: 4,
+                                            marginTop: 4,
+                                            backgroundColor: part.status === 'approved' ? '#dcfce7' : part.status === 'rejected' ? '#fee2e2' : '#fef3c7'
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 10,
+                                                fontWeight: 'bold',
+                                                color: part.status === 'approved' ? '#166534' : part.status === 'rejected' ? '#991b1b' : '#92400e'
+                                            }}>
+                                                {part.status.toUpperCase()}
+                                            </Text>
+                                        </View>
+                                    </View>
                                 </View>
                             </View>
                         </View>
                     ))}
-                    <View style={styles.totalRow}>
-                        <Text style={styles.totalLabel}>Total</Text>
-                        <Text style={styles.totalValue}>₹{totalCharges.toLocaleString()}</Text>
-                    </View>
-                </Accordion>
 
-                {/* 4. Customer & Vehicle */}
+                    {/* Add Part Button */}
+                    <TouchableOpacity style={styles.addPartButton} onPress={() => console.log('Add Part Pressed')}>
+                        <Ionicons name="add-circle-outline" size={20} color="#3b82f6" />
+                        <Text style={styles.addPartText}>Request Part</Text>
+                    </TouchableOpacity>
+                </Accordion>
                 <Accordion
                     title="Customer & Vehicle"
                     isOpen={expandedSection === 'Customer & Vehicle'}
@@ -356,9 +413,7 @@ export default function JobCardDetailScreen() {
                             <View style={[styles.qcColorBar, { backgroundColor: '#22c55e' }]} />
                             <Text style={styles.qcName}>Technician : Varun</Text>
                         </View>
-                        <View style={styles.qcActions}>
-                            {/* Done styling from image (empty or just bar) */}
-                        </View>
+                        {/* Done styling from image (empty or just bar) */}
                     </View>
 
                     {/* Tech Row 2 */}
@@ -377,7 +432,7 @@ export default function JobCardDetailScreen() {
 
                 <View style={{ height: 100 }} />
             </ScrollView>
-        </View>
+        </GestureHandlerRootView>
     );
 }
 
@@ -409,21 +464,19 @@ const styles = StyleSheet.create({
     },
     iconButton: {
     },
-    circleButton: {
+    headerIconContainer: {
         width: 36,
         height: 36,
-        borderRadius: 12, // Squircle
+        borderRadius: 8, // Squircle shape from image
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.1)',
     },
     content: {
         flex: 1,
         paddingHorizontal: 16,
     },
     // JOB CARD HEADER
-    jobCardHeaderBg: {
+    jobCardPill: {
         backgroundColor: '#fff',
         borderRadius: 30, // Large pill shape
         paddingVertical: 12,
@@ -431,9 +484,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: '#cbd5e1',
     },
     jobCardRow: {
         flexDirection: 'row',
@@ -464,27 +517,27 @@ const styles = StyleSheet.create({
     // ACCORDION
     accordionContainer: {
         backgroundColor: '#fff',
-        borderRadius: 24,
-        marginBottom: 16,
+        borderRadius: 30, // Fully rounded pill shape
+        marginBottom: 12,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#ccc', // Darker border like image
+        borderColor: '#cbd5e1',
     },
     accordionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 24,
-        paddingVertical: 18,
+        paddingVertical: 14, // Slightly tighter vertical padding
     },
     accordionTitle: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#000', // Black text
     },
     accordionContent: {
         paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingBottom: 20,
     },
     accordionDivider: {
         height: 1,
@@ -549,16 +602,16 @@ const styles = StyleSheet.create({
     taskCard: {
         flexDirection: 'row',
         backgroundColor: '#fff',
-        borderRadius: 0,
         borderBottomWidth: 1,
         borderBottomColor: '#eee',
-        marginBottom: 0,
         paddingVertical: 12,
     },
     taskColorBar: {
-        width: 8,
+        width: 6,
         marginRight: 12,
         borderRadius: 2,
+        height: '80%',
+        alignSelf: 'center',
     },
     taskContent: {
         flex: 1,
@@ -570,7 +623,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     taskTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 'bold',
         color: '#000',
     },
@@ -580,12 +633,12 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     taskEstimate: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#888',
         marginTop: 2,
     },
     taskCost: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 'bold',
         color: '#000',
     },
@@ -602,9 +655,9 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     legendDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 2,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
     },
     legendText: {
         fontSize: 10,
@@ -618,9 +671,11 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     chargeColorBar: {
-        width: 8,
+        width: 6,
         marginRight: 12,
         borderRadius: 2,
+        height: '80%',
+        alignSelf: 'center',
     },
     chargeContent: {
         flex: 1,
@@ -631,7 +686,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     chargeName: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#000',
     },
@@ -640,9 +695,27 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     chargePrice: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#000',
+    },
+    addPartButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        marginTop: 8,
+        borderWidth: 1,
+        borderColor: '#3b82f6',
+        borderRadius: 8,
+        borderStyle: 'dashed',
+        backgroundColor: '#eff6ff',
+    },
+    addPartText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#3b82f6',
+        marginLeft: 8,
     },
     totalRow: {
         flexDirection: 'row',
@@ -652,7 +725,7 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     totalLabel: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
     },
@@ -702,9 +775,10 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     qcColorBar: {
-        width: 8,
-        height: '100%',
+        width: 6,
+        height: '60%',
         marginRight: 12,
+        borderRadius: 2,
     },
     qcName: {
         fontSize: 13,
@@ -714,27 +788,32 @@ const styles = StyleSheet.create({
     qcActions: {
         flexDirection: 'row',
         height: '100%',
+        alignItems: 'center',
     },
     qcBtnReject: {
-        backgroundColor: '#eee',
-        width: 40,
+        backgroundColor: '#f3f4f6',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
+        marginRight: 8,
     },
     qcBtnApprove: {
-        backgroundColor: '#22c55e',
-        width: 40,
+        backgroundColor: '#bbf7d0',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
     },
     qcBtnRetry: {
-        backgroundColor: '#eee',
-        width: 40,
+        backgroundColor: '#f3f4f6',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        height: '100%',
     },
     qcCompleteBadge: {
         backgroundColor: '#22c55e',
@@ -746,5 +825,31 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 10,
         fontWeight: 'bold',
+    },
+    // SWIPE ACTIONS
+    swipeActionsContainer: {
+        flexDirection: 'row',
+        width: 140,
+        height: '100%',
+    },
+    swipeActionReject: {
+        backgroundColor: '#ef4444',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 70,
+        height: '100%',
+    },
+    swipeActionApprove: {
+        backgroundColor: '#22c55e',
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: 70,
+        height: '100%',
+    },
+    swipeActionText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginTop: 4,
     },
 });
