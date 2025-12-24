@@ -336,27 +336,21 @@ function CompanyAdminTabs() {
         ),
         headerShown: true,
         tabBarStyle: {
-          backgroundColor: BAR_COLOR,
+          backgroundColor: theme.tabBarBg,
           borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 85 : 65,
           paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: 10,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
           elevation: 8,
-          zIndex: 50,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.1,
           shadowRadius: 4,
-          borderTopColor: theme.tabBarBorder, // Add if needed
         },
-        tabBarActiveTintColor: ACTIVE_COLOR,
-        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarActiveTintColor: theme.tabIconColor,
+        tabBarInactiveTintColor: theme.tabIconColor,
         tabBarShowLabel: false,
       })}
     >
@@ -367,9 +361,13 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
             ]}>
-              <LayoutDashboard color={color} size={24} />
+              <LayoutDashboard
+                color={color}
+                size={24}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
             </View>
           ),
           headerShown: false,
@@ -383,9 +381,13 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
             ]}>
-              <Building2 color={color} size={24} />
+              <Building2
+                color={color}
+                size={24}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
             </View>
           ),
         }}
@@ -397,9 +399,13 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
             ]}>
-              <Users color={color} size={24} />
+              <Users
+                color={color}
+                size={24}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
             </View>
           ),
         }}
@@ -411,9 +417,13 @@ function CompanyAdminTabs() {
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
-              { backgroundColor: focused ? (themeName === 'light' ? 'rgba(255, 255, 255, 0.2)' : theme.tabIconBg) : 'transparent' }
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
             ]}>
-              <FileBarChart color={color} size={24} />
+              <FileBarChart
+                color={color}
+                size={24}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
             </View>
           ),
         }}

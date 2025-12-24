@@ -5,6 +5,10 @@ export type ThemeName = 'light' | 'dark';
 
 export type ThemeColors = {
   primary: string;
+  primaryDark: string;
+  primaryOpacity: string;
+  secondary: string;
+  secondaryOpacity: string;
   background: string;
   surface: string;
   surfaceAlt: string;
@@ -13,6 +17,12 @@ export type ThemeColors = {
   border: string;
   notification: string;
   onPrimary: string;
+  success: string;
+  successOpacity: string;
+  warning: string;
+  warningOpacity: string;
+  error: string;
+  errorOpacity: string;
   statusBarStyle: 'light-content' | 'dark-content';
   statusBarBg: string;
   headerBg: string;
@@ -33,15 +43,25 @@ export type ThemeColors = {
 
 export const themes: Record<ThemeName, ThemeColors> = {
   light: {
-    primary: '#4682B4', // Steel Blue from palette
-    background: '#F1F5F9', // Steel bluish gray for background
+    primary: '#4682B4', // Steel Blue
+    primaryDark: '#2E5677',
+    primaryOpacity: 'rgba(70, 130, 180, 0.12)',
+    secondary: '#C37125', // Autumn Orange
+    secondaryOpacity: 'rgba(195, 113, 37, 0.12)',
+    background: '#F1F5F9', // Light Grayish Blue
     surface: '#FFFFFF',
     surfaceAlt: '#E2E8F0',
-    text: '#272727',
-    textMuted: '#64748B',
-    border: '#E2E8F0',
+    text: '#1F2937', // Text Primary
+    textMuted: '#64748B', // Text Secondary
+    border: '#E2E8F0', // Border/Divider
     notification: '#EF4444',
     onPrimary: '#FFFFFF',
+    success: '#22C55E', // Success Green from palette
+    successOpacity: 'rgba(34, 197, 94, 0.12)',
+    warning: '#F59E0B', // Warning Yellow
+    warningOpacity: 'rgba(245, 158, 11, 0.12)',
+    error: '#EF4444', // Error Red
+    errorOpacity: 'rgba(239, 68, 68, 0.12)',
     statusBarStyle: 'dark-content',
     statusBarBg: '#F1F5F9',
     headerBg: '#F1F5F9',
@@ -50,42 +70,64 @@ export const themes: Record<ThemeName, ThemeColors> = {
     headerIcon: '#1F2937',
     avatarBg: '#4682B4',
     avatarText: '#FFFFFF',
-    tabBarBg: '#4682B4',
+    tabBarBg: '#4682B4', // Steel Blue from palette
     tabBarBorder: 'transparent',
-    tabIconBg: 'rgba(70, 130, 180, 0.12)',
+    tabIconBg: 'rgba(255, 255, 255, 0.2)',
     tabIconColor: '#FFFFFF',
-    tabIconInactiveOpacity: 0.7,
-    drawerBackground: '#F0F9FF',
+    tabIconInactiveOpacity: 0.6,
+    drawerBackground: '#F8FAFC',
     overlay: 'rgba(0, 0, 0, 0.35)',
     disabledBg: '#D1D5DB',
   },
   dark: {
-    primary: '#C37125', // Autumn Orange
-    background: '#0B1222', // Deep Steel Blue
-    surface: '#152033', // Steel Blue Surface
-    surfaceAlt: '#1E293B',
-    text: '#F9FAFB',
+    primary: '#4682B4', // Keeping Steel Blue as Primary
+    primaryDark: '#3A6C95',
+    primaryOpacity: 'rgba(70, 130, 180, 0.2)',
+    secondary: '#C37125',
+    secondaryOpacity: 'rgba(195, 113, 37, 0.2)',
+    background: '#0F172A', // Slate 900
+    surface: '#1E293B', // Slate 800
+    surfaceAlt: '#334155',
+    text: '#F8FAFC',
     textMuted: '#94A3B8',
-    border: '#1E293B',
+    border: '#334155',
     notification: '#F87171',
     onPrimary: '#FFFFFF',
+    success: '#4ADE80',
+    successOpacity: 'rgba(74, 222, 128, 0.15)',
+    warning: '#FBBF24',
+    warningOpacity: 'rgba(251, 191, 36, 0.15)',
+    error: '#F87171',
+    errorOpacity: 'rgba(248, 113, 113, 0.15)',
     statusBarStyle: 'light-content',
-    statusBarBg: '#0B1222',
-    headerBg: '#152033',
-    headerText: '#F9FAFB',
-    headerBorder: '#1E293B',
-    headerIcon: '#F9FAFB',
-    avatarBg: '#C37125',
+    statusBarBg: '#0F172A',
+    headerBg: '#1E293B',
+    headerText: '#F8FAFC',
+    headerBorder: '#334155',
+    headerIcon: '#F8FAFC',
+    avatarBg: '#4682B4',
     avatarText: '#FFFFFF',
-    tabBarBg: '#152033',
-    tabBarBorder: '#1E293B',
-    tabIconBg: 'rgba(195, 113, 37, 0.14)',
+    tabBarBg: '#1E293B',
+    tabBarBorder: '#334155',
+    tabIconBg: 'rgba(195, 113, 37, 0.15)',
     tabIconColor: '#C37125',
     tabIconInactiveOpacity: 0.6,
-    drawerBackground: '#152033',
+    drawerBackground: '#1E293B',
     overlay: 'rgba(0, 0, 0, 0.45)',
-    disabledBg: '#1E293B',
+    disabledBg: '#334155',
   },
+};
+
+export const typography = {
+  h1: { fontFamily: 'Ubuntu-Bold', fontSize: 32 },
+  h2: { fontFamily: 'Ubuntu-Bold', fontSize: 28 },
+  h3: { fontFamily: 'Ubuntu-Bold', fontSize: 26 },
+  title1: { fontFamily: 'Ubuntu-Medium', fontSize: 20 },
+  title2: { fontFamily: 'Ubuntu-Medium', fontSize: 18 },
+  subtitle1: { fontFamily: 'Ubuntu-Light', fontSize: 18, opacity: 0.5 },
+  subtitle2: { fontFamily: 'Ubuntu-Light', fontSize: 16, opacity: 0.5 },
+  body1: { fontFamily: 'Inter-Regular', fontSize: 16 },
+  body2: { fontFamily: 'Inter-Regular', fontSize: 14 },
 };
 
 type ThemeContextValue = {

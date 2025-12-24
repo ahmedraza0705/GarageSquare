@@ -25,13 +25,33 @@ module.exports = {
           100: '#fdf3e0',
           200: '#fbe6ba',
           300: '#f9d37c',
-          400: '#D28D4D', // Orange/Tan (Base)
+          400: '#C37125', // Autumn Orange (Base)
           500: '#ad723e',
           600: '#8c5c32',
           700: '#694526',
           800: '#462e19',
           900: '#23170d',
         },
+        accent: {
+          success: '#22C55E',
+          warning: '#F59E0B',
+          error: '#EF4444',
+        },
+        neutral: {
+          900: '#1F2937', // Text Primary
+          600: '#64748B', // Text Secondary
+          200: '#E2E8F0', // Border/Divider
+          100: '#F1F5F9', // Background
+        }
+      },
+      fontFamily: {
+        ubuntu: ['Ubuntu-Regular'],
+        'ubuntu-bold': ['Ubuntu-Bold'],
+        'ubuntu-medium': ['Ubuntu-Medium'],
+        'ubuntu-light': ['Ubuntu-Light'],
+        inter: ['Inter-Regular'],
+        'inter-bold': ['Inter-Bold'],
+        'inter-medium': ['Inter-Medium'],
       },
     },
   },

@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, TextInput, SafeAreaView, Platform, StatusBar, Modal, ActivityIndicator, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { VehicleService } from '@/services/vehicle.service';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, typography } from '@/context/ThemeContext';
 import { CustomerService } from '@/services/customer.service';
 import { Vehicle, Customer } from '@/types';
 import { Search, Plus, X, CheckCircle, User } from 'lucide-react-native';
@@ -142,30 +142,44 @@ export default function VehiclesScreen() {
     });
   };
 
+  useLayoutEffect(() => {
+    // Hide bottom tab bar if it's within a Tab Navigator
+    navigation.getParent()?.setOptions({
+      tabBarStyle: { display: 'none' }
+    });
+
+    return () => {
+      // Re-enable on unmount (optional, but good practice if it was visible)
+      navigation.getParent()?.setOptions({
+        tabBarStyle: undefined
+      });
+    };
+  }, [navigation]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
       {/* Search and Add Bar */}
       <View style={{ paddingHorizontal: 20, paddingVertical: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.surface, borderBottomWidth: 1, borderBottomColor: theme.border }}>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.background, borderRadius: 12, paddingHorizontal: 12, height: 48, borderWidth: 1, borderColor: theme.border, marginRight: 12 }}>
-          <Search size={20} color="#9CA3AF" />
+          <Search size={20} color={theme.textMuted} />
           <TextInput
             placeholder="Search Vehicle"
-            placeholderTextColor="#9CA3AF"
-            style={{ flex: 1, marginLeft: 8, fontSize: 16, color: theme.text }}
+            placeholderTextColor={theme.textMuted}
+            style={{ flex: 1, marginLeft: 8, fontSize: typography.body1.fontSize, fontFamily: typography.body1.fontFamily, color: theme.text }}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
         <TouchableOpacity
           style={{
-            backgroundColor: 'rgba(53, 197, 106, 0.4)',
+            backgroundColor: theme.successOpacity,
             borderRadius: 12,
             width: 48,
             height: 48,
             justifyContent: 'center',
             alignItems: 'center',
             borderWidth: 1,
-            borderColor: '#35C56A'
+            borderColor: theme.success
           }}
           onPress={() => {
             setCustomerInfo({ name: '', id: '' });
@@ -173,7 +187,7 @@ export default function VehiclesScreen() {
             setShowIdentityModal(true);
           }}
         >
-          <Plus size={24} color={themeName === 'dark' ? '#FFFFFF' : '#000000'} />
+          <Plus size={24} color={themeName === 'dark' ? '#FFFFFF' : theme.success} />
         </TouchableOpacity>
       </View>
 
@@ -206,16 +220,16 @@ export default function VehiclesScreen() {
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>
-                  {vehicle.make} {vehicle.model}
+                <Text style={{ fontSize: typography.title2.fontSize, fontFamily: typography.title2.fontFamily, color: theme.text }}>
+                  {vehicle.brand} {vehicle.model}
                 </Text>
-                <Text style={{ color: theme.textMuted, fontSize: 14, marginTop: 4 }}>
+                <Text style={{ color: theme.textMuted, fontSize: typography.body2.fontSize, fontFamily: typography.body2.fontFamily, marginTop: 4 }}>
                   {vehicle.license_plate}
                 </Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ color: theme.textMuted, fontSize: 12 }}>
-                  {vehicle.branch_name || vehicle.customer?.branch?.name || 'Surat'}
+                <Text style={{ color: theme.textMuted, fontSize: 12, fontFamily: typography.body2.fontFamily }}>
+                  {vehicle.branch_name || vehicle.branch?.name || 'Surat'}
                 </Text>
               </View>
             </View>
@@ -224,12 +238,12 @@ export default function VehiclesScreen() {
 
         {vehicles.length === 0 && !loading && (
           <View style={{ alignItems: 'center', paddingVertical: 80 }}>
-            <Text style={{ color: theme.textMuted, fontSize: 18 }}>No vehicles found</Text>
+            <Text style={{ color: theme.textMuted, fontSize: typography.title2.fontSize, fontFamily: typography.title2.fontFamily }}>No vehicles found</Text>
             <TouchableOpacity
               style={{ marginTop: 16, backgroundColor: theme.surface, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 9999, borderWidth: 1, borderColor: theme.primary }}
               onPress={() => setSearchQuery('')}
             >
-              <Text style={{ color: theme.primary, fontWeight: '600' }}>Clear Search</Text>
+              <Text style={{ color: theme.primary, fontFamily: typography.body1.fontFamily, fontWeight: '600' }}>Clear Search</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -3,7 +3,7 @@
 // ============================================
 
 import React, { useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth } from '@/hooks/useAuth';
@@ -70,11 +70,14 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false as boolean}
       >
-        {/* Logo Placeholder - You can replace this with your actual logo */}
-        <View className="items-center mb-8 mt-8">
-          <View className="w-20 h-20 bg-blue-600 rounded-full items-center justify-center mb-4">
-            <Text className="text-white text-3xl">⚙️</Text>
-          </View>
+        {/* Logo Section */}
+        <View className="items-center mb-6 mt-4">
+          <Image
+            source={require('@/assets/login_logo.png')}
+            style={{ width: 150, height: 100 }}
+            resizeMode="contain"
+            fadeDuration={0}
+          />
         </View>
 
         {/* Title */}
@@ -165,4 +168,3 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
-

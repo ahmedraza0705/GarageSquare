@@ -200,7 +200,7 @@ export default function CustomerDetailScreen() {
         {/* Profile Section */}
         <View className="items-center py-6">
           <View style={{ borderColor: theme.surface, backgroundColor: themeName === 'dark' ? '#C37125' : '#4682B4' }} className="w-32 h-32 rounded-full mb-4 border-4 shadow-lg items-center justify-center">
-            <Text className="text-white text-4xl font-bold">
+            <Text className="text-white text-4xl font-bold ">
               {getInitials(customer.full_name)}
             </Text>
           </View>
@@ -237,6 +237,7 @@ export default function CustomerDetailScreen() {
               label="Vehicles"
               count={`(${customer.vehicles?.length || 0})`}
               theme={theme}
+
             />
             <StatsCard
               icon={<FileText color={theme.text} size={24} />}

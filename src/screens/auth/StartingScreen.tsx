@@ -1,89 +1,63 @@
-// ============================================
-// STARTING SCREEN
-// ============================================
-
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ImageBackground, Image, Dimensions } from 'react-native';
+import { useTheme, typography } from '@/context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@/navigation/AuthNavigator';
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 
+const { width } = Dimensions.get('window');
+
 export default function StartingScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { theme } = useTheme();
 
   return (
-    <View className="flex-1" style={{ backgroundColor: '#2d3748' }}>
-      <StatusBar barStyle={theme.statusBarStyle} />
-      {/* Background - Using gradient as placeholder for garage image */}
-      <View style={styles.backgroundContainer}>
-        {/* Garage-like background color (gray tones) */}
-        <View style={styles.backgroundGradient} />
+    <View className="flex-1" style={{ backgroundColor: theme.background }}>
+      <StatusBar barStyle={theme.statusBarStyle} translucent backgroundColor="transparent" />
 
-        {/* Dark Overlay */}
+      <ImageBackground
+        source={require('@/assets/starting_bg_new.png')}
+        style={styles.backgroundContainer}
+        resizeMode="cover"
+      >
+        {/* Subtle Dark Overlay to help white text visibility */}
         <View style={styles.darkOverlay} />
 
-        {/* Content */}
+        {/* Content Container */}
         <View className="flex-1 justify-center items-center px-6">
-          {/* Logo */}
-          <View className="items-center" style={styles.logoSection}>
-            <View style={styles.logoContainer}>
-              {/* Main Gear with Star */}
-              <View style={styles.gearContainer}>
-                {/* Gear Circle */}
-                <View style={styles.gearCircle}>
-                  {/* Star in center */}
-                  <Text style={styles.star}>⭐</Text>
-                </View>
-
-                {/* Gear teeth - positioned around the circle */}
-                <View style={[styles.gearTooth, styles.gearToothTop]} />
-                <View style={[styles.gearTooth, styles.gearToothBottom]} />
-                <View style={[styles.gearTooth, styles.gearToothLeft]} />
-                <View style={[styles.gearTooth, styles.gearToothRight]} />
-
-                {/* Wings - left */}
-                <View style={styles.wingLeft}>
-                  <View style={[styles.wingShape, { transform: [{ rotate: '-45deg' }], backgroundColor: '#3B82F6' }]} />
-                </View>
-                {/* Wings - right */}
-                <View style={styles.wingRight}>
-                  <View style={[styles.wingShape, { transform: [{ rotate: '45deg' }], backgroundColor: '#3B82F6' }]} />
-                </View>
-              </View>
-
-              {/* Crossed Wrenches Below */}
-              <View style={styles.wrenchesContainer}>
-                <View style={[styles.wrench, styles.wrench1, { backgroundColor: '#3B82F6' }]} />
-                <View style={[styles.wrench, styles.wrench2, { backgroundColor: '#3B82F6' }]} />
-              </View>
-            </View>
+          {/* Logo Section */}
+          <View style={styles.logoSection}>
+            <Image
+              source={require('@/assets/starting_logo_final.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+              fadeDuration={0}
+            />
           </View>
 
           {/* Bottom Section */}
-          <View className="absolute bottom-12 w-full px-6">
+          <View style={styles.bottomSection}>
             {/* Get Started Button */}
             <TouchableOpacity
               onPress={() => navigation.navigate('Login')}
-              className="py-4 rounded-lg items-center justify-center mb-4"
-              style={[styles.button, { backgroundColor: '#3B82F6' }]}
+              activeOpacity={0.8}
+              style={[styles.button, { backgroundColor: theme.primary }]}
             >
-              <Text className="text-white font-bold text-lg">Get Started</Text>
+              <Text style={styles.buttonText}>Get Started</Text>
             </TouchableOpacity>
 
             {/* Sign Up Link */}
-            <View className="flex-row justify-center items-center">
-              <Text className="text-white text-base">Don't Have An Account? </Text>
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>Don't Have An Account? </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                <Text className="text-orange-500 font-semibold underline text-base">Sign Up</Text>
+                <Text style={[styles.signupLink, { color: theme.secondary }]}>Sign Up</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      </View>
+      </ImageBackground>
     </View>
   );
 }
@@ -93,135 +67,56 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-    backgroundColor: '#2d3748', // Garage-like dark gray background
-  },
-  backgroundGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#4a5568', // Lighter gray for depth
-    opacity: 0.5,
   },
   darkOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Dark overlay
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)', // Very subtle overlay
   },
   logoSection: {
-    marginBottom: 80,
-  },
-  logoContainer: {
-    width: 200,
-    height: 200,
-    alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
-    position: 'relative',
-  },
-  gearContainer: {
-    width: 128,
-    height: 128,
     alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
+    marginTop: -60,
   },
-  // Revert specific styles to standard blue (no theme dependency for colors where possible or hardcoded)
-  // Replacing theme.primary and #C37125 with #3B82F6 (Standard Blue)
-
-  gearCircle: {
-    width: 96,
-    height: 96,
-    borderWidth: 4,
-    borderColor: '#3B82F6',
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
+  logoImage: {
+    width: width * 0.7,
+    height: 180,
   },
-  star: {
-    fontSize: 36,
-    color: '#3B82F6',
-  },
-  gearTooth: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-  },
-  gearToothTop: {
-    top: -12,
-    left: '50%',
-    marginLeft: -12,
-  },
-  gearToothBottom: {
-    bottom: -12,
-    left: '50%',
-    marginLeft: -12,
-  },
-  gearToothLeft: {
-    left: -12,
-    top: '50%',
-    marginTop: -12,
-  },
-  gearToothRight: {
-    right: -12,
-    top: '50%',
-    marginTop: -12,
-  },
-  wingLeft: {
-    position: 'absolute',
-    left: -40,
-    top: '50%',
-    marginTop: -16,
-    width: 64,
-    height: 32,
-  },
-  wingRight: {
-    position: 'absolute',
-    right: -40,
-    top: '50%',
-    marginTop: -16,
-    width: 64,
-    height: 32,
-  },
-  wingShape: {
-    width: 64,
-    height: 32,
-    backgroundColor: '#3B82F6',
-    borderRadius: 16,
-  },
-  wrenchesContainer: {
-    position: 'absolute',
-    top: 140,
-    left: '50%',
-    marginLeft: -20,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  wrench: {
-    position: 'absolute',
-    width: 32,
-    height: 4,
-    backgroundColor: '#3B82F6',
-    borderRadius: 2,
-  },
-
-  wrench1: {
-    transform: [{ rotate: '45deg' }],
-  },
-  wrench2: {
-    transform: [{ rotate: '-45deg' }],
+  bottomSection: {
+    width: '100%',
+    paddingBottom: 60,
+    paddingHorizontal: 20,
   },
   button: {
+    height: 62,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
     width: '100%',
-    minHeight: 55,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: typography.title1.fontSize,
+    fontFamily: typography.title1.fontFamily,
+  },
+  signupContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  signupText: {
+    color: '#FFFFFF',
+    fontSize: typography.body2.fontSize,
+    fontFamily: typography.body2.fontFamily,
+  },
+  signupLink: {
+    fontSize: typography.body2.fontSize,
+    fontFamily: 'Ubuntu-Bold',
   },
 });
-

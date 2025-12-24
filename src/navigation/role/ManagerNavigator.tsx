@@ -3,8 +3,10 @@
 // ============================================
 
 import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useTheme } from '@/context/ThemeContext';
 import ManagerDashboard from '@/screens/manager/DashboardScreen';
 import CustomersScreen from '@/screens/manager/CustomersScreen';
 import VehiclesScreen from '@/screens/manager/VehiclesScreen';
@@ -24,24 +26,27 @@ const Stack = createNativeStackNavigator();
 import { LayoutGrid, Building2, User, BarChart3 } from 'lucide-react-native';
 
 function ManagerTabs() {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: true,
-        tabBarActiveTintColor: '#ffffff',
-        tabBarInactiveTintColor: '#cbd5e1',
+        tabBarActiveTintColor: theme.tabIconColor,
+        tabBarInactiveTintColor: theme.tabIconColor,
         tabBarStyle: {
-          backgroundColor: '#4E88B9', // Custom blue from image
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          height: 65,
-          paddingBottom: 10,
+          backgroundColor: theme.tabBarBg,
+          borderTopWidth: 0,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 30 : 10,
           paddingTop: 10,
-          position: 'absolute',
-          bottom: 15,
-          left: 15,
-          right: 15,
-          elevation: 5,
+          borderTopLeftRadius: 0,
+          borderTopRightRadius: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
         },
         tabBarShowLabel: false,
       }}
@@ -51,7 +56,18 @@ function ManagerTabs() {
         component={ManagerDashboard}
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color }) => <LayoutGrid size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
+              <LayoutGrid
+                size={24}
+                color={color}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
+            </View>
+          )
         }}
       />
       <Tab.Screen
@@ -60,7 +76,18 @@ function ManagerTabs() {
         options={{
           title: 'Vehicles',
           headerShown: false,
-          tabBarIcon: ({ color }) => <Building2 size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
+              <Building2
+                size={24}
+                color={color}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
+            </View>
+          )
         }}
       />
       <Tab.Screen
@@ -68,7 +95,18 @@ function ManagerTabs() {
         component={CustomersScreen}
         options={{
           title: 'Customers',
-          tabBarIcon: ({ color }) => <User size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
+              <User
+                size={24}
+                color={color}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
+            </View>
+          )
         }}
       />
       <Tab.Screen
@@ -76,12 +114,30 @@ function ManagerTabs() {
         component={PaymentsScreen}
         options={{
           title: 'Payments',
-          tabBarIcon: ({ color }) => <BarChart3 size={28} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <View style={[
+              focused ? styles.activeTabIcon : null,
+              { backgroundColor: focused ? theme.tabIconBg : 'transparent' }
+            ]}>
+              <BarChart3
+                size={24}
+                color={color}
+                opacity={focused ? 1 : theme.tabIconInactiveOpacity}
+              />
+            </View>
+          )
         }}
       />
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  activeTabIcon: {
+    padding: 8,
+    borderRadius: 12,
+  }
+});
 
 export default function ManagerNavigator() {
   return (
