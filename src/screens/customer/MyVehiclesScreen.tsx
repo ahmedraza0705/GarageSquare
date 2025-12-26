@@ -2,9 +2,9 @@
 // MY VEHICLES SCREEN (Customer)
 // ============================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
@@ -16,9 +16,11 @@ export default function CustomerMyVehiclesScreen() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadVehicles();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadVehicles();
+    }, [user])
+  );
 
   const loadVehicles = async () => {
     try {

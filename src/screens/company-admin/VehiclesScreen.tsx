@@ -33,10 +33,7 @@ export default function VehiclesScreen() {
       if (showLoading) setLoading(true);
       const data = await VehicleService.getAll({ search: searchQuery });
 
-      // DEBUG: Log first vehicle to see structure
-      if (data && data.length > 0) {
-        console.log('🚗 First Vehicle Data:', JSON.stringify(data[0], null, 2));
-      }
+
 
       setVehicles(data);
     } catch (error) {
@@ -65,10 +62,12 @@ export default function VehiclesScreen() {
     }
   }, [showIdentityModal]);
 
-  // Load vehicles only on first mount
-  useEffect(() => {
-    loadVehicles(true);
-  }, []);
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadVehicles(false); // Don't show full loading spinner on focus refetch
+    }, [])
+  );
 
   // Realtime subscription - stable reference
   useEffect(() => {
@@ -215,7 +214,10 @@ export default function VehiclesScreen() {
               shadowRadius: 8,
             }}
             onPress={() => navigation.navigate('VehicleDetail', {
-              vehicleId: vehicle.id
+              vehicleId: vehicle.id,
+              onUpdate: (updated: Vehicle) => {
+                setVehicles(current => current.map(v => v.id === updated.id ? { ...v, ...updated } : v));
+              }
             })}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

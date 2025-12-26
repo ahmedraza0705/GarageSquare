@@ -151,8 +151,6 @@ export class VehicleService {
       id: _,
       created_at,
       updated_at,
-      branch_name,  // Not in DB schema
-      last_visit,   // Not in DB schema
       vin,          // Not in DB schema
       ...cleanUpdates
     } = updates as any;

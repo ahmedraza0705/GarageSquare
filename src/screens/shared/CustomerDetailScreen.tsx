@@ -254,7 +254,32 @@ export default function CustomerDetailScreen() {
             <StatsCard
               icon={<Calendar color={theme.text} size={24} />}
               label="Last Visit"
-              count="5 Days Ago"
+              count={(() => {
+                if (!customer.vehicles || customer.vehicles.length === 0) return 'Never';
+
+                const dates = customer.vehicles
+                  .map(v => v.last_visit)
+                  .filter(d => d) as string[];
+
+                if (dates.length === 0) return 'Never';
+
+                // Parse DD-MM-YYYY to Date objects
+                const parsedDates = dates.map(dateStr => {
+                  const [day, month, year] = dateStr.split('-').map(Number);
+                  return new Date(year, month - 1, day);
+                });
+
+                // Find the latest date
+                const latestDate = new Date(Math.max(...parsedDates.map(d => d.getTime())));
+
+                // Calculate "days ago"
+                const diffTime = Math.abs(new Date().getTime() - latestDate.getTime());
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 0) return 'Today';
+                if (diffDays === 1) return 'Yesterday';
+                return `${diffDays} Days Ago`;
+              })()}
               theme={theme}
             />
           </View>
