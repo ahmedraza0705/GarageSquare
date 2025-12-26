@@ -91,13 +91,6 @@ export default function TechnicianVehiclesScreen() {
                                     </TouchableOpacity>
                                 )}
                             </View>
-
-                            <TouchableOpacity
-                                onPress={() => (navigation as any).navigate('AddVehicle')}
-                                className="w-12 h-12 bg-[#bbf7d0] rounded-2xl items-center justify-center border border-green-400 shadow-sm active:scale-95"
-                            >
-                                <Ionicons name="add" size={32} color="#1e293b" />
-                            </TouchableOpacity>
                         </View>
 
                         {/* Summary Stats */}
