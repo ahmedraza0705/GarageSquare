@@ -258,13 +258,13 @@ export default function JobTasksScreen() {
             <TouchableOpacity
                 key={job.id}
                 style={styles.card}
-                onPress={() => navigation.navigate('JobTasksDetail', { jobId: job.id })}
+                onPress={() => navigation.navigate('JobCardDetail', { jobCardId: job.id })}
                 activeOpacity={0.7}
             >
                 {/* Header: Job Card No, Status & Price */}
                 <View style={styles.cardHeader}>
                     <View style={styles.cardHeaderLeft}>
-                        <Text style={styles.jobId}>{job.jobId}</Text>
+                        <Text style={styles.jobCardTitle}>{job.jobId}</Text>
                         {job.priority === 'Urgent' && (
                             <View style={[styles.statusBadge, { backgroundColor: '#ef4444' }]}>
                                 <Text style={styles.statusText}>Urgent</Text>
@@ -283,7 +283,7 @@ export default function JobTasksScreen() {
                             </View>
                         )}
                     </View>
-                    <Text style={styles.amountText}>{job.amount}</Text>
+                    <Text style={styles.priceText}>{job.amount}</Text>
                 </View>
 
                 <View style={styles.divider} />
@@ -292,9 +292,9 @@ export default function JobTasksScreen() {
                 <View style={styles.vehicleSection}>
                     <View>
                         <Text style={styles.vehicleName}>{job.vehicle}</Text>
-                        <Text style={styles.regNo}>{job.regNo}</Text>
+                        <Text style={styles.licensePlate}>{job.regNo}</Text>
                     </View>
-                    <Text style={styles.vehicleIcon}>🚗</Text>
+                    <Text style={styles.carIcon}>🚗</Text>
                 </View>
 
                 <View style={styles.divider} />
@@ -328,10 +328,10 @@ export default function JobTasksScreen() {
                 </View>
 
                 {/* Delivery Info */}
-                <View style={styles.deliveryInfoRow}>
+                <View style={styles.deliveryRow}>
                     <View>
-                        <Text style={styles.deliveryLabelTop}>Delivery due:</Text>
-                        <Text style={styles.deliveryValueLarge}>
+                        <Text style={styles.deliveryLabel}>Delivery due:</Text>
+                        <Text style={styles.deliveryTimeLeft}>
                             {activeTab === 'pending'
                                 ? (job.deliveryDue || '')
                                 : calculateTimeLeft(job.deliveryDate || '', job.deliveryDue)
@@ -339,8 +339,8 @@ export default function JobTasksScreen() {
                         </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={styles.deliveryLabelTop}>Delivery date:</Text>
-                        <Text style={styles.deliveryValueLarge}>{job.deliveryDate || ''}</Text>
+                        <Text style={styles.deliveryLabel}>Delivery date:</Text>
+                        <Text style={styles.deliveryDate}>{job.deliveryDate || ''}</Text>
                     </View>
                 </View>
 
@@ -368,7 +368,7 @@ export default function JobTasksScreen() {
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={styles.container}>
             {/* Tabs */}
             <View style={styles.tabsWrapper}>
                 <View style={styles.tabsContainer}>
@@ -500,6 +500,7 @@ export default function JobTasksScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#eff0f1',
         paddingHorizontal: 16,
         paddingTop: 16,
     },
@@ -578,14 +579,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 8,
     },
-    jobId: {
+    jobCardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#000',
     },
     statusBadge: {
         paddingHorizontal: 8,
-        paddingVertical: 4,
+        paddingVertical: 2,
         borderRadius: 12,
     },
     statusText: {
@@ -593,7 +594,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 10,
     },
-    amountText: {
+    priceText: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#000',
@@ -613,12 +614,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000',
     },
-    regNo: {
+    licensePlate: {
         fontSize: 14,
         color: '#6b7280',
         marginTop: 4,
     },
-    vehicleIcon: {
+    carIcon: {
         fontSize: 28,
     },
     assignmentSection: {
@@ -672,18 +673,23 @@ const styles = StyleSheet.create({
         color: '#4682B4',
         fontWeight: '500',
     },
-    deliveryInfoRow: {
+    deliveryRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginTop: 8,
     },
-    deliveryLabelTop: {
+    deliveryLabel: {
         fontSize: 14,
         fontWeight: 'bold',
         color: '#000',
         marginBottom: 4,
     },
-    deliveryValueLarge: {
+    deliveryTimeLeft: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#ef4444',
+    },
+    deliveryDate: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#ef4444',

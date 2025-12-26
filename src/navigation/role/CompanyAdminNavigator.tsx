@@ -37,7 +37,6 @@ import JobCardsScreen from '@/screens/company-admin/JobCardsScreen';
 import InventoryScreen from '@/screens/company-admin/InventoryScreen';
 import ActiveJobsScreen from '@/screens/company-admin/ActiveJobsScreen';
 import JobTasksScreen from '@/screens/company-admin/JobTasksScreen';
-import JobTasksDetailScreen from '@/screens/company-admin/JobTasksDetailScreen';
 import JobCardDetailScreen from '@/screens/shared/JobCardDetailScreen';
 import SettingsScreen from '@/screens/shared/SettingsScreen';
 import CustomerDetailScreen from '@/screens/shared/CustomerDetailScreen';
@@ -329,7 +328,8 @@ const getTabBarVisibility = (route: any) => {
     routeName === 'CreateCustomer' ||
     routeName === 'CreateVehicle' ||
     routeName === 'CreateJobCard' ||
-    routeName === 'JobTasksDetail') {
+    routeName === 'BranchDetails' ||
+    routeName === 'BranchFileUpload') {
     return 'none';
   }
   return 'flex';
@@ -564,13 +564,6 @@ export default function CompanyAdminNavigator() {
       */}
 
       <Stack.Screen
-        name="JobTasksDetail"
-        component={JobTasksDetailScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
         name="CustomerDetail"
         component={CustomerDetailScreen}
         options={{
@@ -605,6 +598,20 @@ export default function CompanyAdminNavigator() {
           title: 'Add Vehicle',
           headerStyle: { backgroundColor: theme.headerBg },
           headerTintColor: theme.headerText,
+        }}
+      />
+      <Stack.Screen
+        name="BranchDetails"
+        component={BranchDetailsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="BranchFileUpload"
+        component={BranchFileUploadScreen}
+        options={{
+          headerShown: false,
         }}
       />
       <Stack.Screen

@@ -61,13 +61,7 @@ export default function BranchFileUploadScreen() {
 
             // Navigate back to Branches with new data
             // @ts-ignore
-            navigation.navigate('Main', {
-                screen: 'MainTabs',
-                params: {
-                    screen: 'BranchesTab',
-                    params: { newBranch: createdBranch }
-                }
-            });
+            navigation.navigate('BranchesTab', { newBranch: createdBranch });
         } catch (error) {
             console.error('Error creating branch:', error);
             Alert.alert('Error', 'Failed to create branch. Please try again.');
