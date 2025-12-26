@@ -8,12 +8,13 @@ import { useAuth } from '@/hooks/useAuth';
 
 // Screens
 import TechnicianDashboard from '../screens/TechnicianDashboard';
-import JobCardDetailScreen from '../screens/JobCardDetailScreen';
-import TechnicianJobCardsScreen from '../screens/TechnicianJobCardsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import CompletedJobsScreen from '../screens/CompletedJobsScreen';
 import EfficiencyScreen from '../screens/EfficiencyScreen';
 import TechnicianVehiclesScreen from '../screens/TechnicianVehiclesScreen';
+import JobTasksScreen from '@/roles/technician/screens/JobTasksScreen';
+import JobTasksDetailScreen from '@/roles/technician/screens/JobTasksDetailScreen';
+import JobCardsScreen from '@/roles/technician/screens/JobCardsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -23,7 +24,7 @@ function DashboardStack() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="DashboardMain" component={TechnicianDashboard} />
-            <Stack.Screen name="JobCardDetail" component={JobCardDetailScreen} />
+            {/* <Stack.Screen name="JobCardDetail" component={JobCardDetailScreen} /> */}
             <Stack.Screen name="CompletedJobs" component={CompletedJobsScreen} />
             <Stack.Screen name="Efficiency" component={EfficiencyScreen} />
         </Stack.Navigator>
@@ -34,8 +35,8 @@ function DashboardStack() {
 function JobsStack() {
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="JobsList" component={TechnicianJobCardsScreen} />
-            <Stack.Screen name="JobCardDetail" component={JobCardDetailScreen} />
+            <Stack.Screen name="JobsList" component={JobTasksScreen} />
+            <Stack.Screen name="JobTasksDetail" component={JobTasksDetailScreen} />
         </Stack.Navigator>
     );
 }
@@ -127,7 +128,7 @@ function TechnicianTabNavigator() {
         >
             <Tab.Screen name="Dashboard" component={DashboardStack} />
             <Tab.Screen name="My Jobs" component={JobsStack} />
-            {/* <Tab.Screen name="Job Cards" component={TechnicianJobCardsScreen} /> */}
+            {/* <Tab.Screen name="Job Cards" component={JobCardsScreen} /> */}
             <Tab.Screen name="Vehicles" component={TechnicianVehiclesScreen} />
             <Tab.Screen name="Profile" component={ProfileStack} />
         </Tab.Navigator>
