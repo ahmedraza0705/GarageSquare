@@ -251,8 +251,8 @@ export default function ReportsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#F8F9FA' }}>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30, paddingTop: 0 }}>
+    <SafeAreaView className="flex-1" edges={['left', 'right', 'bottom']} style={{ backgroundColor: '#F8F9FA' }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 30, paddingTop: 20 }}>
         {/* Header */}
         {/* <View className="flex-row justify-between items-center mb-6">
           <View>
@@ -270,10 +270,10 @@ export default function ReportsScreen() {
             <TouchableOpacity
               key={period}
               onPress={() => setSelectedPeriod(period)}
-              className={`flex-1 py-2 rounded-full items-center justify-center ${selectedPeriod === period ? 'bg-white shadow-sm' : ''}`}
+              className={`flex-1 py-2 rounded-full items-center justify-center ${selectedPeriod === period ? 'bg-[#4682B4] shadow-sm' : ''}`}
             >
               <Text
-                className={`text-xs ${selectedPeriod === period ? 'font-bold text-blue-600' : 'font-medium text-gray-500'}`}
+                className={`text-xs ${selectedPeriod === period ? 'font-bold text-white' : 'font-medium text-gray-500'}`}
               >
                 {period}
               </Text>

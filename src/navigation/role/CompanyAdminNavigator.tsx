@@ -8,7 +8,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Platform } from 'react
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { DrawerActions, useNavigation } from '@react-navigation/native';
+import { DrawerActions, useNavigation, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme, ThemeColors, ThemeName } from '@/context/ThemeContext';
 import CustomDrawerContent from '@/components/navigation/CustomDrawerContent';
@@ -73,21 +73,7 @@ function CustomHeader({
 
   // Get current screen title
   const getScreenTitle = () => {
-    const routeName = route?.name || 'Dashboard';
-
-    // If we're in MainTabs, check the active tab
-    if (routeName === 'MainTabs' && route?.state?.index !== undefined) {
-      const activeTabRoute = route.state.routes[route.state.index];
-      if (activeTabRoute?.name) {
-        const titleMap: Record<string, string> = {
-          DashboardTab: 'Dashboard',
-          BranchesTab: 'Branches',
-          UsersTab: 'User Management',
-          ReportsTab: 'Reports',
-        };
-        return titleMap[activeTabRoute.name] || 'Dashboard';
-      }
-    }
+    const routeName = getFocusedRouteNameFromRoute(route) || route?.name || 'Dashboard';
 
     const titleMap: Record<string, string> = {
       DashboardTab: 'Dashboard',
@@ -99,9 +85,9 @@ function CustomHeader({
       UserManagement: 'User Management',
       ReportsTab: 'Reports',
       Reports: 'Reports',
-      InvoiceTab: 'Estimate',
-      Invoice: 'Estimate',
-      InvoiceList: 'Estimate',
+      InvoiceTab: 'Invoice',
+      Invoice: 'Invoice',
+      InvoiceList: 'Invoice',
       InvoiceDetail: 'Invoice Detail',
       ActiveJobs: 'Active Jobs',
       Vehicles: 'Vehicles',

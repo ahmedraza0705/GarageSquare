@@ -290,7 +290,7 @@ export default function InvoiceScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50" edges={['left', 'right', 'bottom']}>
             <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
 
             {/* Top Search & Action Bar */}
@@ -391,10 +391,10 @@ export default function InvoiceScreen() {
                             <TouchableOpacity
                                 key={period}
                                 onPress={() => setSelectedPeriod(period)}
-                                className={`flex-1 py-2 rounded-full items-center justify-center ${selectedPeriod === period ? 'bg-white shadow-sm' : ''}`}
+                                className={`flex-1 py-2 rounded-full items-center justify-center ${selectedPeriod === period ? 'bg-[#4682B4] shadow-sm' : ''}`}
                             >
                                 <Text
-                                    className={`text-xs ${selectedPeriod === period ? 'font-bold text-blue-600' : 'font-medium text-gray-500'}`}
+                                    className={`text-xs ${selectedPeriod === period ? 'font-bold text-white' : 'font-medium text-gray-500'}`}
                                 >
                                     {period}
                                 </Text>
