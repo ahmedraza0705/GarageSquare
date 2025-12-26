@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, ScrollView, StyleSheet, Modal, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '@/context/ThemeContext';
@@ -12,6 +12,11 @@ const TECHNICIAN_MANAGERS = [
 ];
 
 export default function JobTasksScreen() {
+    // Debug Mount
+    useEffect(() => {
+        console.log('[JobTasksScreen] Mounted');
+    }, []);
+
     const { theme } = useTheme();
     const navigation = useNavigation<any>();
     const { jobs, updateJobStatus, toggleWorkComplete, toggleQualityCheck, toggleDelivery, getJobsByStatus } = useJobs();
@@ -253,7 +258,7 @@ export default function JobTasksScreen() {
             <TouchableOpacity
                 key={job.id}
                 style={styles.card}
-                onPress={() => navigation.navigate('JobCardDetail', { jobCardId: job.id })}
+                onPress={() => navigation.navigate('JobTasksDetail', { jobId: job.id })}
                 activeOpacity={0.7}
             >
                 {/* Header: Job Card No, Status & Price */}
