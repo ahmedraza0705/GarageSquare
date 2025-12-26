@@ -117,6 +117,6 @@ const styles = StyleSheet.create({
   },
   signupLink: {
     fontSize: typography.body2.fontSize,
-    fontFamily: 'Ubuntu-Bold',
+    fontFamily: 'sans-serif-Bold',
   },
 });

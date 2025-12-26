@@ -45,10 +45,10 @@ module.exports = {
         }
       },
       fontFamily: {
-        ubuntu: ['Ubuntu-Regular'],
-        'ubuntu-bold': ['Ubuntu-Bold'],
-        'ubuntu-medium': ['Ubuntu-Medium'],
-        'ubuntu-light': ['Ubuntu-Light'],
+        ubuntu: ['sans-serif-Regular'],
+        'ubuntu-bold': ['sans-serif-Bold'],
+        'ubuntu-medium': ['sans-serif-Medium'],
+        'ubuntu-light': ['sans-serif-Light'],
         inter: ['Inter-Regular'],
         'inter-bold': ['Inter-Bold'],
         'inter-medium': ['Inter-Medium'],

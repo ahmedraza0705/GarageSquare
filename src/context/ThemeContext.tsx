@@ -119,13 +119,13 @@ export const themes: Record<ThemeName, ThemeColors> = {
 };
 
 export const typography = {
-  h1: { fontFamily: 'Ubuntu-Bold', fontSize: 32 },
-  h2: { fontFamily: 'Ubuntu-Bold', fontSize: 28 },
-  h3: { fontFamily: 'Ubuntu-Bold', fontSize: 26 },
-  title1: { fontFamily: 'Ubuntu-Medium', fontSize: 20 },
-  title2: { fontFamily: 'Ubuntu-Medium', fontSize: 18 },
-  subtitle1: { fontFamily: 'Ubuntu-Light', fontSize: 18, opacity: 0.5 },
-  subtitle2: { fontFamily: 'Ubuntu-Light', fontSize: 16, opacity: 0.5 },
+  h1: { fontFamily: 'sans-serif-Bold', fontSize: 32 },
+  h2: { fontFamily: 'sans-serif-Bold', fontSize: 28 },
+  h3: { fontFamily: 'sans-serif-Bold', fontSize: 26 },
+  title1: { fontFamily: 'sans-serif-Medium', fontSize: 20 },
+  title2: { fontFamily: 'sans-serif-Medium', fontSize: 18 },
+  subtitle1: { fontFamily: 'sans-serif-Light', fontSize: 18, opacity: 0.5 },
+  subtitle2: { fontFamily: 'sans-serif-Light', fontSize: 16, opacity: 0.5 },
   body1: { fontFamily: 'Inter-Regular', fontSize: 16 },
   body2: { fontFamily: 'Inter-Regular', fontSize: 14 },
 };

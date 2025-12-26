@@ -27,10 +27,10 @@ function AppContent() {
   const { theme } = useTheme();
 
   const [fontsLoaded] = useFonts({
-    'Ubuntu-Light': Ubuntu_300Light,
-    'Ubuntu-Regular': Ubuntu_400Regular,
-    'Ubuntu-Medium': Ubuntu_500Medium,
-    'Ubuntu-Bold': Ubuntu_700Bold,
+    'sans-serif-Light': Ubuntu_300Light,
+    'sans-serif-Regular': Ubuntu_400Regular,
+    'sans-serif-Medium': Ubuntu_500Medium,
+    'sans-serif-Bold': Ubuntu_700Bold,
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
     'Inter-Bold': Inter_700Bold,
