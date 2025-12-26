@@ -167,7 +167,7 @@ export default function JobCardDetailScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
           <Ionicons name="menu" size={28} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Active Jobs</Text>
+        <Text style={styles.headerTitle}>Job Card</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.iconButton}>
             {/* Delete Icon from image */}

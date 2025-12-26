@@ -118,7 +118,8 @@ const TaskGauge = ({ total, completed }: { total: number, completed: number }) =
                     <Text style={styles.gaugeStatLabel}>Total task</Text>
                 </View>
                 <View style={[styles.gaugeStatItem, styles.borderLeft]}>
-                    <Text style={styles.gaugeStatNumber}>{total - completed}</Text> {/* Simplifying Logic */}
+                    <Text style={styles.gaugeStatNumber}>{total - completed}</Text>
+                    {/* Simplifying Logic */}
                     <Text style={styles.gaugeStatLabel}>Rejected</Text>
                 </View>
             </View>
@@ -153,11 +154,25 @@ const Accordion = ({ title, isOpen, onToggle, children, rightElement }: any) => 
 export default function JobCardDetailScreen() {
     const navigation = useNavigation();
     const [expandedSection, setExpandedSection] = useState<string | null>('Task');
+    const [tasks, setTasks] = useState(mockTasks);
 
     const toggleSection = (section: string) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedSection(expandedSection === section ? null : section);
     };
+
+    const handleCompleteTask = (taskId: string) => {
+        setTasks(currentTasks =>
+            currentTasks.map(task =>
+                task.id === taskId
+                    ? { ...task, status: 'completed' }
+                    : task
+            )
+        );
+    };
+
+    const completedTasksCount = tasks.filter(t => t.status === 'completed').length;
+
 
     const totalCharges = mockCharges.reduce((sum, item) => sum + item.price, 0);
 
@@ -168,18 +183,12 @@ export default function JobCardDetailScreen() {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
                     <Ionicons name="arrow-back" size={28} color="#0f172a" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Active Jobs</Text>
+                <Text style={styles.headerTitle}>Job Card</Text>
                 <View style={styles.headerRight}>
                     <TouchableOpacity style={styles.iconButton}>
                         {/* Delete Icon from image */}
                         <View style={[styles.circleButton, { backgroundColor: '#fca5a5' }]}>
                             <Ionicons name="trash-outline" size={18} color="#991b1b" />
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                        {/* Add Icon from image */}
-                        <View style={[styles.circleButton, { backgroundColor: '#86efac' }]}>
-                            <Ionicons name="add-outline" size={20} color="#166534" />
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -204,7 +213,7 @@ export default function JobCardDetailScreen() {
                     isOpen={expandedSection === 'Task Summary'}
                     onToggle={() => toggleSection('Task Summary')}
                 >
-                    <TaskGauge total={6} completed={4} />
+                    <TaskGauge total={tasks.length} completed={completedTasksCount} />
                 </Accordion>
 
                 {/* 2. Task List Accordion */}
@@ -213,7 +222,7 @@ export default function JobCardDetailScreen() {
                     isOpen={expandedSection === 'Task'}
                     onToggle={() => toggleSection('Task')}
                 >
-                    {mockTasks.map((task, index) => (
+                    {tasks.map((task, index) => (
                         <View key={task.id} style={styles.taskCard}>
                             {/* Color Bar */}
                             <View style={[
@@ -233,15 +242,21 @@ export default function JobCardDetailScreen() {
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <Text style={styles.taskCost}>₹{task.cost.toLocaleString()}</Text>
-                                        {task.status === 'completed' && (
+                                        {task.status === 'completed' ? (
                                             <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#22c55e', borderRadius: 4 }}>
                                                 <Ionicons name="checkmark" size={16} color="#fff" />
                                             </View>
-                                        )}
-                                        {task.status === 'rejected' && (
+                                        ) : task.status === 'rejected' ? (
                                             <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#eee', borderRadius: 4 }}>
                                                 <Ionicons name="close" size={16} color="#000" />
                                             </View>
+                                        ) : (
+                                            <TouchableOpacity
+                                                onPress={() => handleCompleteTask(task.id)}
+                                                style={{ marginLeft: 8, padding: 4, backgroundColor: '#e0f2fe', borderRadius: 4, borderWidth: 1, borderColor: '#3b82f6' }}
+                                            >
+                                                <Text style={{ fontSize: 10, color: '#3b82f6', fontWeight: 'bold' }}>Done</Text>
+                                            </TouchableOpacity>
                                         )}
                                     </View>
                                 </View>
@@ -380,7 +395,7 @@ export default function JobCardDetailScreen() {
 
                 <View style={{ height: 100 }} />
             </ScrollView>
-        </GestureHandlerRootView>
+        </GestureHandlerRootView >
     );
 }
 
@@ -394,7 +409,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingTop: 50,
+        paddingTop: 10,
         paddingBottom: 16,
         backgroundColor: '#eef2f6',
     },

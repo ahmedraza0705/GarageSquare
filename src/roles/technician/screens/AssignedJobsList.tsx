@@ -156,7 +156,7 @@ export default function AssignedJobsList() {
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
 
-                <Text style={styles.headerTitle}>Active Jobs</Text>
+                <Text style={styles.headerTitle}>Job Cards</Text>
 
                 <View style={styles.headerRight}>
                     <TouchableOpacity
