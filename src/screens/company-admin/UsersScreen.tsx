@@ -413,7 +413,7 @@ export default function UsersScreen() {
                 <TextInput
                   value={form.full_name}
                   onChangeText={t => setForm({ ...form, full_name: t })}
-                  placeholder="e.g. John Doe"
+                  placeholder="Full Name"
                   placeholderTextColor={theme.textMuted}
                   style={{ color: theme.text }}
                   className="flex-1 ml-3 text-base"
@@ -429,7 +429,7 @@ export default function UsersScreen() {
                 <TextInput
                   value={form.email}
                   onChangeText={t => setForm({ ...form, email: t.trim().toLowerCase() })}
-                  placeholder="john@company.com"
+                  placeholder="Email Address"
                   placeholderTextColor={theme.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"

@@ -53,7 +53,7 @@ export default function CombinedOnboardingStep({ data, onUpdate, onNext, errors 
 
                     <WizardInput
                         label="Gmail"
-                        placeholder="yourmail@gmail.com"
+                        placeholder="Email Address"
                         value={data.email}
                         onChangeText={(text) => onUpdate({ ...data, email: text })}
                         onBlur={() => handleBlur('email')}

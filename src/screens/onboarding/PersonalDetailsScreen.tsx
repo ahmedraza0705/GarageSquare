@@ -119,7 +119,7 @@ export default function PersonalDetailsScreen() {
 
                 <ScrollView className="px-6 flex-1" showsVerticalScrollIndicator={false}>
                     {renderInput('Your Name', fullName, setFullName, 'Enter Your Name', 'fullName')}
-                    {renderInput('GMail', gmail, setGmail, 'yourmail@gmail.com', 'gmail', { keyboardType: 'email-address', autoCapitalize: 'none' })}
+                    {renderInput('GMail', gmail, setGmail, 'Email Address', 'gmail', { keyboardType: 'email-address', autoCapitalize: 'none' })}
                     {renderInput('Phone Number', phoneNumber, setPhoneNumber, 'Enter Your Number', 'phoneNumber', { keyboardType: 'phone-pad', maxLength: 10 })}
                     {renderInput('Address', address, setAddress, 'Enter Your Address', 'address')}
 
