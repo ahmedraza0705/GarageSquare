@@ -34,7 +34,7 @@ export default function Header({ title }: HeaderProps) {
                     ) : (
                         <View className="w-9 h-9 rounded-full bg-slate-200 items-center justify-center border border-slate-300">
                             <Text className="text-sm font-bold text-slate-600">
-                                {user?.profile?.full_name?.[0] || 'U'}
+                                {user?.profile?.full_name?.[0]}
                             </Text>
                         </View>
                     )}

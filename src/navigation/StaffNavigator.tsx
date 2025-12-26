@@ -139,13 +139,21 @@ export default function StaffNavigator() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: '#4e86c0', // Blue color from image
+                    backgroundColor: '#1e293b', // Dark Slate 900 - Premium dark look
                     borderTopWidth: 0,
-                    height: 60,
-                    paddingBottom: 8,
-                    paddingTop: 8,
-                    borderTopLeftRadius: 20,
-                    borderTopRightRadius: 20,
+                    height: 70, // Slightly taller
+                    paddingBottom: 20, // More bottom padding for modern phones
+                    paddingTop: 12,
+                    position: 'absolute',
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                    borderRadius: 24, // Floating pill
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 15,
+                    elevation: 10,
                 },
                 tabBarActiveTintColor: '#ffffff',
                 tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
@@ -157,7 +165,7 @@ export default function StaffNavigator() {
                         iconName = focused ? 'grid' : 'grid-outline';
                     } else if (route.name === 'Jobs') {
                         iconName = focused ? 'briefcase' : 'briefcase-outline';
-                    } else if (route.name === 'Operations') {
+                    } else if (route.name === 'Operations' || route.name === 'Vehicles') {
                         iconName = focused ? 'car-sport' : 'car-sport-outline'; // Vehicles
                     } else if (route.name === 'Invoices') {
                         iconName = focused ? 'receipt' : 'receipt-outline';
@@ -177,9 +185,12 @@ export default function StaffNavigator() {
             )}
             {permissions.includes(PERMISSIONS.MANAGE_OPERATIONS) && (
                 <Tab.Screen
-                    name="Operations"
+                    name="Vehicles" // Renamed from Operations
                     component={role === 'technician' ? TechnicianOperationsStack : OperationsStack}
-                    options={{ title: 'Vehicles' }}
+                    options={{
+                        title: 'Vehicles',
+                        tabBarIcon: ({ focused, color }) => <Ionicons name={focused ? 'car-sport' : 'car-sport-outline'} size={28} color={color} />
+                    }}
                 />
             )}
             {/* {permissions.includes(PERMISSIONS.VIEW_INVOICES) && ( */}

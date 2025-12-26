@@ -1,6 +1,6 @@
 export const technicianStats = {
     pending: 3,
-    completed: 12,
+    completed: 1,
     efficiency: '94%',
 };
 

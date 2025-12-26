@@ -42,8 +42,8 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
     technician: [
         PERMISSIONS.VIEW_DASHBOARD,
         PERMISSIONS.MANAGE_JOBS,
-        PERMISSIONS.VIEW_INVOICES,
-        PERMISSIONS.MANAGE_OPERATIONS, // For Vehicle Management
+        // PERMISSIONS.VIEW_INVOICES, // Removing Invoices if confusing/unused, or keep? User didn't ask.
+        PERMISSIONS.MANAGE_OPERATIONS, // Vehicles
         PERMISSIONS.VIEW_PROFILE,
     ],
     customer: [],

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface VehicleCardProps {
@@ -33,17 +33,14 @@ export default function VehicleCard({ vehicle, onPress }: VehicleCardProps) {
             className="bg-white rounded-2xl mb-5 shadow-sm border border-slate-100 overflow-hidden"
             style={{ elevation: 3 }}
         >
-            {/* Header: Image & Overlay Badge */}
-            <View className="h-40 bg-slate-100 relative">
-                <Image
-                    source={{ uri: vehicle.image }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                />
-                <View className="absolute top-0 left-0 w-full h-full bg-black/10" />
+            {/* Header: Icon Placeholder & Overlay Badge */}
+            <View className="h-40 bg-slate-50 items-center justify-center relative">
+                <View className="w-20 h-20 bg-slate-100 rounded-full items-center justify-center border border-slate-200 shadow-sm">
+                    <Ionicons name="car-sport" size={40} color="#64748b" />
+                </View>
 
                 {/* Status Badge - Floating */}
-                <View className={`absolute top-3 right-3 px-3 py-1.5 rounded-full flex-row items-center ${statusStyle.bg} border-white/50 border`}>
+                <View className={`absolute top-3 right-3 px-3 py-1.5 rounded-full flex-row items-center ${statusStyle.bg} border-slate-100/50 border`}>
                     <View className={`w-1.5 h-1.5 rounded-full mr-2 ${statusStyle.dot}`} />
                     <Text className={`text-[10px] font-bold uppercase tracking-wide ${statusStyle.text}`}>
                         {vehicle.status}
@@ -51,8 +48,8 @@ export default function VehicleCard({ vehicle, onPress }: VehicleCardProps) {
                 </View>
 
                 {/* Registration - Floating Bottom Left */}
-                <View className="absolute bottom-3 left-3 bg-white/95 px-2.5 py-1 rounded-md shadow-sm">
-                    <Text className="text-xs font-bold text-slate-900 font-mono">
+                <View className="absolute bottom-3 left-3 bg-white px-2.5 py-1 rounded-md shadow-sm border border-slate-100">
+                    <Text className="text-xs font-bold text-slate-800 font-mono">
                         {vehicle.reg_number}
                     </Text>
                 </View>

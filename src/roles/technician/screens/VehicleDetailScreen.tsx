@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { vehicleService } from '../services/VehicleService';
 
 export default function VehicleDetailScreen() {
     const navigation = useNavigation();
@@ -23,14 +24,12 @@ export default function VehicleDetailScreen() {
 
     return (
         <View className="flex-1 bg-white">
-            {/* Header Image Area */}
-            <View className="h-64 relative">
-                <Image
-                    source={{ uri: vehicle.image }}
-                    className="w-full h-full"
-                    resizeMode="cover"
-                />
-                <View className="absolute inset-0 bg-black/30" />
+            {/* Header: Icon Placeholder & Overlay Badge */}
+            <View className="h-64 bg-slate-900 items-center justify-center relative overflow-hidden">
+                {/* Background Pattern/Icon */}
+                <Ionicons name="car-sport" size={180} color="#1e293b" style={{ opacity: 0.5, transform: [{ scale: 1.2 }] }} />
+
+                <View className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
 
                 {/* Back Button */}
                 <SafeAreaView className="absolute top-0 left-0 right-0 z-10">
@@ -41,11 +40,42 @@ export default function VehicleDetailScreen() {
                         >
                             <Ionicons name="arrow-back" size={24} color="white" />
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full items-center justify-center"
-                        >
-                            <Ionicons name="create-outline" size={20} color="white" />
-                        </TouchableOpacity>
+
+                        <View className="flex-row space-x-2">
+                            <TouchableOpacity
+                                onPress={() => {
+                                    Alert.alert(
+                                        'Delete Vehicle',
+                                        'Are you sure you want to delete this vehicle? This action cannot be undone.',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            {
+                                                text: 'Delete',
+                                                style: 'destructive',
+                                                onPress: async () => {
+                                                    const success = await vehicleService.delete(vehicle.id);
+                                                    if (success) {
+                                                        navigation.goBack();
+                                                    } else {
+                                                        Alert.alert('Error', 'Could not delete vehicle');
+                                                    }
+                                                }
+                                            }
+                                        ]
+                                    );
+                                }}
+                                className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full items-center justify-center mr-2"
+                            >
+                                <Ionicons name="trash-outline" size={20} color="white" />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => (navigation as any).navigate('AddVehicle', { vehicle })}
+                                className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full items-center justify-center"
+                            >
+                                <Ionicons name="create-outline" size={20} color="white" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </SafeAreaView>
 
@@ -73,7 +103,19 @@ export default function VehicleDetailScreen() {
                     <DetailItem label="Owner" value={vehicle.owner} icon="person-outline" />
                     <DetailItem label="Technician" value={vehicle.assigned_to || 'Unassigned'} icon="construct-outline" />
                     <DetailItem label="Status" value={vehicle.service_status} icon="information-circle-outline" />
+
+                    {vehicle.vin && <DetailItem label="VIN" value={vehicle.vin} icon="finger-print-outline" />}
+                    {vehicle.color && <DetailItem label="Color" value={vehicle.color} icon="color-palette-outline" />}
+                    {vehicle.mileage && <DetailItem label="Mileage" value={`${vehicle.mileage} km`} icon="speedometer-outline" />}
+                    {vehicle.fuel_level && <DetailItem label="Fuel" value={vehicle.fuel_level} icon="water-outline" />}
                 </View>
+
+                {vehicle.notes && (
+                    <View className="mb-6 bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                        <Text className="text-xs font-bold text-yellow-600 uppercase mb-1">Notes</Text>
+                        <Text className="text-slate-700">{vehicle.notes}</Text>
+                    </View>
+                )}
 
                 <View className="h-[1px] bg-slate-100 mb-6" />
 
@@ -215,8 +257,16 @@ export default function VehicleDetailScreen() {
 
                 <TouchableOpacity
                     onPress={() => {
-                        // Demo Update Status Action
-                        alert('Status Update Feature\n\nOptions:\n1. In Shop\n2. Work in Progress\n3. Completed');
+                        Alert.alert(
+                            'Update Status',
+                            'Select new status for this vehicle:',
+                            [
+                                { text: 'In Shop', onPress: async () => { await vehicleService.update(vehicle.id, { status: 'In Shop' }); navigation.goBack(); } },
+                                { text: 'Completed', onPress: async () => { await vehicleService.update(vehicle.id, { status: 'Completed' }); navigation.goBack(); } },
+                                { text: 'Ready', onPress: async () => { await vehicleService.update(vehicle.id, { status: 'Ready' }); navigation.goBack(); } },
+                                { text: 'Cancel', style: 'cancel' }
+                            ]
+                        );
                     }}
                     className="bg-slate-900 py-4 rounded-xl items-center shadow-lg active:bg-slate-800 mb-10 mt-2"
                 >

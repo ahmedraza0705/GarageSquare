@@ -1,15 +1,11 @@
-
-// ============================================
-// JOB CARD DETAIL SCREEN - ACCORDION DESIGN
-// ============================================
-
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, UIManager, Platform, LayoutAnimation, StyleSheet, Dimensions, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { vehicleService, Vehicle } from '../services/VehicleService';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -150,11 +146,100 @@ const Accordion = ({ title, isOpen, onToggle, children, rightElement }: any) => 
         </View>
     );
 }
+// ----------------------------------------
+// SWIPEABLE IMPLEMENTATION
+// ----------------------------------------
+import { Swipeable } from 'react-native-gesture-handler';
+import { Animated } from 'react-native';
+
+const SwipeableActionRow = ({ children, onApprove, onReject }: any) => {
+    const renderRightActions = (progress: any, dragX: any) => {
+        const trans = dragX.interpolate({
+            inputRange: [-160, 0],
+            outputRange: [0, 160],
+            extrapolate: 'clamp',
+        });
+
+        return (
+            <View style={{ width: 160, flexDirection: 'row' }}>
+                <Animated.View style={{ flex: 1, transform: [{ translateX: 0 }] }}>
+                    <TouchableOpacity
+                        onPress={onReject}
+                        style={{
+                            backgroundColor: '#e5e7eb', // Grey
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            flex: 1,
+                        }}>
+                        <Ionicons name="close" size={28} color="#000" />
+                    </TouchableOpacity>
+                </Animated.View>
+                <Animated.View style={{ flex: 1, transform: [{ translateX: 0 }] }}>
+                    <TouchableOpacity
+                        onPress={onApprove}
+                        style={{
+                            backgroundColor: '#22c55e', // Green
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            flex: 1,
+                        }}>
+                        <Ionicons name="checkmark" size={28} color="#000" />
+                    </TouchableOpacity>
+                </Animated.View>
+            </View>
+        );
+    };
+
+    return (
+        <Swipeable renderRightActions={renderRightActions} containerStyle={{ backgroundColor: '#fff' }}>
+            {children}
+        </Swipeable>
+    );
+};
 
 export default function JobCardDetailScreen() {
     const navigation = useNavigation();
+    const route = useRoute();
+    const { job } = route.params as any; // Get job passed from Dashboard/List
+
     const [expandedSection, setExpandedSection] = useState<string | null>('Task');
-    const [tasks, setTasks] = useState(mockTasks);
+
+    // Initialize tasks from the actual vehicle service or fall back to mock if empty
+    const vehicleId = job.id; // Since we mapped job.id to vehicle.id
+    const currentVehicle = vehicleService.getById(vehicleId);
+
+    const [tasks, setTasks] = useState(
+        (currentVehicle?.tasks && currentVehicle.tasks.length > 0)
+            ? currentVehicle.tasks
+            : mockTasks
+    );
+
+    const [qcChecks, setQcChecks] = useState<any[]>(
+        (currentVehicle?.qc_checks && currentVehicle.qc_checks.length > 0)
+            ? currentVehicle.qc_checks
+            : []
+    );
+
+    // Save default mock tasks/QC to service if vehicle has none
+    useEffect(() => {
+        const updates: any = {};
+        if (!currentVehicle?.tasks || currentVehicle.tasks.length === 0) {
+            updates.tasks = mockTasks;
+        }
+        if (!currentVehicle?.qc_checks || currentVehicle.qc_checks.length === 0) {
+            updates.qc_checks = [
+                { id: 'qc_default_1', name: 'Technician Inspection', status: 'Pending', role: 'Technician' },
+                { id: 'qc_default_2', name: 'Final Certification', status: 'Pending', role: 'Supervisor' }
+            ];
+            setQcChecks(updates.qc_checks);
+        }
+
+        if (Object.keys(updates).length > 0) {
+            vehicleService.update(vehicleId, updates);
+        }
+    }, []);
 
     const toggleSection = (section: string) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -162,19 +247,29 @@ export default function JobCardDetailScreen() {
     };
 
     const handleCompleteTask = (taskId: string) => {
-        setTasks(currentTasks =>
-            currentTasks.map(task =>
-                task.id === taskId
-                    ? { ...task, status: 'completed' }
-                    : task
-            )
+        const updatedTasks = tasks.map((task: any) =>
+            task.id === taskId
+                ? { ...task, status: 'completed' }
+                : task
         );
+        setTasks(updatedTasks);
+        // Persist to service
+        vehicleService.update(vehicleId, { tasks: updatedTasks });
     };
 
-    const completedTasksCount = tasks.filter(t => t.status === 'completed').length;
+    const handleQCAction = (qcId: string, status: 'Approved' | 'Rejected' | 'Pending') => {
+        const updatedQC = qcChecks.map(item =>
+            item.id === qcId ? { ...item, status } : item
+        );
+        setQcChecks(updatedQC);
+        vehicleService.update(vehicleId, { qc_checks: updatedQC });
+    };
 
-
+    const completedTasksCount = tasks.filter((t: any) => t.status === 'completed').length;
     const totalCharges = mockCharges.reduce((sum, item) => sum + item.price, 0);
+
+    // Dynamic Vehicle Data
+    const vehicleDisplay = currentVehicle || job.vehicle || {};
 
     return (
         <GestureHandlerRootView style={styles.container}>
@@ -200,10 +295,10 @@ export default function JobCardDetailScreen() {
                 <View style={styles.jobCardHeaderBg}>
                     <View style={styles.jobCardRow}>
                         <Text style={styles.jobCardLabel}>Job Card:</Text>
-                        <Text style={styles.jobCardValue}>SA0001</Text>
+                        <Text style={styles.jobCardValue}>{job.job_card_no || 'JC-001'}</Text>
                     </View>
                     <View style={styles.urgentBadge}>
-                        <Text style={styles.urgentText}>Urgent</Text>
+                        <Text style={styles.urgentText}>{job.priority || 'Normal'}</Text>
                     </View>
                 </View>
 
@@ -222,7 +317,7 @@ export default function JobCardDetailScreen() {
                     isOpen={expandedSection === 'Task'}
                     onToggle={() => toggleSection('Task')}
                 >
-                    {tasks.map((task, index) => (
+                    {tasks.map((task: any, index: number) => (
                         <View key={task.id} style={styles.taskCard}>
                             {/* Color Bar */}
                             <View style={[
@@ -241,7 +336,7 @@ export default function JobCardDetailScreen() {
                                         <Text style={styles.taskEstimate}>Estimate: {task.estimate}</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={styles.taskCost}>₹{task.cost.toLocaleString()}</Text>
+                                        <Text style={styles.taskCost}>₹{(task.cost || 0).toLocaleString()}</Text>
                                         {task.status === 'completed' ? (
                                             <View style={{ marginLeft: 8, padding: 4, backgroundColor: '#22c55e', borderRadius: 4 }}>
                                                 <Ionicons name="checkmark" size={16} color="#fff" />
@@ -320,13 +415,13 @@ export default function JobCardDetailScreen() {
                     <View style={styles.detailList}>
                         <View style={styles.detailItem}>
                             <Text style={styles.detailLabel}>VIN:</Text>
-                            <Text style={styles.detailValue}>GJ-05-RT-2134</Text>
+                            <Text style={styles.detailValue}>{vehicleDisplay.vin || 'N/A'}</Text>
                         </View>
                         <View style={styles.detailDivider} />
 
                         <View style={styles.detailItem}>
                             <Text style={styles.detailLabel}>Customer :</Text>
-                            <Text style={styles.detailValue}>Ahmed Raza</Text>
+                            <Text style={styles.detailValue}>{vehicleDisplay.owner || 'Unknown'}</Text>
                         </View>
                         <View style={styles.detailDivider} />
 
@@ -338,7 +433,7 @@ export default function JobCardDetailScreen() {
 
                         <View style={styles.detailItem}>
                             <Text style={styles.detailLabel}>Car Brand:</Text>
-                            <Text style={styles.detailValue}>Honda City</Text>
+                            <Text style={styles.detailValue}>{vehicleDisplay.make} {vehicleDisplay.model}</Text>
                         </View>
                     </View>
                 </Accordion>
@@ -350,47 +445,61 @@ export default function JobCardDetailScreen() {
                     onToggle={() => toggleSection('Quality Check')}
                     rightElement={!expandedSection && <View style={styles.qcCompleteBadge}><Text style={styles.qcCompleteText}>Complete</Text></View>}
                 >
-                    {/* Manager Row */}
-                    {/* Manager Row - SWIPEABLE */}
-                    <SwipeableActionRow
-                        onApprove={() => console.log('Approved')}
-                        onReject={() => console.log('Rejected')}
-                    >
-                        <View style={styles.qcRow}>
-                            <View style={styles.qcLeft}>
-                                <View style={[styles.qcColorBar, { backgroundColor: '#1f2937' }]} />
-                                <Text style={styles.qcName}>Technician Manager : Varun</Text>
-                            </View>
-                            {/* Static actions hidden, revealed on swipe */}
-                            <View style={styles.qcActions}>
-                                <Ionicons name="chevron-back" size={20} color="#ccc" style={{ marginRight: 10 }} />
-                            </View>
-                        </View>
-                    </SwipeableActionRow>
+                    {/* Dynamic QC List */}
+                    {qcChecks.map((item) => {
+                        const isPending = item.status === 'Pending';
+                        const statusColor = item.status === 'Approved' ? '#22c55e' : item.status === 'Rejected' ? '#ef4444' : '#1f2937';
 
-                    {/* Tech Row 1 */}
-                    <View style={styles.qcRow}>
-                        <View style={styles.qcLeft}>
-                            <View style={[styles.qcColorBar, { backgroundColor: '#22c55e' }]} />
-                            <Text style={styles.qcName}>Technician : Varun</Text>
-                        </View>
-                        <View style={styles.qcActions}>
-                            {/* Done styling from image (empty or just bar) */}
-                        </View>
-                    </View>
+                        const Content = (
+                            <View style={styles.qcRow}>
+                                <View style={styles.qcLeft}>
+                                    <View style={[styles.qcColorBar, { backgroundColor: statusColor }]} />
+                                    <View>
+                                        <Text style={styles.qcName}>{item.name}</Text>
+                                        <Text style={{ fontSize: 10, color: '#666' }}>{item.role}</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.qcActions}>
+                                    {!isPending && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <View style={[styles.qcCompleteBadge, { backgroundColor: item.status === 'Approved' ? '#dcfce7' : '#fee2e2', marginRight: 8 }]}>
+                                                <Text style={{ color: item.status === 'Approved' ? '#166534' : '#991b1b', fontSize: 10, fontWeight: 'bold' }}>
+                                                    {item.status}
+                                                </Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={() => handleQCAction(item.id, 'Pending')}
+                                                style={{ padding: 4, borderRadius: 12, backgroundColor: '#f1f5f9' }}
+                                            >
+                                                <Ionicons name="refresh" size={16} color="#64748b" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                    {isPending && (
+                                        <Ionicons name="chevron-back" size={20} color="#cbd5e1" style={{ marginRight: 10 }} />
+                                    )}
+                                </View>
+                            </View>
+                        );
 
-                    {/* Tech Row 2 */}
-                    <View style={styles.qcRow}>
-                        <View style={styles.qcLeft}>
-                            <View style={[styles.qcColorBar, { backgroundColor: '#ef4444' }]} />
-                            <Text style={styles.qcName}>Technician : Ahmed</Text>
-                        </View>
-                        <View style={styles.qcActions}>
-                            <TouchableOpacity style={styles.qcBtnRetry}>
-                                <Ionicons name="sync" size={18} color="#000" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                        if (isPending) {
+                            return (
+                                <SwipeableActionRow
+                                    key={item.id}
+                                    onApprove={() => handleQCAction(item.id, 'Approved')}
+                                    onReject={() => handleQCAction(item.id, 'Rejected')}
+                                >
+                                    {Content}
+                                </SwipeableActionRow>
+                            );
+                        }
+
+                        return (
+                            <View key={item.id} style={{ backgroundColor: '#fff' }}>
+                                {Content}
+                            </View>
+                        );
+                    })}
                 </Accordion>
 
                 <View style={{ height: 100 }} />
@@ -767,56 +876,5 @@ const styles = StyleSheet.create({
     },
 });
 
-// ==========================================
-// SWIPEABLE IMPLEMENTATION
-// ==========================================
-import { Swipeable } from 'react-native-gesture-handler';
-import { Animated } from 'react-native';
 
-const SwipeableActionRow = ({ children, onApprove, onReject }: any) => {
-    const renderRightActions = (progress: any, dragX: any) => {
-        const trans = dragX.interpolate({
-            inputRange: [-160, 0],
-            outputRange: [0, 160],
-            extrapolate: 'clamp',
-        });
-
-        return (
-            <View style={{ width: 160, flexDirection: 'row' }}>
-                <Animated.View style={{ flex: 1, transform: [{ translateX: 0 }] }}>
-                    <TouchableOpacity
-                        onPress={onReject}
-                        style={{
-                            backgroundColor: '#e5e7eb', // Grey
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            flex: 1,
-                        }}>
-                        <Ionicons name="close" size={28} color="#000" />
-                    </TouchableOpacity>
-                </Animated.View>
-                <Animated.View style={{ flex: 1, transform: [{ translateX: 0 }] }}>
-                    <TouchableOpacity
-                        onPress={onApprove}
-                        style={{
-                            backgroundColor: '#22c55e', // Green
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            flex: 1,
-                        }}>
-                        <Ionicons name="checkmark" size={28} color="#000" />
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
-        );
-    };
-
-    return (
-        <Swipeable renderRightActions={renderRightActions} containerStyle={{ backgroundColor: '#fff' }}>
-            {children}
-        </Swipeable>
-    );
-};
 

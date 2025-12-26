@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, Image, View, Text } from 'react-native';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { useAuth } from '@/hooks/useAuth';
 
 // Screens
 import TechnicianDashboard from '../screens/TechnicianDashboard';
@@ -62,43 +63,73 @@ function ProfileStack() {
 }
 
 function TechnicianTabNavigator() {
+    const { user } = useAuth();
+    const userImage = user?.profile?.avatar_url;
+
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 headerShown: false,
-                tabBarShowLabel: false, // Hide labels as per design
+                tabBarShowLabel: false,
                 tabBarIcon: ({ focused, color, size }) => {
+                    if (route.name === 'Profile') {
+                        return (
+                            <View className={`rounded-full border-2 ${focused ? 'border-sky-400' : 'border-transparent'}`} style={{ padding: 1 }}>
+                                {userImage ? (
+                                    <Image
+                                        source={{ uri: userImage }}
+                                        className="w-10 h-10 rounded-full"
+                                    />
+                                ) : (
+                                    <View className="w-10 h-10 rounded-full bg-slate-600 items-center justify-center">
+                                        <Ionicons name="person" size={20} color="#ffffffff" />
+                                    </View>
+                                )}
+                            </View>
+                        );
+                    }
+
                     let iconName: any;
 
                     if (route.name === 'Dashboard') {
                         iconName = focused ? 'grid' : 'grid-outline';
                     } else if (route.name === 'My Jobs') {
-                        iconName = focused ? 'construct' : 'construct-outline'; // Tools for Jobs
+                        iconName = focused ? 'construct' : 'construct-outline';
                     } else if (route.name === 'Job Cards') {
-                        iconName = focused ? 'file-tray-full' : 'file-tray-full-outline'; // Box/File for Job Cards
+                        iconName = focused ? 'file-tray-full' : 'file-tray-full-outline';
                     } else if (route.name === 'Vehicles') {
                         iconName = focused ? 'car-sport' : 'car-sport-outline';
                     }
 
-                    return <Ionicons name={iconName} size={28} color={color} />;
+                    return <Ionicons name={iconName} size={30} color={color} />;
                 },
-                tabBarActiveTintColor: '#ffffff', // White
-                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)', // Faded white
+                tabBarActiveTintColor: '#ffffff',
+                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
                 tabBarStyle: {
-                    backgroundColor: '#4682b4', // Matches the Blue Card/Design
+                    backgroundColor: '#4682B4', // Restoring premium dark
                     borderTopWidth: 0,
-                    height: Platform.OS === 'ios' ? 88 : 60,
-                    paddingTop: 8,
-                    paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-                    borderTopLeftRadius: 0,
-                    borderTopRightRadius: 0,
+                    height: Platform.OS === 'ios' ? 88 : 70,
+                    paddingTop: 12,
+                    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+                    borderTopLeftRadius: 24,
+                    borderTopRightRadius: 24,
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    elevation: 10,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: -4 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 10,
                 },
             })}
         >
             <Tab.Screen name="Dashboard" component={DashboardStack} />
             <Tab.Screen name="My Jobs" component={JobsStack} />
-            <Tab.Screen name="Job Cards" component={TechnicianJobCardsScreen} />
+            {/* <Tab.Screen name="Job Cards" component={TechnicianJobCardsScreen} /> */}
             <Tab.Screen name="Vehicles" component={TechnicianVehiclesScreen} />
+            <Tab.Screen name="Profile" component={ProfileStack} />
         </Tab.Navigator>
     );
 }
