@@ -12,7 +12,9 @@ import {
     TextInput,
     StatusBar,
     ActivityIndicator,
-    Alert,
+    Platform,
+    Dimensions,
+    StyleSheet,
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,284 +25,38 @@ import {
     LayoutDashboard,
     Building2,
     Users,
-    FileBarChart,
+    Plus,
+    TrendingUp,
+    Clock,
+    CheckCircle2,
+    Calendar,
+    BarChart3,
+    ChevronRight,
+    Briefcase,
+    AlertTriangle
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Platform } from 'react-native';
-import { InvoiceService, Invoice } from '@/services/invoice.service';
-import { useAuth } from '@/hooks/useAuth';
+import { LinearGradient } from 'expo-linear-gradient';
+import { InvoiceService } from '@/services/invoice.service';
+import { Invoice } from '@/types';
+
+const { width } = Dimensions.get('window');
 
 type TimePeriod = 'Today' | 'Week' | 'Month' | 'Quarter' | 'Year';
 type InvoiceType = 'Estimate' | 'Invoice';
 
 export default function InvoiceScreen() {
     const navigation = useNavigation<any>();
-    const { user } = useAuth();
-    const { theme } = useTheme();
+    const { theme, themeName } = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('Month');
-    const [selectedType, setSelectedType] = useState<InvoiceType>('Estimate');
+    const [selectedType, setSelectedType] = useState<InvoiceType>('Invoice');
+    const [statusFilter, setStatusFilter] = useState<'All' | 'Paid' | 'Pending'>('All');
 
-    // Supabase integration state
     const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Comprehensive static data for different time periods
-    const allInvoices = {
-        Today: [
-            {
-                id: '1',
-                customerName: 'Rajesh.K',
-                customerInitials: 'RK',
-                location: 'Honda City',
-                jobNumber: 'GJ-05-AB-1234',
-                amount: 8500,
-                invoiceNumber: 'EST-0030',
-                date: '19 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#FF6B6B',
-            },
-            {
-                id: '2',
-                customerName: 'Priya.S',
-                customerInitials: 'PS',
-                location: 'Maruti Swift',
-                jobNumber: 'GJ-05-CD-5678',
-                amount: 12000,
-                invoiceNumber: 'EST-0031',
-                date: '19 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#4ECDC4',
-            },
-        ],
-        Week: [
-            {
-                id: '1',
-                customerName: 'Ahmed.R',
-                customerInitials: 'AR',
-                location: 'SWIFT Dzire',
-                jobNumber: 'GJ-05-MT-0007',
-                amount: 14498,
-                invoiceNumber: 'EST-0021',
-                date: '14 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#4A90E2',
-            },
-            {
-                id: '2',
-                customerName: 'Vikram.P',
-                customerInitials: 'VP',
-                location: 'Hyundai Creta',
-                jobNumber: 'GJ-05-EF-9012',
-                amount: 18500,
-                invoiceNumber: 'EST-0028',
-                date: '16 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#9B59B6',
-            },
-            {
-                id: '3',
-                customerName: 'Sneha.M',
-                customerInitials: 'SM',
-                location: 'Tata Nexon',
-                jobNumber: 'GJ-05-GH-3456',
-                amount: 9800,
-                invoiceNumber: 'EST-0029',
-                date: '18 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#E74C3C',
-            },
-        ],
-        Month: [
-            {
-                id: '1',
-                customerName: 'Ahmed.R',
-                customerInitials: 'AR',
-                location: 'SWIFT Dzire',
-                jobNumber: 'GJ-05-MT-0007',
-                amount: 14498,
-                invoiceNumber: 'EST-0021',
-                date: '14 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#4A90E2',
-            },
-            {
-                id: '2',
-                customerName: 'Solution.S',
-                customerInitials: 'SS',
-                location: 'BMW i7',
-                jobNumber: 'GJ-05-J2-0007',
-                amount: 32000,
-                invoiceNumber: 'EST-0022',
-                date: '8 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#5C6BC0',
-            },
-            {
-                id: '3',
-                customerName: 'Squares.S',
-                customerInitials: 'SS',
-                location: 'Kia Carens',
-                jobNumber: 'GJ-05-J2-0001',
-                amount: 22000,
-                invoiceNumber: 'EST-0023',
-                date: '5 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#66BB6A',
-            },
-            {
-                id: '4',
-                customerName: 'Amit.T',
-                customerInitials: 'AT',
-                location: 'Mahindra XUV700',
-                jobNumber: 'GJ-05-IJ-7890',
-                amount: 25000,
-                invoiceNumber: 'EST-0024',
-                date: '1 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#FFA726',
-            },
-        ],
-        Quarter: [
-            {
-                id: '1',
-                customerName: 'Rahul.G',
-                customerInitials: 'RG',
-                location: 'Toyota Fortuner',
-                jobNumber: 'GJ-05-KL-2345',
-                amount: 45000,
-                invoiceNumber: 'EST-0015',
-                date: '15 Nov 2024',
-                status: 'estimate' as const,
-                avatarColor: '#26A69A',
-            },
-            {
-                id: '2',
-                customerName: 'Kavita.D',
-                customerInitials: 'KD',
-                location: 'Honda Amaze',
-                jobNumber: 'GJ-05-MN-6789',
-                amount: 11500,
-                invoiceNumber: 'EST-0016',
-                date: '22 Oct 2024',
-                status: 'estimate' as const,
-                avatarColor: '#AB47BC',
-            },
-            {
-                id: '3',
-                customerName: 'Suresh.B',
-                customerInitials: 'SB',
-                location: 'Ford EcoSport',
-                jobNumber: 'GJ-05-OP-0123',
-                amount: 16800,
-                invoiceNumber: 'EST-0017',
-                date: '10 Oct 2024',
-                status: 'estimate' as const,
-                avatarColor: '#5C6BC0',
-            },
-            {
-                id: '4',
-                customerName: 'Meera.L',
-                customerInitials: 'ML',
-                location: 'Renault Duster',
-                jobNumber: 'GJ-05-QR-4567',
-                amount: 13200,
-                invoiceNumber: 'EST-0018',
-                date: '28 Nov 2024',
-                status: 'estimate' as const,
-                avatarColor: '#EF5350',
-            },
-            {
-                id: '5',
-                customerName: 'Deepak.N',
-                customerInitials: 'DN',
-                location: 'Nissan Magnite',
-                jobNumber: 'GJ-05-ST-8901',
-                amount: 9500,
-                invoiceNumber: 'EST-0019',
-                date: '5 Dec 2024',
-                status: 'estimate' as const,
-                avatarColor: '#42A5F5',
-            },
-        ],
-        Year: [
-            {
-                id: '1',
-                customerName: 'Ankit.V',
-                customerInitials: 'AV',
-                location: 'Audi Q7',
-                jobNumber: 'GJ-05-UV-2345',
-                amount: 85000,
-                invoiceNumber: 'EST-0001',
-                date: '15 Jan 2024',
-                status: 'estimate' as const,
-                avatarColor: '#7E57C2',
-            },
-            {
-                id: '2',
-                customerName: 'Pooja.K',
-                customerInitials: 'PK',
-                location: 'Mercedes GLC',
-                jobNumber: 'GJ-05-WX-6789',
-                amount: 95000,
-                invoiceNumber: 'EST-0002',
-                date: '28 Feb 2024',
-                status: 'estimate' as const,
-                avatarColor: '#EC407A',
-            },
-            {
-                id: '3',
-                customerName: 'Ravi.S',
-                customerInitials: 'RS',
-                location: 'Volvo XC90',
-                jobNumber: 'GJ-05-YZ-0123',
-                amount: 120000,
-                invoiceNumber: 'EST-0003',
-                date: '12 Mar 2024',
-                status: 'estimate' as const,
-                avatarColor: '#26C6DA',
-            },
-            {
-                id: '4',
-                customerName: 'Neha.R',
-                customerInitials: 'NR',
-                location: 'Jaguar F-Pace',
-                jobNumber: 'GJ-05-AB-4567',
-                amount: 110000,
-                invoiceNumber: 'EST-0004',
-                date: '20 May 2024',
-                status: 'estimate' as const,
-                avatarColor: '#66BB6A',
-            },
-            {
-                id: '5',
-                customerName: 'Karan.M',
-                customerInitials: 'KM',
-                location: 'Range Rover',
-                jobNumber: 'GJ-05-CD-8901',
-                amount: 150000,
-                invoiceNumber: 'EST-0005',
-                date: '8 Aug 2024',
-                status: 'estimate' as const,
-                avatarColor: '#FFA726',
-            },
-            {
-                id: '6',
-                customerName: 'Simran.P',
-                customerInitials: 'SP',
-                location: 'Porsche Cayenne',
-                jobNumber: 'GJ-05-EF-2345',
-                amount: 180000,
-                invoiceNumber: 'EST-0006',
-                date: '25 Sep 2024',
-                status: 'estimate' as const,
-                avatarColor: '#EF5350',
-            },
-        ],
-    };
-
-    // Load invoices from Supabase
     useEffect(() => {
         loadInvoices();
     }, [selectedPeriod, selectedType]);
@@ -310,236 +66,341 @@ export default function InvoiceScreen() {
             setLoading(true);
             setError(null);
 
-            const branchId = user?.profile?.branch_id;
-            const invoiceType = selectedType === 'Estimate' ? 'estimate' : 'invoice';
-
             const data = await InvoiceService.getByTimePeriod(
                 selectedPeriod,
-                branchId,
-                invoiceType
+                undefined,
+                selectedType.toLowerCase() as 'estimate' | 'invoice'
             );
 
-            setInvoices(data);
+            setInvoices(data as Invoice[]);
         } catch (err: any) {
-            setError(err.message || 'Failed to load invoices');
             console.error('Error loading invoices:', err);
+            setError(err.message || 'Failed to load invoices');
         } finally {
             setLoading(false);
         }
     };
 
     const periods: TimePeriod[] = ['Today', 'Week', 'Month', 'Quarter', 'Year'];
-    const types: InvoiceType[] = ['Estimate', 'Invoice'];
 
-    // Filter invoices based on search query
     const filteredInvoices = invoices.filter((invoice) => {
         const customerName = invoice.customer?.full_name || '';
-        return customerName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = customerName.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = statusFilter === 'All'
+            ? true
+            : statusFilter === 'Paid'
+                ? invoice.payment_status === 'paid'
+                : invoice.payment_status === 'unpaid';
+
+        return matchesSearch && matchesStatus;
     });
 
+    const totalAmount = filteredInvoices.reduce((sum, inv) => sum + inv.total_amount, 0);
+    const pendingAmount = filteredInvoices
+        .filter(inv => inv.payment_status === 'unpaid')
+        .reduce((sum, inv) => sum + inv.total_amount, 0);
+    const paidCount = filteredInvoices.filter(inv => inv.payment_status === 'paid').length;
+
+    const getStatusColor = (status: string) => {
+        const colors: Record<string, { bg: string, text: string }> = {
+            draft: { bg: themeName === 'dark' ? 'rgba(75, 85, 99, 0.2)' : '#F3F4F6', text: theme.textMuted },
+            sent: { bg: themeName === 'dark' ? 'rgba(2, 132, 199, 0.2)' : '#E0F2FE', text: '#0284C7' },
+            approved: { bg: themeName === 'dark' ? 'rgba(22, 163, 74, 0.2)' : '#DCFCE7', text: '#16A34A' },
+            rejected: { bg: themeName === 'dark' ? 'rgba(220, 38, 38, 0.2)' : '#FEE2E2', text: '#DC2626' },
+            converted: { bg: themeName === 'dark' ? 'rgba(147, 51, 234, 0.2)' : '#F3E8FF', text: '#9333EA' },
+            paid: { bg: themeName === 'dark' ? 'rgba(22, 163, 74, 0.2)' : '#DCFCE7', text: '#16A34A' },
+            cancelled: { bg: themeName === 'dark' ? 'rgba(220, 38, 38, 0.2)' : '#FEE2E2', text: '#DC2626' },
+        };
+        return colors[status.toLowerCase()] || colors.draft;
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'paid':
+            case 'approved': return <CheckCircle2 size={13} color="#16A34A" />;
+            case 'draft': return <Clock size={13} color={theme.textMuted} />;
+            case 'sent': return <TrendingUp size={13} color="#0284C7" />;
+            case 'converted': return <Clock size={13} color="#9333EA" />;
+            case 'rejected': return <AlertTriangle size={13} color="#DC2626" />;
+            default: return <Clock size={13} color={theme.textMuted} />;
+        }
+    };
+
     return (
-        <View className="flex-1" style={{ backgroundColor: theme.background }}>
-            <StatusBar barStyle={theme.statusBarStyle} backgroundColor={theme.statusBarBg} />
+        <SafeAreaView className="flex-1" edges={['left', 'right', 'bottom']} style={{ backgroundColor: theme.background }}>
+            <StatusBar barStyle={themeName === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
-            <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
-                {/* Search Bar */}
-                <View className="flex-row items-center gap-2 mb-4">
-                    <View
-                        className="flex-1 flex-row items-center px-3 py-2.5 rounded-lg"
-                        style={{ borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface }}
-                    >
-                        <Search size={18} color={theme.textMuted} />
-                        <TextInput
-                            className="flex-1 ml-2 text-sm"
-                            placeholder="Search customers..."
-                            placeholderTextColor={theme.textMuted}
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                            style={{ color: theme.text }}
-                        />
-                    </View>
+            {/* Top Search & Action Bar */}
+            <View className="px-6 pt-2 pb-2 flex-row items-center gap-2">
+                <View className="flex-1 flex-row items-center border rounded-xl px-4 py-3" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+                    <Search size={20} color={theme.textMuted} />
+                    <TextInput
+                        className="flex-1 ml-3 text-base font-medium"
+                        placeholder="Search Invoice"
+                        placeholderTextColor={theme.border}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        style={{ color: theme.text }}
+                    />
+                </View>
+            </View>
+
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    className="mt-4 pl-6"
+                    contentContainerStyle={{ paddingRight: 24 }}
+                >
                     <TouchableOpacity
-                        className="p-2.5 rounded-lg"
-                        style={{ borderWidth: 1, borderColor: theme.border, backgroundColor: theme.surface }}
+                        activeOpacity={0.9}
+                        onPress={() => navigation.navigate('MainTabs', { screen: 'ReportsTab' })}
                     >
-                        <Filter size={18} color={theme.text} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Time Period Filter Buttons */}
-                <View className="flex-row mb-4">
-                    {periods.map((period) => (
-                        <TouchableOpacity
-                            key={period}
-                            onPress={() => setSelectedPeriod(period)}
-                            className="flex-1 py-2 mx-1 rounded-lg items-center"
-                            style={{
-                                backgroundColor: selectedPeriod === period ? theme.primary : theme.surface,
-                                borderWidth: 1,
-                                borderColor: selectedPeriod === period ? theme.primary : theme.border,
-                            }}
+                        <LinearGradient
+                            colors={['#2563EB', '#3B82F6']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0.5, y: 1 }}
+                            className={`w-40 p-3 rounded-2xl mr-3 border-2 ${statusFilter === 'All' ? 'border-white/30' : 'border-transparent'}`}
                         >
-                            <Text
-                                className="font-medium text-sm"
-                                style={{ color: selectedPeriod === period ? '#FFFFFF' : theme.text }}
-                            >
-                                {period}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-
-                {/* Invoice List */}
-                {loading ? (
-                    <View className="items-center justify-center py-20">
-                        <ActivityIndicator size="large" color={theme.primary} />
-                        <Text className="text-sm mt-4" style={{ color: theme.textMuted }}>
-                            Loading {selectedType.toLowerCase()}s...
-                        </Text>
-                    </View>
-                ) : error ? (
-                    <View className="items-center justify-center py-20">
-                        <FileText size={64} color="#EF5350" />
-                        <Text className="text-base mt-4 mb-2" style={{ color: '#EF5350' }}>
-                            {error}
-                        </Text>
-                        <TouchableOpacity
-                            className="px-6 py-3 rounded-lg"
-                            style={{ backgroundColor: theme.primary }}
-                            onPress={loadInvoices}
-                        >
-                            <Text className="text-white font-semibold">Retry</Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : filteredInvoices.map((invoice) => {
-                    const customerName = invoice.customer?.full_name || 'Unknown';
-                    const customerInitials = customerName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-                    const avatarColors = ['#FF6B6B', '#4ECDC4', '#4A90E2', '#9B59B6', '#E74C3C', '#5C6BC0', '#66BB6A', '#FFA726'];
-                    const avatarColor = avatarColors[customerName.length % avatarColors.length];
-                    const vehicleInfo = invoice.vehicle ? `${invoice.vehicle.brand} ${invoice.vehicle.model}` : 'No vehicle';
-
-                    return (
-                        <View
-                            key={invoice.id}
-                            className="mb-3 rounded-lg overflow-hidden"
-                            style={{
-                                backgroundColor: theme.surface,
-                                borderWidth: 1,
-                                borderColor: theme.border,
-                            }}
-                        >
-                            <View className="p-4">
-                                {/* Customer Info */}
-                                <View className="flex-row items-center mb-3">
-                                    <View
-                                        className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                                        style={{ backgroundColor: avatarColor }}
-                                    >
-                                        <Text className="text-white font-bold text-base">
-                                            {customerInitials}
-                                        </Text>
-                                    </View>
-                                    <View className="flex-1">
-                                        <Text className="text-base font-bold mb-1" style={{ color: theme.text }}>
-                                            {customerName}
-                                        </Text>
-                                        <Text className="text-sm" style={{ color: theme.textMuted }}>
-                                            {vehicleInfo}
-                                        </Text>
-                                    </View>
-                                    <View className="items-end">
-                                        <Text className="text-xs mb-1" style={{ color: theme.textMuted }}>
-                                            {invoice.invoice_number}
-                                        </Text>
-                                        <Text className="text-xs" style={{ color: theme.textMuted }}>
-                                            {new Date(invoice.invoice_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                        </Text>
-                                    </View>
-                                </View>
-
-                                {/* Vehicle License Plate */}
-                                <View className="mb-3">
-                                    <Text className="text-sm" style={{ color: theme.textMuted }}>
-                                        {invoice.vehicle?.license_plate || 'No license plate'}
-                                    </Text>
-                                </View>
-
-                                {/* Amount and Action */}
-                                <View className="flex-row items-center justify-between">
-                                    <Text className="text-2xl font-bold" style={{ color: theme.text }}>
-                                        ₹{invoice.total_amount.toLocaleString('en-IN')}
-                                    </Text>
-                                    <TouchableOpacity
-                                        className="px-6 py-2.5 rounded-lg"
-                                        style={{ backgroundColor: theme.tabIconBg }}
-                                        onPress={() => navigation.navigate('InvoiceDetail' as never, { invoice } as never)}
-                                    >
-                                        <Text className="font-semibold text-sm" style={{ color: theme.primary }}>
-                                            Convert to Invoice
-                                        </Text>
-                                    </TouchableOpacity>
+                            <View className="flex-row justify-between items-start">
+                                <View className="bg-white/20 p-1.5 rounded-lg">
+                                    <TrendingUp size={18} color="white" />
                                 </View>
                             </View>
+                            <View className="mt-3">
+                                <Text className="text-white/90 text-xs font-medium">Revenue</Text>
+                                <Text className="text-lg font-bold text-white mt-0.5" numberOfLines={1}>
+                                    ₹{(totalAmount / 1000).toFixed(1)}k
+                                </Text>
+                            </View>
+                        </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setStatusFilter(statusFilter === 'Pending' ? 'All' : 'Pending')}
+                        className={`w-40 p-3 rounded-2xl mr-3 border ${statusFilter === 'Pending' ? 'border-orange-500' : 'border-transparent'}`}
+                        style={{ backgroundColor: statusFilter === 'Pending' ? (themeName === 'dark' ? 'rgba(249, 115, 22, 0.1)' : '#FFF7ED') : theme.surface }}
+                    >
+                        <View className="flex-row justify-between items-start">
+                            <View className="bg-orange-50 p-1.5 rounded-lg">
+                                <Clock size={18} color="#F97316" />
+                            </View>
                         </View>
-                    );
-                })}
+                        <View className="mt-3">
+                            <Text className="text-xs font-medium" style={{ color: theme.textMuted }}>Pending</Text>
+                            <Text className="text-lg font-bold mt-0.5" numberOfLines={1} style={{ color: theme.text }}>
+                                ₹{(pendingAmount / 1000).toFixed(1)}k
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
 
-                {/* Empty State */}
-                {!loading && !error && filteredInvoices.length === 0 && (
-                    <View className="items-center justify-center py-20">
-                        <FileText size={64} color="#E0E0E0" />
-                        <Text className="text-base mt-4" style={{ color: '#9E9E9E' }}>
-                            No {selectedType.toLowerCase()}s found
-                        </Text>
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setStatusFilter(statusFilter === 'Paid' ? 'All' : 'Paid')}
+                        className={`w-40 p-3 rounded-2xl border ${statusFilter === 'Paid' ? 'border-green-500' : 'border-transparent'}`}
+                        style={{ backgroundColor: statusFilter === 'Paid' ? (themeName === 'dark' ? 'rgba(22, 163, 74, 0.1)' : '#F0FDF4') : theme.surface }}
+                    >
+                        <View className="flex-row justify-between items-start">
+                            <View className="bg-green-50 p-1.5 rounded-lg">
+                                <CheckCircle2 size={18} color="#16A34A" />
+                            </View>
+                        </View>
+                        <View className="mt-3">
+                            <Text className="text-xs font-medium" style={{ color: theme.textMuted }}>Total Paid</Text>
+                            <Text className="text-lg font-bold mt-0.5" style={{ color: theme.text }}>{paidCount}</Text>
+                        </View>
+                    </TouchableOpacity>
+                </ScrollView>
+
+                <View className="px-6 mt-6">
+                    {/* Time Period Tabs */}
+                    <View className="flex-row mb-2 p-1 rounded-full" style={{ backgroundColor: theme.surfaceAlt }}>
+                        {periods.map((period) => (
+                            <TouchableOpacity
+                                key={period}
+                                onPress={() => setSelectedPeriod(period)}
+                                className="flex-1 py-2 rounded-full items-center justify-center"
+                                style={{
+                                    backgroundColor: selectedPeriod === period ? theme.primary : 'transparent',
+                                    ...(selectedPeriod === period && themeName === 'light' ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 } : {})
+                                }}
+                            >
+                                <Text
+                                    className="text-xs"
+                                    style={{ color: selectedPeriod === period ? '#ffffff' : theme.textMuted, fontWeight: selectedPeriod === period ? 'bold' : '500' }}
+                                >
+                                    {period}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
                     </View>
-                )}
+                </View>
 
-                {/* Bottom Spacing for Tab Bar */}
-                <View className="h-24" />
+                {/* Invoices List */}
+                <View className="px-6 mt-1">
+                    <View className="flex-row justify-between items-center mb-4">
+                        <View className="flex-row items-baseline gap-2">
+                            <Text className="text-lg font-bold" style={{ color: theme.text }}>Recent {selectedType}s</Text>
+                            {statusFilter !== 'All' && (
+                                <View className={`px-2 py-0.5 rounded-md ${statusFilter === 'Paid' ? 'bg-green-100' : 'bg-orange-100'}`}>
+                                    <Text className={`text-[10px] font-bold ${statusFilter === 'Paid' ? 'text-green-700' : 'text-orange-700'}`}>
+                                        {statusFilter.toUpperCase()} ONLY
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                        {statusFilter !== 'All' ? (
+                            <TouchableOpacity onPress={() => setStatusFilter('All')}>
+                                <Text className="text-blue-600 text-sm font-semibold">Clear Filter</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity onPress={() => setSelectedType(prev => prev === 'Invoice' ? 'Estimate' : 'Invoice')}>
+                                <Text className="text-blue-600 text-sm font-semibold">
+                                    {selectedType === 'Estimate' ? 'Show Invoices' : 'Show Estimates'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {loading ? (
+                        <View className="py-20 items-center">
+                            <ActivityIndicator size="large" color={theme.primary} />
+                        </View>
+                    ) : (
+                        <View className="gap-4">
+                            {filteredInvoices.length > 0 ? filteredInvoices.map((invoice) => {
+                                const customerName = invoice.customer?.full_name || 'Unknown';
+                                const initials = customerName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                                const statusColor = getStatusColor(invoice.status);
+
+                                return (
+                                    <TouchableOpacity
+                                        key={invoice.id}
+                                        activeOpacity={0.7}
+                                        onPress={() => navigation.navigate('InvoiceDetail', { invoice })}
+                                        className="rounded-2xl p-4 border"
+                                        style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                                    >
+                                        <View className="flex-row justify-between items-start">
+                                            <View className="flex-row flex-1">
+                                                {/* Avatar */}
+                                                <View className="w-12 h-12 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: theme.surfaceAlt }}>
+                                                    <Text className="text-base font-bold" style={{ color: theme.text }}>{initials}</Text>
+                                                </View>
+
+                                                {/* Info */}
+                                                <View className="flex-1">
+                                                    <Text className="text-base font-bold mb-1" numberOfLines={1} style={{ color: theme.text }}>
+                                                        {customerName}
+                                                    </Text>
+                                                    <View className="flex-row items-center gap-2">
+                                                        <Text className="text-xs font-medium px-2 py-0.5 rounded-md overflow-hidden" style={{ backgroundColor: theme.surfaceAlt, color: theme.textMuted }}>
+                                                            {invoice.invoice_number}
+                                                        </Text>
+                                                        <View className="w-1 h-1 rounded-full bg-gray-300" />
+                                                        <Text className="text-xs" style={{ color: theme.textMuted }}>
+                                                            {new Date(invoice.invoice_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                            </View>
+
+                                            {/* Amount */}
+                                            <View className="items-end">
+                                                <Text className="text-lg font-bold" style={{ color: theme.text }}>
+                                                    ₹{invoice.total_amount.toLocaleString('en-IN')}
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        {/* Footer: Vehicle & Status */}
+                                        <View className="flex-row justify-between items-center mt-4 pt-4 border-t" style={{ borderTopColor: theme.border }}>
+                                            <View className="flex-row items-center">
+                                                <View className="p-1.5 rounded-lg mr-2" style={{ backgroundColor: theme.surfaceAlt }}>
+                                                    <Building2 size={12} color={theme.textMuted} />
+                                                </View>
+                                                <Text className="text-xs font-medium" style={{ color: theme.textMuted }}>
+                                                    {invoice.vehicle?.brand} {invoice.vehicle?.model}
+                                                </Text>
+                                            </View>
+
+                                            {/* Status Badge */}
+                                            <View
+                                                className="flex-row items-center px-3 rounded-full gap-1.5 h-7"
+                                                style={{ backgroundColor: statusColor.bg }}
+                                            >
+                                                {getStatusIcon(invoice.status)}
+                                                <Text
+                                                    className="text-[11px] font-bold"
+                                                    style={{
+                                                        color: statusColor.text,
+                                                        includeFontPadding: false,
+                                                        textAlignVertical: 'center',
+                                                        marginTop: -3
+                                                    }}
+                                                >
+                                                    {invoice.status.toUpperCase()}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+                                )
+                            }) : (
+                                <View className="py-20 items-center justify-center">
+                                    <FileText size={48} color={theme.border} />
+                                    <Text className="mt-4 font-medium" style={{ color: theme.textMuted }}>No invoices found</Text>
+                                </View>
+                            )}
+                        </View>
+                    )}
+                </View>
             </ScrollView>
 
             {/* Bottom Navigation Bar */}
-            <View
-                className="absolute bottom-0 left-0 right-0 flex-row items-center justify-around"
-                style={{
-                    backgroundColor: theme.tabBarBg,
-                    height: Platform.OS === 'ios' ? 85 : 65,
-                    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
-                    paddingTop: 10,
-                    borderTopLeftRadius: 20,
-                    borderTopRightRadius: 20,
-                    elevation: 8,
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: -2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
-                }}
-            >
+            <View className="absolute bottom-0 left-0 right-0 flex-row items-center justify-around py-4" style={{ backgroundColor: theme.primary, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
                 <TouchableOpacity
                     className="items-center"
-                    onPress={() => navigation.navigate('MainTabs' as never, { screen: 'DashboardTab' } as never)}
+                    onPress={() => navigation.navigate('MainTabs', { screen: 'DashboardTab' })}
                 >
-                    <LayoutDashboard size={24} color={theme.text} />
+                    <LayoutDashboard size={24} color="#FFFFFF" />
                 </TouchableOpacity>
                 <TouchableOpacity
                     className="items-center"
-                    onPress={() => navigation.navigate('MainTabs' as never, { screen: 'BranchesTab' } as never)}
+                    onPress={() => navigation.navigate('MainTabs', { screen: 'BranchesTab' })}
                 >
-                    <Building2 size={24} color={theme.text} />
+                    <Building2 size={24} color="#FFFFFF" />
                 </TouchableOpacity>
                 <TouchableOpacity
                     className="items-center"
-                    onPress={() => navigation.navigate('MainTabs' as never, { screen: 'UsersTab' } as never)}
+                    onPress={() => navigation.navigate('MainTabs', { screen: 'UsersTab' })}
                 >
-                    <Users size={24} color={theme.text} />
+                    <Users size={24} color="#FFFFFF" />
                 </TouchableOpacity>
                 <TouchableOpacity
                     className="items-center"
-                    onPress={() => navigation.navigate('MainTabs' as never, { screen: 'ReportsTab' } as never)}
+                    onPress={() => navigation.navigate('MainTabs', { screen: 'ReportsTab' })}
                 >
-                    <FileBarChart size={24} color={theme.text} />
+                    <BarChart3 size={24} color="#FFFFFF" />
                 </TouchableOpacity>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }
+
+const styles = StyleSheet.create({
+    cardShadow: {
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 2,
+    },
+});

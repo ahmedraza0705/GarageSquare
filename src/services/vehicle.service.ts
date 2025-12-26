@@ -35,7 +35,6 @@ export class VehicleService {
     }
 
     const { data, error } = await query;
-
     if (error) {
       console.error('Error fetching vehicles:', error);
       throw error;
@@ -79,7 +78,6 @@ export class VehicleService {
    */
   static async getById(id: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
-
     const { data, error } = await supabase
       .from('vehicles')
       .select(`
@@ -101,7 +99,6 @@ export class VehicleService {
    */
   static async create(formData: CreateVehicleForm, branchId?: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
-
     // 1. Get current user profile for company_id
     const { data: { user } } = await supabase.auth.getUser();
     let companyId = null;
@@ -142,7 +139,6 @@ export class VehicleService {
    */
   static async update(id: string, updates: Partial<Vehicle>) {
     if (!supabase) throw new Error('Supabase client not initialized');
-
     // Remove relations/read-only fields AND fields that don't exist in schema
     const {
       customer,
@@ -186,7 +182,6 @@ export class VehicleService {
    */
   static async delete(id: string) {
     if (!supabase) throw new Error('Supabase client not initialized');
-
     const { error } = await supabase
       .from('vehicles')
       .delete()

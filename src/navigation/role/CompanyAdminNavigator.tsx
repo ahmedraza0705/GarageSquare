@@ -97,42 +97,33 @@ function DashboardStackNavigator() {
   );
 }
 
-// Custom Header Component
+// Custom Header
 function CustomHeader({
   route,
+  options,
   theme,
   themeName,
   onToggleTheme,
   showBack,
+  navigation: navigationProp,
 }: {
   route: any;
+  options?: any;
   theme: ThemeColors;
   themeName: ThemeName;
   onToggleTheme: () => void;
   showBack?: boolean;
+  navigation?: any;
 }) {
-  const navigation = useNavigation();
+  const navigation = navigationProp || useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
   const getScreenTitle = () => {
-    const routeName = route?.name || 'Dashboard';
-
-    // If we're in MainTabs, check the active tab
-    if (routeName === 'MainTabs' && route?.state?.index !== undefined) {
-      const activeTabRoute = route.state.routes[route.state.index];
-      if (activeTabRoute?.name) {
-        const titleMap: Record<string, string> = {
-          DashboardTab: 'Dashboard',
-          BranchesTab: 'Branches',
-          UsersTab: 'User Management',
-          ReportsTab: 'Reports',
-        };
-        return titleMap[activeTabRoute.name] || 'Dashboard';
-      }
-    }
+    const focusedRouteName = getFocusedRouteNameFromRoute(route);
+    const routeName = focusedRouteName || route?.name || 'Dashboard';
 
     const titleMap: Record<string, string> = {
       // Navigators
@@ -154,10 +145,10 @@ function CustomHeader({
       Branches: 'Branches',
       UserManagement: 'User Management',
       Reports: 'Reports',
-      InvoiceTab: 'Estimate',
-      Invoice: 'Estimate',
-      InvoiceList: 'Estimate',
-      InvoiceDetail: 'Invoice Detail',
+      InvoiceTab: 'Invoice',
+      Invoice: 'Invoice',
+      InvoiceList: 'Invoice',
+      InvoiceDetail: 'Invoice Details',
       ActiveJobs: 'Active Jobs',
       JobCards: 'Job Cards',
       Settings: 'Settings',
@@ -169,18 +160,18 @@ function CustomHeader({
       CreateJobCard: 'Create Job Card',
     };
 
-    // 2. Try to get the deepest focused route name
+    // If we have a mapping for the current route (or focused nested route), use it
+    if (titleMap[routeName]) {
+      return titleMap[routeName];
+    }
+
+    // Try to get the deepest focused route name for complex navigators
     const getDeepestRouteName = (r: any): string => {
       const name = getFocusedRouteNameFromRoute(r);
       if (name) {
-        // If we found a name, check if it's a tab or stack container that might have more nesting
-        if (name === 'DashboardTab' || name === 'MainTabs') {
-          // This is a bit of a hack since we don't have the state object here directly,
-          // but we can check if it exists in the route object's state
-          const state = r.state;
-          if (state && state.routes && state.index !== undefined) {
-            return getDeepestRouteName(state.routes[state.index]);
-          }
+        const state = r.state;
+        if (state && state.routes && state.index !== undefined) {
+          return getDeepestRouteName(state.routes[state.index]);
         }
         return name;
       }
@@ -188,7 +179,10 @@ function CustomHeader({
     };
 
     const deepestRouteName = getDeepestRouteName(route);
-    return titleMap[deepestRouteName] || deepestRouteName || 'Dashboard';
+    if (titleMap[deepestRouteName]) return titleMap[deepestRouteName];
+
+    // Fallback to options.title if provided, otherwise default to Dashboard
+    return options?.title || deepestRouteName || 'Dashboard';
   };
 
   const screenTitle = getScreenTitle();
@@ -213,7 +207,7 @@ function CustomHeader({
 
     // List of screens that should show menu button (hamburger) instead of back button
     // These are primary drawer screens
-    const drawerScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab', 'Inventory', 'JobCards'];
+    const drawerScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab', 'Inventory', 'JobCards', 'InvoiceList', 'Invoice'];
 
     // If we're on a drawer screen, don't show back button
     if (drawerScreens.includes(routeName) || drawerScreens.includes(route?.name)) {
@@ -232,7 +226,6 @@ function CustomHeader({
           {
             backgroundColor: headerBackgroundColor,
             borderBottomColor: theme.headerBorder,
-            // Remove border for seamless dashboard look
             // Remove border for seamless look
             borderBottomWidth: isSeamless ? 0 : 1,
             paddingBottom: 8,
@@ -337,11 +330,11 @@ const getTabBarVisibility = (route: any) => {
 
 // Bottom Tab Navigator
 function CompanyAdminTabs() {
-  const { theme, themeName, toggleTheme } = useTheme();
-  // Use theme colors instead of hardcoded values
-  const BAR_COLOR = theme.tabBarBg;
-  const ACTIVE_COLOR = theme.tabIconColor;
-  const INACTIVE_COLOR = themeName === 'dark' ? '#9CA3AF' : '#E5E7EB'; // Muted color for inactive
+  const { theme, themeName } = useTheme();
+  // We want a blue bar with white icons, matching the user's image request
+  const BAR_COLOR = theme.tabBarBg || '#4682B4';
+  const ACTIVE_COLOR = theme.tabIconColor || '#ffffff86';
+  const INACTIVE_COLOR = themeName === 'dark' ? '#9CA3AF' : '#FFFFFF';
 
   return (
     <Tab.Navigator
@@ -371,6 +364,7 @@ function CompanyAdminTabs() {
         name="DashboardTab"
         component={DashboardStackNavigator}
         options={{
+          title: 'Dashboard',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
@@ -391,6 +385,7 @@ function CompanyAdminTabs() {
         component={BranchesScreen}
         options={{
           headerShown: true, // Uses shared header
+          title: 'Branches',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
@@ -409,6 +404,7 @@ function CompanyAdminTabs() {
         name="UsersTab"
         component={UsersScreen}
         options={{
+          title: 'User Management',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
@@ -427,6 +423,7 @@ function CompanyAdminTabs() {
         name="ReportsTab"
         component={ReportsScreen}
         options={{
+          title: 'Reports',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={[
               focused ? styles.activeTabIcon : null,
@@ -448,10 +445,25 @@ function CompanyAdminTabs() {
 
 // Invoice Stack Navigator (for Invoice and InvoiceDetail)
 function InvoiceStack() {
+  const { theme, themeName, toggleTheme } = useTheme();
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="InvoiceList" component={InvoiceScreen} />
-      <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
+    <Stack.Navigator
+      screenOptions={({ route, navigation }) => ({
+        headerShown: true,
+        header: ({ route, options }) => (
+          <CustomHeader
+            route={route}
+            options={options}
+            navigation={navigation}
+            theme={theme}
+            themeName={themeName}
+            onToggleTheme={toggleTheme}
+          />
+        )
+      })}
+    >
+      <Stack.Screen name="InvoiceList" component={InvoiceScreen} options={{ title: 'Invoice' }} />
+      <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} options={{ title: 'Invoice Details' }} />
     </Stack.Navigator>
   );
 }
@@ -463,9 +475,11 @@ function CompanyAdminDrawer() {
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={({ route }) => ({
-        header: () => (
+        header: ({ route, options, navigation }) => (
           <CustomHeader
             route={route}
+            options={options}
+            navigation={navigation}
             theme={theme}
             themeName={themeName}
             onToggleTheme={toggleTheme}
@@ -487,6 +501,23 @@ function CompanyAdminDrawer() {
         options={{
           title: 'Dashboard',
           headerShown: false,
+        }}
+      />
+      <Drawer.Screen
+        name="Vehicles"
+        component={VehiclesScreen}
+        options={{
+          title: 'Vehicles',
+          drawerItemStyle: { display: 'none' },
+        }}
+      />
+      <Drawer.Screen
+        name="Invoice"
+        component={InvoiceStack}
+        options={{
+          title: 'Invoice',
+          headerShown: false,
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -528,13 +559,7 @@ function CompanyAdminDrawer() {
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen
-        name="Invoice"
-        component={InvoiceStack}
-        options={{
-          title: 'Invoice',
-        }}
-      />
+
 
     </Drawer.Navigator>
   );

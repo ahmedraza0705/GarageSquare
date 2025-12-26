@@ -8,15 +8,18 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CustomerStackParamList } from '@/types/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/context/ThemeContext';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { Car, ChevronRight } from 'lucide-react-native';
 
 type NavigationProp = NativeStackNavigationProp<CustomerStackParamList>;
 
 export default function CustomerMyVehiclesScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
+  const { theme, themeName } = useTheme();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +31,6 @@ export default function CustomerMyVehiclesScreen() {
     try {
       setLoading(true);
 
-      // Check if Supabase is disabled
       if (!supabase) {
         console.warn('Supabase is disabled - using local storage');
         setVehicles([]);
@@ -62,46 +64,69 @@ export default function CustomerMyVehiclesScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={loadVehicles} />
+        <RefreshControl refreshing={loading} onRefresh={loadVehicles} tintColor={theme.primary} />
       }
     >
-      <View className="px-6 py-4">
-        {vehicles.map((vehicle) => (
+      <View className="px-5 py-6">
+        {vehicles.length > 0 ? vehicles.map((vehicle) => (
           <TouchableOpacity
             key={vehicle.id}
-            className="bg-white rounded-lg p-4 mb-4 shadow-sm"
+            className="rounded-2xl p-5 mb-5 border flex-row items-center justify-between"
+            style={{
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 10,
+              elevation: 2,
+            }}
             onPress={() => navigation.navigate('VehicleDetail', { vehicleId: vehicle.id })}
           >
-            <Text className="text-lg font-semibold text-gray-900 mb-2">
-              {vehicle.brand} {vehicle.model}
-            </Text>
-            {vehicle.year_manufacture && (
-              <Text className="text-gray-600 text-sm mb-1">
-                Year: {vehicle.year_manufacture}
-              </Text>
-            )}
-            {vehicle.license_plate && (
-              <Text className="text-gray-600 text-sm mb-1">
-                Plate: {vehicle.license_plate}
-              </Text>
-            )}
-            {vehicle.odometer && (
-              <Text className="text-gray-600 text-sm">
-                Odometer: {vehicle.odometer.toLocaleString()} KM
-              </Text>
-            )}
-          </TouchableOpacity>
-        ))}
+            <View className="flex-1">
+              <View className="flex-row items-center gap-3 mb-2">
+                <View className="p-2 rounded-xl" style={{ backgroundColor: theme.surfaceAlt }}>
+                  <Car size={20} color={theme.primary} />
+                </View>
+                <Text className="text-lg font-bold" style={{ color: theme.text }}>
+                  {vehicle.brand} {vehicle.model}
+                </Text>
+              </View>
 
-        {vehicles.length === 0 && !loading && (
-          <View className="items-center py-12">
-            <Text className="text-gray-500">No vehicles found</Text>
+              <View className="flex-row items-center gap-4 pl-1">
+                <View>
+                  <Text className="text-[10px] font-bold uppercase tracking-wider" style={{ color: theme.textMuted }}>License Plate</Text>
+                  <Text className="text-sm font-semibold" style={{ color: theme.text }}>{vehicle.license_plate || 'N/A'}</Text>
+                </View>
+                {vehicle.year_manufacture && (
+                  <View>
+                    <Text className="text-[10px] font-bold uppercase tracking-wider" style={{ color: theme.textMuted }}>Year</Text>
+                    <Text className="text-sm font-semibold" style={{ color: theme.text }}>{vehicle.year_manufacture}</Text>
+                  </View>
+                )}
+                {vehicle.odometer && (
+                  <View>
+                    <Text className="text-[10px] font-bold uppercase tracking-wider" style={{ color: theme.textMuted }}>Odometer</Text>
+                    <Text className="text-sm font-semibold" style={{ color: theme.text }}>{vehicle.odometer.toLocaleString()} KM</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            <ChevronRight size={20} color={theme.border} />
+          </TouchableOpacity>
+        )) : !loading && (
+          <View className="items-center py-20 justify-center">
+            <View className="w-20 h-20 rounded-full items-center justify-center mb-4" style={{ backgroundColor: theme.surfaceAlt }}>
+              <Car size={32} color={theme.textMuted} />
+            </View>
+            <Text className="text-lg font-bold" style={{ color: theme.text }}>No Vehicles Found</Text>
+            <Text className="text-sm mt-1" style={{ color: theme.textMuted }}>Your registered vehicles will appear here</Text>
           </View>
         )}
       </View>
     </ScrollView>
   );
 }
-

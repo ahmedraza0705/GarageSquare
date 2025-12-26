@@ -226,19 +226,35 @@ export default function VehiclesScreen() {
               }
             })}
           >
-            <View className="flex-row justify-between items-center">
-              <View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View className="flex-1 mr-2">
                 <Text className="text-lg font-bold" style={{ color: theme.text }}>
                   {vehicle.brand} {vehicle.model}
                 </Text>
-                <Text className="text-sm mt-1" style={{ color: theme.textMuted }}>
-                  {vehicle.license_plate}
-                </Text>
+                <View className="flex-row items-center mt-1">
+                  <Text style={{ color: theme.textMuted, fontSize: 14 }}>
+                    {vehicle.license_plate || 'No Plate'}
+                  </Text>
+                  {vehicle.year_manufacture && (
+                    <>
+                      <Text style={{ color: theme.border, marginHorizontal: 6 }}>•</Text>
+                      <Text style={{ color: theme.textMuted, fontSize: 14 }}>{vehicle.year_manufacture}</Text>
+                    </>
+                  )}
+                </View>
+                {vehicle.customer && (
+                  <View className="flex-row items-center mt-2">
+                    <User size={12} color={theme.border} />
+                    <Text className="ml-1 text-xs" style={{ color: theme.textMuted }}>{vehicle.customer.full_name}</Text>
+                  </View>
+                )}
               </View>
-              <View className="items-end">
-                <Text className="text-xs" style={{ color: theme.textMuted }}>
-                  {vehicle.branch_name || vehicle.customer?.branch?.name || 'Surat'}
-                </Text>
+              <View style={{ alignItems: 'flex-end' }}>
+                <View className="bg-blue-50 px-2 py-1 rounded-md" style={{ backgroundColor: themeName === 'dark' ? 'rgba(74, 130, 180, 0.1)' : '#EFF6FF' }}>
+                  <Text style={{ color: '#4682B4', fontSize: 10, fontWeight: 'bold' }}>
+                    {vehicle.branch_name || vehicle.customer?.branch?.name || 'Local Branch'}
+                  </Text>
+                </View>
               </View>
             </View>
           </TouchableOpacity>

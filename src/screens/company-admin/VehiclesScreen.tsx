@@ -221,18 +221,34 @@ export default function VehiclesScreen() {
             })}
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <View>
-                <Text className="text-lg font-bold text-gray-900">
+              <View className="flex-1 mr-2">
+                <Text className="text-lg font-bold" style={{ color: theme.text }}>
                   {vehicle.brand} {vehicle.model}
                 </Text>
-                <Text style={{ color: theme.textMuted, fontSize: typography.body2.fontSize, fontFamily: typography.body2.fontFamily, marginTop: 4 }}>
-                  {vehicle.license_plate}
-                </Text>
+                <View className="flex-row items-center mt-1">
+                  <Text style={{ color: theme.textMuted, fontSize: typography.body2.fontSize, fontFamily: typography.body2.fontFamily }}>
+                    {vehicle.license_plate || 'No Plate'}
+                  </Text>
+                  {vehicle.year_manufacture && (
+                    <>
+                      <Text style={{ color: theme.border, marginHorizontal: 6 }}>•</Text>
+                      <Text style={{ color: theme.textMuted, fontSize: typography.body2.fontSize }}>{vehicle.year_manufacture}</Text>
+                    </>
+                  )}
+                </View>
+                {vehicle.customer && (
+                  <View className="flex-row items-center mt-2">
+                    <User size={12} color={theme.border} />
+                    <Text className="ml-1 text-xs" style={{ color: theme.textMuted }}>{vehicle.customer.full_name}</Text>
+                  </View>
+                )}
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ color: theme.textMuted, fontSize: 12, fontFamily: typography.body2.fontFamily }}>
-                  {vehicle.branch_name || vehicle.branch?.name || 'Surat'}
-                </Text>
+                <View className="bg-blue-50 px-2 py-1 rounded-md" style={{ backgroundColor: themeName === 'dark' ? 'rgba(37, 99, 235, 0.1)' : '#EFF6FF' }}>
+                  <Text style={{ color: '#2563EB', fontSize: 10, fontWeight: 'bold' }}>
+                    {vehicle.branch_name || vehicle.branch?.name || 'Main Branch'}
+                  </Text>
+                </View>
               </View>
             </View>
           </TouchableOpacity>

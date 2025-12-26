@@ -381,109 +381,55 @@ export interface UpdateTaskForm {
   notes?: string;
 }
 
-// ============================================
-// INVENTORY MANAGEMENT TYPES
-// ============================================
-
-export interface InventoryCategory {
+export interface Invoice {
   id: string;
-  company_id: string;
-  name: string;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface InventoryItem {
-  id: string;
-  company_id: string;
-  category_id?: string;
-  name: string;
-  sku: string;
-  unit_price: number;
-  low_stock_threshold: number;
-  unit: string;
-  description?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  category?: InventoryCategory;
-}
-
-export interface InventoryStock {
-  id: string;
-  item_id: string;
+  invoice_number: string;
+  invoice_type: 'estimate' | 'invoice';
+  job_card_id?: string;
+  customer_id: string;
+  vehicle_id?: string;
   branch_id: string;
-  quantity: number;
-  updated_at: string;
-  item?: InventoryItem;
-  branch?: Branch;
-}
-
-export type TransactionType = 'IN' | 'OUT' | 'ADJUST';
-
-export interface InventoryTransaction {
-  id: string;
-  item_id: string;
-  branch_id: string;
-  type: TransactionType;
-  quantity: number;
-  reference?: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  discount_amount: number;
+  discount_percentage: number;
+  total_amount: number;
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'converted' | 'paid' | 'cancelled';
+  payment_status: 'unpaid' | 'partial' | 'paid' | 'refunded';
+  invoice_date: string;
+  due_date?: string;
+  converted_to_invoice_id?: string;
+  converted_at?: string;
   notes?: string;
+  terms_and_conditions?: string;
   created_by?: string;
+  updated_by?: string;
   created_at: string;
-  item?: InventoryItem;
-  branch?: Branch;
+  updated_at: string;
+  customer?: Customer;
+  vehicle?: Vehicle;
+  invoice_items?: InvoiceItem[];
 }
 
-export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
-
-export interface InventoryItemWithStock extends InventoryItem {
-  stock_quantity: number;
-  total_value: number;
-  stock_status: StockStatus;
-  branch_id?: string;
-}
-
-export interface CreateInventoryItemData {
-  company_id: string;
-  category_id?: string;
-  name: string;
-  sku: string;
-  unit_price: number;
-  low_stock_threshold?: number;
-  unit: string;
-  description?: string;
-  initial_quantity?: number;
-  branch_id?: string;
-}
-
-export interface UpdateInventoryItemData {
-  category_id?: string;
-  name?: string;
-  sku?: string;
-  unit_price?: number;
-  low_stock_threshold?: number;
-  unit?: string;
-  description?: string;
-  is_active?: boolean;
-}
-
-export interface CreateTransactionData {
-  item_id: string;
-  branch_id: string;
-  type: TransactionType;
-  quantity: number;
-  reference?: string;
-  notes?: string;
-}
-
-export interface InventoryValueBreakdown {
-  item_id: string;
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  service_id?: string;
   item_name: string;
-  sku: string;
+  description?: string;
+  item_type: 'service' | 'part' | 'labour' | 'other';
   quantity: number;
   unit_price: number;
-  total_value: number;
-  unit: string;
+  discount_percentage: number;
+  discount_amount: number;
+  tax_percentage: number;
+  tax_amount: number;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
 }
+

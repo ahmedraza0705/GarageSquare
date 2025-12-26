@@ -4,79 +4,8 @@
 // ============================================
 
 import { supabase } from '@/lib/supabase';
+import { Invoice, InvoiceItem } from '@/types';
 
-export interface Invoice {
-    id: string;
-    invoice_number: string;
-    invoice_type: 'estimate' | 'invoice';
-    job_card_id?: string;
-    customer_id: string;
-    vehicle_id?: string;
-    branch_id: string;
-
-    // Financial Details
-    subtotal: number;
-    tax_rate: number;
-    cgst: number;
-    sgst: number;
-    igst: number;
-    discount_amount: number;
-    discount_percentage: number;
-    total_amount: number;
-
-    // Status
-    status: 'draft' | 'sent' | 'approved' | 'rejected' | 'converted' | 'paid' | 'cancelled';
-    payment_status: 'unpaid' | 'partial' | 'paid' | 'refunded';
-
-    // Dates
-    invoice_date: string;
-    due_date?: string;
-    converted_to_invoice_id?: string;
-    converted_at?: string;
-
-    // Notes
-    notes?: string;
-    terms_and_conditions?: string;
-
-    // Audit
-    created_by?: string;
-    updated_by?: string;
-    created_at: string;
-    updated_at: string;
-
-    // Relations
-    customer?: {
-        id: string;
-        full_name: string;
-        email?: string;
-        phone: string;
-    };
-    vehicle?: {
-        id: string;
-        make: string;
-        model: string;
-        license_plate?: string;
-    };
-    invoice_items?: InvoiceItem[];
-}
-
-export interface InvoiceItem {
-    id: string;
-    invoice_id: string;
-    service_id?: string;
-    item_name: string;
-    description?: string;
-    item_type: 'service' | 'part' | 'labour' | 'other';
-    quantity: number;
-    unit_price: number;
-    discount_percentage: number;
-    discount_amount: number;
-    tax_percentage: number;
-    tax_amount: number;
-    total_price: number;
-    created_at: string;
-    updated_at: string;
-}
 
 export interface CreateInvoiceData {
     invoice_type: 'estimate' | 'invoice';
@@ -112,7 +41,7 @@ export class InvoiceService {
             .select(`
         *,
         customer:customers(id, full_name, email, phone),
-        vehicle:vehicles(id, make, model, license_plate),
+        vehicle:vehicles(id, brand, model, license_plate),
         invoice_items(*)
       `)
             .order('invoice_date', { ascending: false });
@@ -191,7 +120,7 @@ export class InvoiceService {
             .select(`
         *,
         customer:customers(id, full_name, email, phone),
-        vehicle:vehicles(id, make, model, license_plate, year, color),
+        vehicle:vehicles(id, brand, model, license_plate, year, color),
         invoice_items(*)
       `)
             .eq('id', id)
