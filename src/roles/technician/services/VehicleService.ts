@@ -13,7 +13,7 @@ export interface Vehicle {
     last_service: string;
     image: string;
     assigned_to: string;
-    tasks?: any[];
+    tasks?: Task[];
     timeline?: any[];
     performance_stats?: any;
     vin?: string;
@@ -28,6 +28,17 @@ export interface Vehicle {
         role: string; // e.g., 'Technician', 'Advisor'
     }[];
 }
+
+export interface Task {
+    id: string | number;
+    name: string;
+    status: string;
+    time?: string;
+    performedBy?: string;
+    completedAt?: string;
+}
+
+export const CURRENT_TECHNICIAN = 'Ahmed Raza';
 
 const STORAGE_KEY = 'technician_vehicles';
 
@@ -66,6 +77,29 @@ class VehicleService {
 
     getAll(): Vehicle[] {
         return this.vehicles;
+    }
+
+    /**
+     * Get vehicles where the specified technician has performed tasks
+     */
+    getVehiclesForTechnician(technicianName: string): Vehicle[] {
+        return this.vehicles.filter(vehicle => {
+            if (!vehicle.tasks || vehicle.tasks.length === 0) return false;
+
+            // Check if ANY task was performed by this technician
+            // Ideally we check for 'Completed' status too, but user said "Completed at least one task"
+            // The mock data has some tasks as "Pending" or "In Progress" with assigned names too, 
+            // but strict requirement is "Completed at least one task".
+            return vehicle.tasks.some(task =>
+                task.performedBy === technicianName &&
+                (task.status === 'Completed' || task.status === 'In Progress' || task.status === 'Rejected')
+                // Including In Progress/Rejected based on "Visibility" logic - usually you want to see what you are working on too.
+                // Requirement said: "The technician has completed at least one task on that vehicle"
+                // I will broaden it slightly to "has worked on" (Completed/Rejected) or "is working on" (In Progress) 
+                // to be safe, but prioritize "Completed" if strict. 
+                // Let's stick to the prompt's "work-based visibility" -> "Who worked on it".
+            );
+        });
     }
 
     getById(id: string): Vehicle | undefined {

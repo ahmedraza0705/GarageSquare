@@ -12,7 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../components/Header';
 import { Ionicons } from '@expo/vector-icons';
-import { vehicleService, Vehicle } from '../services/VehicleService';
+import { vehicleService, Vehicle, CURRENT_TECHNICIAN } from '../services/VehicleService';
 import VehicleCard from '../components/VehicleCard';
 
 export default function TechnicianVehiclesScreen() {
@@ -26,7 +26,7 @@ export default function TechnicianVehiclesScreen() {
         useCallback(() => {
             const loadVehicles = async () => {
                 await vehicleService.init();
-                setVehicles(vehicleService.getAll());
+                setVehicles(vehicleService.getVehiclesForTechnician(CURRENT_TECHNICIAN));
             };
             loadVehicles();
         }, [])
@@ -37,14 +37,13 @@ export default function TechnicianVehiclesScreen() {
     const completedCount = vehicles.filter(v => v.status === 'Completed').length;
 
     const filteredVehicles = vehicles.filter(vehicle => {
-        // Enforce only Completed vehicles are shown based on user request
-        const isCompleted = vehicle.status === 'Completed';
+        // Show ALL vehicles, matches search
         const matchesSearch =
             vehicle.make.toLowerCase().includes(searchQuery.toLowerCase()) ||
             vehicle.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
             vehicle.reg_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
             vehicle.owner.toLowerCase().includes(searchQuery.toLowerCase());
-        return isCompleted && matchesSearch;
+        return matchesSearch;
     });
 
     const StatsBadge = ({ label, count, icon, color, active }: any) => (
@@ -62,7 +61,7 @@ export default function TechnicianVehiclesScreen() {
     return (
         <View className="flex-1 bg-[#f8fafc]">
             <StatusBar barStyle="dark-content" />
-            <Header title="Completed Vehicles" />
+            <Header title="My Work Vehicles" />
 
             {/* List with Header Component to scroll together */}
             <FlatList
@@ -78,7 +77,7 @@ export default function TechnicianVehiclesScreen() {
                             <View className="flex-1 flex-row items-center bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm h-14">
                                 <Ionicons name="search" size={22} color="#94a3b8" />
                                 <TextInput
-                                    placeholder="Search completed vehicles..."
+                                    placeholder="Search my vehicles..."
                                     placeholderTextColor="#cbd5e1"
                                     className="flex-1 ml-3 text-slate-800 text-base font-medium h-full p-0"
                                     value={searchQuery}
@@ -108,7 +107,7 @@ export default function TechnicianVehiclesScreen() {
 
                         {/* Section Title */}
                         <Text className="text-lg font-bold text-slate-800 mb-4 px-1">
-                            Completed Vehicles <Text className="text-slate-400 text-base font-normal">({filteredVehicles.length})</Text>
+                            Vehicles I Worked On <Text className="text-slate-400 text-base font-normal">({filteredVehicles.length})</Text>
                         </Text>
                     </View>
                 }

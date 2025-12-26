@@ -21,10 +21,47 @@ const InputField = ({ label, placeholder, value, onChange, keyboardType = 'defau
     </View>
 );
 
+// --- Mock Data for Dropdowns ---
+const SERVICE_DATA: Record<string, string[]> = {
+    'General Service': ['Standard Service', 'Premium Service', 'Oil Change', 'General Inspection'],
+    'Engine & Mechanical': ['Engine Noise', 'Starting Issue', 'Overheating', 'Belt Replacement'],
+    'Body & Paint': ['Dent Repair', 'Scratch Removal', 'Full Paint', 'Polishing'],
+    'Electrical': ['Battery Issue', 'Light Failure', 'AC Repair', 'Wiring Fault'],
+    'Wheels & Tyres': ['Wheel Alignment', 'Wheel Balancing', 'Tyre Puncture', 'Tyre Replacement'],
+    'Other': ['Custom Request', 'Consultation']
+};
+
+const DropdownModal = ({ visible, onClose, title, items, onSelect }: any) => {
+    if (!visible) return null;
+    return (
+        <View className="absolute top-0 bottom-0 left-0 right-0 bg-black/50 justify-center items-center z-50 p-5">
+            <View className="bg-white w-full rounded-2xl max-h-[80%] overflow-hidden">
+                <View className="p-4 border-b border-gray-100 flex-row justify-between items-center bg-gray-50">
+                    <Text className="text-lg font-bold text-slate-800">{title}</Text>
+                    <TouchableOpacity onPress={onClose}>
+                        <Ionicons name="close" size={24} color="#64748b" />
+                    </TouchableOpacity>
+                </View>
+                <ScrollView contentContainerStyle={{ padding: 10 }}>
+                    {items.map((item: string, idx: number) => (
+                        <TouchableOpacity
+                            key={idx}
+                            onPress={() => { onSelect(item); onClose(); }}
+                            className="p-4 border-b border-gray-100 active:bg-blue-50"
+                        >
+                            <Text className="text-slate-700 font-medium text-base">{item}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+        </View>
+    );
+};
+
 export default function AddVehicleScreen() {
     const navigation = useNavigation();
     const route: any = useRoute();
-    const editingVehicle = route.params?.vehicle; // Check if we are editing
+    const editingVehicle = route.params?.vehicle;
 
     // Form State
     const [make, setMake] = useState('');
@@ -36,7 +73,17 @@ export default function AddVehicleScreen() {
     const [mileage, setMileage] = useState('');
     const [fuel, setFuel] = useState('');
     const [ownerName, setOwnerName] = useState('');
-    const [issue, setIssue] = useState('');
+
+    // Service Request State
+    const [issue, setIssue] = useState(''); // Kept for final output
+    const [selectedCategory, setSelectedCategory] = useState('');
+    // Multiple services state
+    const [selectedServices, setSelectedServices] = useState<string[]>([]);
+
+    // UI state
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [showItemModal, setShowItemModal] = useState(false);
+
     const [notes, setNotes] = useState('');
 
     useEffect(() => {
@@ -51,9 +98,28 @@ export default function AddVehicleScreen() {
             setFuel(editingVehicle.fuel_level || '');
             setOwnerName(editingVehicle.owner);
             setNotes(editingVehicle.notes || '');
-            // Issue is usually for a new job card, but could pre-fill if editing a draft
         }
     }, [editingVehicle]);
+
+    // Handle Dropdown Selection
+    const handleCategorySelect = (cat: string) => {
+        setSelectedCategory(cat);
+        // We don't reset items anymore, we just allow adding from new category
+    };
+
+    const handleItemSelect = (item: string) => {
+        const fullItem = `${selectedCategory} - ${item}`;
+        if (!selectedServices.includes(fullItem)) {
+            setSelectedServices([...selectedServices, fullItem]);
+        }
+        setShowItemModal(false);
+    };
+
+    const removeService = (index: number) => {
+        const newServices = [...selectedServices];
+        newServices.splice(index, 1);
+        setSelectedServices(newServices);
+    };
 
     const handleSubmit = async () => {
         if (!make || !model || !regNumber) {
@@ -72,21 +138,22 @@ export default function AddVehicleScreen() {
             fuel_level: fuel,
             owner: ownerName,
             notes,
-            // Only update these if creating new, or specific logic for edits
             status: editingVehicle ? editingVehicle.status : 'In Shop',
             service_status: editingVehicle ? editingVehicle.service_status : 'Inspection Required',
             last_service: 'Just Now',
-            assigned_to: 'Me', // Auto-assign to current tech
+            assigned_to: 'Me',
         };
 
         if (editingVehicle) {
             await vehicleService.update(editingVehicle.id, vehicleData);
             Alert.alert('Success', 'Vehicle updated successfully');
         } else {
+            // New Vehicle Logic
             await vehicleService.add({
                 ...vehicleData,
-                // Add initial generic task for the reported issue
-                tasks: issue ? [{ id: Date.now(), name: issue, status: 'Pending', time: 'Pending', cost: 0 }] : [],
+                tasks: selectedServices.length > 0
+                    ? selectedServices.map((svc, idx) => ({ id: Date.now() + idx, name: svc, status: 'Pending', time: 'Pending', cost: 0 }))
+                    : issue ? [{ id: Date.now(), name: issue, status: 'Pending', time: 'Pending', cost: 0 }] : [],
                 timeline: [{ time: 'Just Now', event: 'Vehicle Registered', date: 'Today' }]
             } as any);
             Alert.alert('Success', 'Vehicle added successfully');
@@ -97,6 +164,22 @@ export default function AddVehicleScreen() {
 
     return (
         <View className="flex-1 bg-[#f8fafc]">
+            {/* Modals placed at root of View to cover screen */}
+            <DropdownModal
+                visible={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                title="Select Category"
+                items={Object.keys(SERVICE_DATA)}
+                onSelect={handleCategorySelect}
+            />
+            <DropdownModal
+                visible={showItemModal}
+                onClose={() => setShowItemModal(false)}
+                title="Select Service Item"
+                items={selectedCategory ? SERVICE_DATA[selectedCategory] : []}
+                onSelect={handleItemSelect}
+            />
+
             <SafeAreaView className="bg-white" edges={['top']}>
                 <View className="flex-row items-center px-4 py-3 border-b border-slate-100">
                     <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3 p-1">
@@ -160,13 +243,55 @@ export default function AddVehicleScreen() {
                 {!editingVehicle && (
                     <View className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mb-6">
                         <Text className="text-lg font-bold text-slate-800 mb-6">Initial Service Request</Text>
-                        <InputField
-                            label="Reported Issues"
-                            placeholder="Describe the main issue..."
-                            value={issue}
-                            onChange={setIssue}
-                            multiline={true}
-                        />
+
+                        {/* Custom Dropdown Triggers */}
+                        <View className="mb-4">
+                            <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Service Category</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowCategoryModal(true)}
+                                className="bg-white border border-slate-200 rounded-xl p-4 flex-row justify-between items-center"
+                            >
+                                <Text className={selectedCategory ? "text-slate-800 font-medium text-base" : "text-slate-400 text-base"}>
+                                    {selectedCategory || "Select Category"}
+                                </Text>
+                                <Ionicons name="chevron-down" size={20} color="#64748b" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View className="mb-4">
+                            <Text className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Service Item</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    if (!selectedCategory) {
+                                        Alert.alert('Select Category First', 'Please select a service category to see available items.');
+                                        return;
+                                    }
+                                    setShowItemModal(true);
+                                }}
+                                className={`bg-white border border-slate-200 rounded-xl p-4 flex-row justify-between items-center ${!selectedCategory ? 'opacity-50' : ''}`}
+                            >
+                                <Text className={"text-slate-400 text-base"}>
+                                    Select Service Item to Add...
+                                </Text>
+                                <Ionicons name="add-circle" size={24} color="#64748b" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Selected Services List (Chips) */}
+                        {selectedServices.length > 0 && (
+                            <View className="flex-row flex-wrap gap-2 mt-2">
+                                {selectedServices.map((service, index) => (
+                                    <View key={index} className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 flex-row items-center">
+                                        <Text className="text-blue-700 font-medium mr-2">{service}</Text>
+                                        <TouchableOpacity onPress={() => removeService(index)}>
+                                            <Ionicons name="close-circle" size={18} color="#93c5fd" />
+                                        </TouchableOpacity>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+
+                        {/* Read-only preview or Additional Input could go here if needed, but requirements said "Instead of text" */}
                     </View>
                 )}
 

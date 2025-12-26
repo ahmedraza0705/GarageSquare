@@ -57,12 +57,12 @@ export const technicianVehicles = [
         image: 'https://imgd.aeplcdn.com/664x374/n/cw/ec/41564/hyundai-creta-right-front-three-quarter5.jpeg?q=80',
         assigned_to: 'Ahmed Raza',
         tasks: [
-            { id: 101, name: 'Engine Oil Replacement', status: 'Completed', time: '45m' },
-            { id: 102, name: 'Oil Filter Change', status: 'Completed', time: '15m' },
-            { id: 103, name: 'Brake Pad Inspection', status: 'Pending', time: '30m' },
-            { id: 104, name: 'Coolant Top-up', status: 'Rejected', time: '10m' }, // Rejected Item
-            { id: 105, name: 'Tyre Rotation', status: 'Rejected', time: '40m' },   // Rejected Item
-            { id: 106, name: 'Air Filter Check', status: 'Pending', time: '10m' },
+            { id: 101, name: 'Engine Oil Replacement', status: 'Completed', time: '45m', performedBy: 'Ahmed Raza' },
+            { id: 102, name: 'Oil Filter Change', status: 'Completed', time: '15m', performedBy: 'Ahmed Raza' },
+            { id: 103, name: 'Brake Pad Inspection', status: 'Completed', time: '30m', performedBy: 'Varun Sharma' },
+            { id: 104, name: 'Coolant Top-up', status: 'Rejected', time: '10m', performedBy: 'Ahmed Raza' }, // Rejected Item
+            { id: 105, name: 'Tyre Rotation', status: 'Rejected', time: '40m', performedBy: 'Varun Sharma' },   // Rejected Item
+            { id: 106, name: 'Air Filter Check', status: 'Pending', time: '10m', performedBy: 'Ahmed Raza' },
         ],
         timeline: [
             { time: '09:00 AM', event: 'Vehicle Checked In', date: '24 Dec' },
@@ -88,9 +88,9 @@ export const technicianVehicles = [
         image: 'https://imgd.aeplcdn.com/664x374/n/cw/ec/54399/swift-exterior-right-front-three-quarter-64.jpeg?q=80',
         assigned_to: 'Rahul Verma',
         tasks: [
-            { id: 201, name: 'General Service', status: 'Completed', time: '2h' },
-            { id: 202, name: 'Washing & Cleaning', status: 'Completed', time: '45m' },
-            { id: 203, name: 'Wheel Alignment', status: 'Completed', time: '30m' },
+            { id: 201, name: 'General Service', status: 'Completed', time: '2h', performedBy: 'Rahul Verma' },
+            { id: 202, name: 'Washing & Cleaning', status: 'Completed', time: '45m', performedBy: 'Rahul Verma' },
+            { id: 203, name: 'Wheel Alignment', status: 'Completed', time: '30m', performedBy: 'Rahul Verma' },
         ],
         timeline: [
             { time: '10:00 AM', event: 'Vehicle Received', date: '20 Dec' },
@@ -115,8 +115,8 @@ export const technicianVehicles = [
         image: 'https://imgd.aeplcdn.com/664x374/n/cw/ec/42611/tata-nexon-ev-right-front-three-quarter5.jpeg?q=80',
         assigned_to: 'Pending',
         tasks: [
-            { id: 301, name: 'Battery Health Check', status: 'Pending', time: '1h' },
-            { id: 302, name: 'Software Update', status: 'Pending', time: '45m' },
+            { id: 301, name: 'Battery Health Check', status: 'Pending', time: '1h', performedBy: 'Ahmed Raza' },
+            { id: 302, name: 'Software Update', status: 'Pending', time: '45m', performedBy: 'Ahmed Raza' },
         ],
         timeline: [],
         performance_stats: {
@@ -138,9 +138,9 @@ export const technicianVehicles = [
         image: 'https://imgd.aeplcdn.com/664x374/n/cw/ec/44709/fortuner-exterior-right-front-three-quarter-19.jpeg?q=80',
         assigned_to: 'Vikram Singh',
         tasks: [
-            { id: 401, name: 'Brake Disc Replacement', status: 'In Progress', time: '1h 30m' },
-            { id: 402, name: 'Suspension Check', status: 'Pending', time: '45m' },
-            { id: 403, name: 'AC Service', status: 'Pending', time: '1h' },
+            { id: 401, name: 'Brake Disc Replacement', status: 'In Progress', time: '1h 30m', performedBy: 'Ahmed Raza' },
+            { id: 402, name: 'Suspension Check', status: 'Pending', time: '45m', performedBy: 'Ahmed Raza' },
+            { id: 403, name: 'AC Service', status: 'Completed', time: '1h', performedBy: 'Varun Sharma' },
         ],
         timeline: [
             { time: '11:00 AM', event: 'Vehicle Received', date: '22 Dec' },

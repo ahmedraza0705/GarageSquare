@@ -26,6 +26,10 @@ export default function VehicleCard({ vehicle, onPress }: VehicleCardProps) {
     const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
     const progressColor = progress === 100 ? 'bg-emerald-500' : progress > 50 ? 'bg-blue-500' : 'bg-amber-500';
 
+    // Get Involved Technicians
+    const technicians = Array.from(new Set(vehicle.tasks?.map((t: any) => t.performedBy).filter(Boolean))) as string[];
+    const uniqueTechnicians = technicians.length > 0 ? technicians.join(', ') : 'Unassigned';
+
     return (
         <TouchableOpacity
             onPress={onPress}
@@ -117,11 +121,13 @@ export default function VehicleCard({ vehicle, onPress }: VehicleCardProps) {
                     {vehicle.assigned_to && (
                         <View className="flex-row items-center">
                             <View className="w-6 h-6 rounded-full bg-indigo-50 items-center justify-center mr-2 border border-indigo-100">
-                                <Ionicons name="construct-outline" size={12} color="#6366f1" />
+                                <Ionicons name="people-outline" size={12} color="#6366f1" />
                             </View>
                             <View>
-                                <Text className="text-[10px] text-slate-400 font-medium uppercase">Tech</Text>
-                                <Text className="text-xs font-semibold text-slate-700">{vehicle.assigned_to}</Text>
+                                <Text className="text-[10px] text-slate-400 font-medium uppercase">Worked by</Text>
+                                <Text className="text-xs font-semibold text-slate-700 max-w-[120px]" numberOfLines={1}>
+                                    {uniqueTechnicians}
+                                </Text>
                             </View>
                         </View>
                     )}

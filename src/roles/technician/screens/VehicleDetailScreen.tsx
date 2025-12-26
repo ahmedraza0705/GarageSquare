@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { vehicleService } from '../services/VehicleService';
+import { vehicleService, CURRENT_TECHNICIAN } from '../services/VehicleService';
 
 export default function VehicleDetailScreen() {
     const navigation = useNavigation();
@@ -142,91 +142,127 @@ export default function VehicleDetailScreen() {
                     </View>
                 )}
 
-                {/* 2. Tasks List */}
-                {/* 2. Professional Service History Breakdown */}
+                {/* 2. Tasks List - Grouped by Technician */}
                 {vehicle.tasks && vehicle.tasks.length > 0 && (
                     <View className="mb-8">
                         <Text className="text-xl font-bold text-slate-900 mb-4">Service History</Text>
 
-                        {/* Stats Row */}
-                        <View className="flex-row justify-between mb-6">
-                            <View className="items-center bg-emerald-50 px-4 py-3 rounded-2xl w-[30%] border border-emerald-100">
-                                <Text className="text-2xl font-bold text-emerald-600">
-                                    {vehicle.tasks.filter((t: any) => t.status === 'Completed').length}
-                                </Text>
-                                <Text className="text-[10px] font-bold text-emerald-800 uppercase tracking-wide mt-1">Repaired</Text>
-                            </View>
-                            <View className="items-center bg-red-50 px-4 py-3 rounded-2xl w-[30%] border border-red-100">
-                                <Text className="text-2xl font-bold text-red-600">
-                                    {vehicle.tasks.filter((t: any) => t.status === 'Rejected').length}
-                                </Text>
-                                <Text className="text-[10px] font-bold text-red-800 uppercase tracking-wide mt-1">Rejected</Text>
-                            </View>
-                            <View className="items-center bg-slate-50 px-4 py-3 rounded-2xl w-[30%] border border-slate-100">
-                                <Text className="text-2xl font-bold text-slate-600">
-                                    {vehicle.tasks.filter((t: any) => t.status === 'Pending').length}
-                                </Text>
-                                <Text className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mt-1">Pending</Text>
-                            </View>
-                        </View>
+                        {/* Helper to render a task item */}
+                        {(() => {
+                            const renderTaskItem = (task: any, showPerformer: boolean = false) => {
+                                const isCompleted = task.status === 'Completed';
+                                const isRejected = task.status === 'Rejected';
+                                const isPending = task.status === 'Pending' || task.status === 'In Progress';
 
-                        {/* List - Repaired */}
-                        <Text className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 pl-1">Confirmed Repairs</Text>
-                        {vehicle.tasks.filter((t: any) => t.status === 'Completed').map((task: any) => (
-                            <View key={task.id} className="flex-row items-center p-4 mb-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                                <View className="w-10 h-10 rounded-full bg-emerald-100 items-center justify-center mr-4">
-                                    <Ionicons name="checkmark" size={20} color="#10b981" />
-                                </View>
-                                <View className="flex-1">
-                                    <Text className="text-base font-bold text-slate-800">{task.name}</Text>
-                                    <Text className="text-xs text-slate-400 mt-0.5">Completed in {task.time}</Text>
-                                </View>
-                                <View className="px-3 py-1 bg-emerald-50 rounded-lg">
-                                    <Text className="text-xs font-bold text-emerald-600">Done</Text>
-                                </View>
-                            </View>
-                        ))}
-                        {vehicle.tasks.filter((t: any) => t.status === 'Completed').length === 0 && (
-                            <Text className="text-slate-400 text-sm italic mb-4 pl-1">No repairs completed yet.</Text>
-                        )}
+                                let iconName = 'time-outline';
+                                let iconColor = '#94a3b8';
+                                let bgColor = 'bg-slate-50';
+                                let borderColor = 'border-slate-100';
+                                let badgeColor = 'text-slate-500';
+                                let badgeBg = 'bg-slate-100';
 
-                        {/* List - Rejected */}
-                        <Text className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 mt-4 pl-1">Rejected / Cancelled</Text>
-                        {vehicle.tasks.filter((t: any) => t.status === 'Rejected').map((task: any) => (
-                            <View key={task.id} className="flex-row items-center p-4 mb-3 bg-white rounded-2xl border border-red-50 shadow-sm">
-                                <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center mr-4">
-                                    <Ionicons name="close" size={20} color="#ef4444" />
-                                </View>
-                                <View className="flex-1">
-                                    <Text className="text-base font-bold text-slate-800">{task.name}</Text>
-                                    <Text className="text-xs text-slate-400 mt-0.5">Estimated: {task.time}</Text>
-                                </View>
-                                <View className="px-3 py-1 bg-red-50 rounded-lg">
-                                    <Text className="text-xs font-bold text-red-600">Rejected</Text>
-                                </View>
-                            </View>
-                        ))}
-                        {vehicle.tasks.filter((t: any) => t.status === 'Rejected').length === 0 && (
-                            <Text className="text-slate-400 text-sm italic mb-4 pl-1">No items rejected.</Text>
-                        )}
+                                if (isCompleted) {
+                                    iconName = 'checkmark';
+                                    iconColor = '#10b981';
+                                    bgColor = 'bg-white';
+                                    borderColor = 'border-slate-100';
+                                    badgeColor = 'text-emerald-600';
+                                    badgeBg = 'bg-emerald-50';
+                                } else if (isRejected) {
+                                    iconName = 'close';
+                                    iconColor = '#ef4444';
+                                    bgColor = 'bg-white';
+                                    borderColor = 'border-red-50';
+                                    badgeColor = 'text-red-600';
+                                    badgeBg = 'bg-red-50';
+                                } else if (task.status === 'In Progress') {
+                                    iconName = 'construct';
+                                    iconColor = '#3b82f6';
+                                    bgColor = 'bg-blue-50';
+                                    borderColor = 'border-blue-100';
+                                    badgeColor = 'text-blue-600';
+                                    badgeBg = 'bg-blue-100';
+                                }
 
-                        {/* List - Pending */}
-                        <Text className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 mt-4 pl-1">Pending Approval / Work</Text>
-                        {vehicle.tasks.filter((t: any) => t.status === 'Pending').map((task: any) => (
-                            <View key={task.id} className="flex-row items-center p-4 mb-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                <View className="w-10 h-10 rounded-full bg-white items-center justify-center mr-4 shadow-sm">
-                                    <Ionicons name="time-outline" size={20} color="#94a3b8" />
-                                </View>
-                                <View className="flex-1">
-                                    <Text className="text-base font-bold text-slate-700">{task.name}</Text>
-                                    <Text className="text-xs text-slate-400 mt-0.5">Estimated: {task.time}</Text>
-                                </View>
-                                <View className="px-3 py-1 bg-white rounded-lg border border-slate-100">
-                                    <Text className="text-xs font-bold text-slate-500">Pending</Text>
-                                </View>
-                            </View>
-                        ))}
+                                return (
+                                    <View key={task.id} className={`flex-row items-center p-4 mb-3 rounded-2xl border shadow-sm ${bgColor} ${borderColor}`}>
+                                        <View className={`w-10 h-10 rounded-full items-center justify-center mr-4 ${badgeBg}`}>
+                                            <Ionicons name={iconName as any} size={20} color={iconColor} />
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text className="text-base font-bold text-slate-800">{task.name}</Text>
+                                            <Text className="text-xs text-slate-400 mt-0.5">
+                                                {task.time} {showPerformer && task.performedBy ? `• ${task.performedBy}` : ''}
+                                            </Text>
+                                            {task.completedAt && <Text className="text-[10px] text-slate-400 mt-0.5">{task.completedAt}</Text>}
+                                        </View>
+                                        <View className={`px-3 py-1 rounded-lg ${badgeBg}`}>
+                                            <Text className={`text-xs font-bold ${badgeColor}`}>{task.status}</Text>
+                                        </View>
+                                    </View>
+                                );
+                            };
 
+                            const myTasks = vehicle.tasks.filter((t: any) => t.performedBy === CURRENT_TECHNICIAN);
+                            const otherTasks = vehicle.tasks.filter((t: any) => t.performedBy !== CURRENT_TECHNICIAN);
+
+                            // Collect other technicians names for headers
+                            const otherTechnicians = Array.from(new Set(otherTasks.map((t: any) => t.performedBy).filter(Boolean)));
+
+                            return (
+                                <View>
+                                    {/* MY WORK SECTION */}
+                                    <View className="mb-6">
+                                        <View className="flex-row items-center mb-3">
+                                            <View className="w-8 h-8 rounded-full bg-blue-100 items-center justify-center mr-2">
+                                                <Ionicons name="person" size={16} color="#2563eb" />
+                                            </View>
+                                            <Text className="text-lg font-bold text-slate-800">My Work</Text>
+                                            <View className="bg-slate-100 px-2 py-0.5 rounded-full ml-2">
+                                                <Text className="text-xs font-bold text-slate-500">{myTasks.length}</Text>
+                                            </View>
+                                        </View>
+
+                                        {myTasks.length > 0 ? (
+                                            myTasks.map((task: any) => renderTaskItem(task, false))
+                                        ) : (
+                                            <Text className="text-slate-400 text-sm italic pl-2">No tasks assigned to you.</Text>
+                                        )}
+                                    </View>
+
+                                    {/* OTHERS WORK SECTION */}
+                                    {otherTasks.length > 0 && (
+                                        <View>
+                                            <View className="flex-row items-center mb-3 mt-2">
+                                                <View className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center mr-2">
+                                                    <Ionicons name="people" size={16} color="#64748b" />
+                                                </View>
+                                                <Text className="text-lg font-bold text-slate-800">Team's Work</Text>
+                                                <View className="bg-slate-100 px-2 py-0.5 rounded-full ml-2">
+                                                    <Text className="text-xs font-bold text-slate-500">{otherTasks.length}</Text>
+                                                </View>
+                                            </View>
+
+                                            {/* We can group by person or just list them showing names */}
+                                            {otherTechnicians.length > 0 ? (
+                                                otherTechnicians.map((techName: any) => {
+                                                    const techTasks = otherTasks.filter((t: any) => t.performedBy === techName);
+                                                    return (
+                                                        <View key={techName} className="mb-4 pl-4 border-l-2 border-slate-100 ml-2">
+                                                            <Text className="text-sm font-bold text-slate-500 uppercase mb-2">{techName}</Text>
+                                                            {techTasks.map((task: any) => renderTaskItem(task, false))}
+                                                        </View>
+                                                    );
+                                                })
+                                            ) : (
+                                                // Fallback for tasks with no performedBy or just display flat list if grouping logic fails
+                                                otherTasks.map((task: any) => renderTaskItem(task, true))
+                                            )}
+                                        </View>
+                                    )}
+                                </View>
+                            );
+                        })()}
                     </View>
                 )}
 
