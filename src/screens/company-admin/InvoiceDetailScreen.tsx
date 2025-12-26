@@ -32,29 +32,10 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { Invoice, InvoiceItem } from '@/types';
+
 type InvoiceDetailRouteParams = {
-    invoice: {
-        id: string;
-        invoice_number: string;
-        invoice_type: 'estimate' | 'invoice';
-        status: string;
-        payment_status: string;
-        invoice_date: string;
-        total_amount: number;
-        customer?: {
-            full_name: string;
-            phone?: string;
-            email?: string;
-            address?: string;
-        };
-        vehicle?: {
-            make: string;
-            model: string;
-            license_plate?: string;
-            year?: string;
-        };
-        job_card_id?: string;
-    };
+    invoice: Invoice;
 };
 
 type RouteParams = RouteProp<{ InvoiceDetail: InvoiceDetailRouteParams }, 'InvoiceDetail'>;
@@ -105,21 +86,13 @@ export default function InvoiceDetailScreen() {
         month: 'long',
         year: 'numeric'
     });
-    const vehicleInfo = invoice.vehicle ? `${invoice.vehicle.make} ${invoice.vehicle.model}` : 'No Vehicle';
+    const vehicleInfo = invoice.vehicle ? `${invoice.vehicle.brand} ${invoice.vehicle.model}` : 'No Vehicle';
 
-    // Mock Billing Items (Ideally should come from invoice object)
-    const billingItems = [
-        { name: 'Full Service - Synthetic Oil', qty: 1, price: 4500 },
-        { name: 'Oil Filter Replacement', qty: 1, price: 350 },
-        { name: 'Air Filter Cleaning', qty: 1, price: 150 },
-        { name: 'Brake Pad Inspection', qty: 4, price: 800 },
-        { name: 'General Labour Charges', qty: 1, price: 1200 },
-    ];
-
-    const subtotal = billingItems.reduce((sum, item) => sum + item.price, 0);
-    const taxRate = 0.18;
-    const taxAmount = subtotal * taxRate;
-    const grandTotal = subtotal + taxAmount;
+    // Use real invoice items
+    const billingItems = invoice.invoice_items || [];
+    const subtotal = invoice.subtotal || billingItems.reduce((sum, item) => sum + item.total_price, 0);
+    const taxAmount = invoice.tax_amount || (invoice.cgst + invoice.sgst + invoice.igst);
+    const grandTotal = invoice.total_amount;
 
     const handleShare = async () => {
         try {
@@ -132,25 +105,10 @@ export default function InvoiceDetailScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50" edges={['left', 'right', 'bottom']}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Top Navigation Bar */}
-            <View className="px-4 py-3 bg-white border-b border-gray-100 flex-row items-center justify-between shadow-sm">
-                <TouchableOpacity
-                    onPress={() => navigation.goBack()}
-                    className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 active:bg-gray-100"
-                >
-                    <ArrowLeft size={20} color="#374151" />
-                </TouchableOpacity>
-                <Text className="text-lg font-bold text-gray-900">Invoice Details</Text>
-                <TouchableOpacity
-                    onPress={handleShare}
-                    className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 active:bg-gray-100"
-                >
-                    <Share2 size={18} color="#374151" />
-                </TouchableOpacity>
-            </View>
+
 
             <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
@@ -255,9 +213,9 @@ export default function InvoiceDetailScreen() {
                         {/* Items */}
                         {billingItems.map((item, index) => (
                             <View key={index} className="flex-row px-4 py-3.5 border-b border-gray-50 last:border-0 items-center">
-                                <Text className="flex-[2] text-sm font-medium text-gray-700 leading-5">{item.name}</Text>
-                                <Text className="flex-1 text-center text-sm font-semibold text-gray-600">{item.qty}</Text>
-                                <Text className="flex-1 text-right text-sm font-bold text-gray-900">₹{item.price}</Text>
+                                <Text className="flex-[2] text-sm font-medium text-gray-700 leading-5">{item.item_name}</Text>
+                                <Text className="flex-1 text-center text-sm font-semibold text-gray-600">{item.quantity}</Text>
+                                <Text className="flex-1 text-right text-sm font-bold text-gray-900">₹{item.unit_price}</Text>
                             </View>
                         ))}
                     </View>
@@ -270,12 +228,12 @@ export default function InvoiceDetailScreen() {
                         <Text className="text-gray-900 font-bold">₹{subtotal.toLocaleString('en-IN')}</Text>
                     </View>
                     <View className="flex-row justify-between mb-2">
-                        <Text className="text-gray-500 font-medium">Tax (18%)</Text>
+                        <Text className="text-gray-500 font-medium">Tax ({invoice.tax_rate}%)</Text>
                         <Text className="text-gray-900 font-bold">₹{taxAmount.toLocaleString('en-IN')}</Text>
                     </View>
                     <View className="flex-row justify-between mb-4">
                         <Text className="text-gray-500 font-medium">Discount</Text>
-                        <Text className="text-green-600 font-bold">- ₹0</Text>
+                        <Text className="text-green-600 font-bold">- ₹{invoice.discount_amount.toLocaleString('en-IN')}</Text>
                     </View>
 
                     <View className="h-px bg-gray-100 mb-4" />

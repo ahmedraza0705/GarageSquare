@@ -23,7 +23,7 @@ export default function CustomerMyVehiclesScreen() {
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      
+
       // Check if Supabase is disabled
       if (!supabase) {
         console.warn('Supabase is disabled - using local storage');
@@ -31,7 +31,7 @@ export default function CustomerMyVehiclesScreen() {
         setLoading(false);
         return;
       }
-      
+
       // Get customer ID
       const { data: customer } = await supabase
         .from('customers')
@@ -65,7 +65,7 @@ export default function CustomerMyVehiclesScreen() {
             onPress={() => navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never)}
           >
             <Text className="text-lg font-semibold text-gray-900 mb-2">
-              {vehicle.make} {vehicle.model}
+              {vehicle.brand} {vehicle.model}
             </Text>
             {vehicle.year && (
               <Text className="text-gray-600 text-sm mb-1">

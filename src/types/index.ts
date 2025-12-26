@@ -100,7 +100,7 @@ export interface Customer {
 export interface Vehicle {
   id: string;
   customer_id: string;
-  make: string;
+  brand: string;
   model: string;
   year?: number;
   vin?: string;
@@ -252,7 +252,7 @@ export interface CreateCustomerForm {
 
 export interface CreateVehicleForm {
   customer_id: string;
-  make: string;
+  brand: string;
   model: string;
   year?: number;
   vin?: string;
@@ -276,5 +276,57 @@ export interface UpdateTaskForm {
   status: TaskStatus;
   actual_time?: number;
   notes?: string;
+}
+
+export interface Invoice {
+  id: string;
+  invoice_number: string;
+  invoice_type: 'estimate' | 'invoice';
+  job_card_id?: string;
+  customer_id: string;
+  vehicle_id?: string;
+  branch_id: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  cgst: number;
+  sgst: number;
+  igst: number;
+  discount_amount: number;
+  discount_percentage: number;
+  total_amount: number;
+  status: 'draft' | 'sent' | 'approved' | 'rejected' | 'converted' | 'paid' | 'cancelled';
+  payment_status: 'unpaid' | 'partial' | 'paid' | 'refunded';
+  invoice_date: string;
+  due_date?: string;
+  converted_to_invoice_id?: string;
+  converted_at?: string;
+  notes?: string;
+  terms_and_conditions?: string;
+  created_by?: string;
+  updated_by?: string;
+  created_at: string;
+  updated_at: string;
+  customer?: Customer;
+  vehicle?: Vehicle;
+  invoice_items?: InvoiceItem[];
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoice_id: string;
+  service_id?: string;
+  item_name: string;
+  description?: string;
+  item_type: 'service' | 'part' | 'labour' | 'other';
+  quantity: number;
+  unit_price: number;
+  discount_percentage: number;
+  discount_amount: number;
+  tax_percentage: number;
+  tax_amount: number;
+  total_price: number;
+  created_at: string;
+  updated_at: string;
 }
 

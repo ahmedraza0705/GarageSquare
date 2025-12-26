@@ -30,10 +30,12 @@ import {
     Calendar,
     BarChart3,
     ChevronRight,
-    Briefcase
+    Briefcase,
+    AlertTriangle
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { InvoiceService } from '@/services/invoice.service';
 
 const { width } = Dimensions.get('window');
 
@@ -223,23 +225,25 @@ export default function InvoiceScreen() {
         loadInvoices();
     }, [selectedPeriod, selectedType]);
 
-    const loadInvoices = () => {
-        setLoading(true);
-        // Simulate a small delay for better UX feeling
-        setTimeout(() => {
-            const data = allInvoices[selectedPeriod] || [];
-            // Filter by type if needed, but for now we just show all matches
-            // In a real static scenario we might want two sets of data or filter the static array
-            // For this request, we just return the static data for the period.
-            // If the user wants to filter by Estimate vs Invoice:
-            // const filteredByType = data.filter(inv => inv.invoice_type.toLowerCase() === selectedType.toLowerCase());
-            // setInvoices(filteredByType);
+    const loadInvoices = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-            // To match previous behavior somewhat:
-            setInvoices(data);
+            // Fetch from Supabase service
+            const data = await InvoiceService.getByTimePeriod(
+                selectedPeriod,
+                undefined, // branchId
+                selectedType.toLowerCase() as 'estimate' | 'invoice'
+            );
 
+            setInvoices(data as any);
+        } catch (err: any) {
+            console.error('Error loading invoices:', err);
+            setError(err.message || 'Failed to load invoices');
+        } finally {
             setLoading(false);
-        }, 300);
+        }
     };
 
     const periods: TimePeriod[] = ['Today', 'Week', 'Month', 'Quarter', 'Year'];
@@ -281,11 +285,13 @@ export default function InvoiceScreen() {
 
     const getStatusIcon = (status: string) => {
         switch (status.toLowerCase()) {
-            case 'paid': return <CheckCircle2 size={14} color="#16A34A" />;
-            case 'approved': return <CheckCircle2 size={14} color="#16A34A" />;
-            case 'draft': return <Clock size={14} color="#4B5563" />;
-            case 'sent': return <TrendingUp size={14} color="#0284C7" />;
-            default: return <Clock size={14} color="#4B5563" />;
+            case 'paid': return <CheckCircle2 size={13} color="#16A34A" />;
+            case 'approved': return <CheckCircle2 size={13} color="#16A34A" />;
+            case 'draft': return <Clock size={13} color="#4B5563" />;
+            case 'sent': return <TrendingUp size={13} color="#0284C7" />;
+            case 'converted': return <Clock size={13} color="#9333EA" />;
+            case 'rejected': return <AlertTriangle size={13} color="#DC2626" />;
+            default: return <Clock size={13} color="#4B5563" />;
         }
     };
 
@@ -294,12 +300,12 @@ export default function InvoiceScreen() {
             <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
 
             {/* Top Search & Action Bar */}
-            <View className="px-6 pb-2 flex-row items-center gap-2 bg-gray-50">
-                <View className="flex-1 flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-1 shadow-sm">
+            <View className="px-6 pt-2 pb-2 flex-row items-center gap-2 bg-gray-50">
+                <View className="flex-1 flex-row items-center bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
                     <Search size={20} color="#6B7280" />
                     <TextInput
                         className="flex-1 ml-3 text-base text-gray-900 font-medium"
-                        placeholder="Search User"
+                        placeholder="Search Invoice"
                         placeholderTextColor="#9CA3AF"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -384,17 +390,19 @@ export default function InvoiceScreen() {
                     </TouchableOpacity>
                 </ScrollView>
 
-                <View className="px-6 top-4">
+                <View className="px-6 mt-6">
                     {/* Time Period Tabs */}
                     <View className="flex-row mb-2 bg-gray-100 p-1 rounded-full">
                         {periods.map((period) => (
                             <TouchableOpacity
                                 key={period}
                                 onPress={() => setSelectedPeriod(period)}
-                                className={`flex-1 py-2 rounded-full items-center justify-center ${selectedPeriod === period ? 'bg-[#4682B4] shadow-sm' : ''}`}
+                                className="flex-1 py-2 rounded-full items-center justify-center"
+                                style={{ backgroundColor: selectedPeriod === period ? '#4682B4' : 'transparent', ... (selectedPeriod === period ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 1 } : {}) }}
                             >
                                 <Text
-                                    className={`text-xs ${selectedPeriod === period ? 'font-bold text-white' : 'font-medium text-gray-500'}`}
+                                    className="text-xs"
+                                    style={{ color: selectedPeriod === period ? '#ffffff' : '#6B7280', fontWeight: selectedPeriod === period ? 'bold' : '500' }}
                                 >
                                     {period}
                                 </Text>
@@ -404,7 +412,7 @@ export default function InvoiceScreen() {
                 </View>
 
                 {/* Invoices List */}
-                <View className="px-6 mt-6">
+                <View className="px-6 mt-1">
                     <View className="flex-row justify-between items-center mb-4">
                         <View className="flex-row items-baseline gap-2">
                             <Text className="text-lg font-bold text-gray-900">Recent {selectedType}s</Text>
@@ -492,13 +500,18 @@ export default function InvoiceScreen() {
 
                                             {/* Status Badge */}
                                             <View
-                                                className="flex-row items-center px-2.5 py-1 rounded-full gap-1.5"
+                                                className="flex-row items-center px-3 rounded-full gap-1.5 h-7"
                                                 style={{ backgroundColor: statusColor.bg }}
                                             >
                                                 {getStatusIcon(invoice.status)}
                                                 <Text
-                                                    className="text-xs font-bold text-center"
-                                                    style={{ color: statusColor.text }}
+                                                    className="text-[11px] font-bold"
+                                                    style={{
+                                                        color: statusColor.text,
+                                                        includeFontPadding: false,
+                                                        textAlignVertical: 'center',
+                                                        marginTop: -3
+                                                    }}
                                                 >
                                                     {invoice.status}
                                                 </Text>

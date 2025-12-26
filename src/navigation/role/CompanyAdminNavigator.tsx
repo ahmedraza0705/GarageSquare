@@ -53,27 +53,32 @@ const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Custom Header Component
+// Custom Header
 function CustomHeader({
   route,
+  options,
   theme,
   themeName,
   onToggleTheme,
   showBack,
+  navigation: navigationProp,
 }: {
   route: any;
+  options?: any;
   theme: ThemeColors;
   themeName: ThemeName;
   onToggleTheme: () => void;
   showBack?: boolean;
+  navigation?: any;
 }) {
-  const navigation = useNavigation();
+  const navigation = navigationProp || useNavigation();
   const { user } = useAuth();
   const [profilePopupVisible, setProfilePopupVisible] = useState(false);
 
   // Get current screen title
   const getScreenTitle = () => {
-    const routeName = getFocusedRouteNameFromRoute(route) || route?.name || 'Dashboard';
+    const focusedRouteName = getFocusedRouteNameFromRoute(route);
+    const routeName = focusedRouteName || route?.name || 'Dashboard';
 
     const titleMap: Record<string, string> = {
       DashboardTab: 'Dashboard',
@@ -88,7 +93,7 @@ function CustomHeader({
       InvoiceTab: 'Invoice',
       Invoice: 'Invoice',
       InvoiceList: 'Invoice',
-      InvoiceDetail: 'Invoice Detail',
+      InvoiceDetail: 'Invoice Details',
       ActiveJobs: 'Active Jobs',
       Vehicles: 'Vehicles',
       Customers: 'Customers',
@@ -100,7 +105,14 @@ function CustomHeader({
       Notifications: 'Notifications',
       About: 'About GarageSquares',
     };
-    return titleMap[routeName] || 'Dashboard';
+
+    // If we have a mapping for the current route (or focused nested route), use it
+    if (titleMap[routeName]) {
+      return titleMap[routeName];
+    }
+
+    // Fallback to options.title if provided, otherwise default to Dashboard
+    return options?.title || 'Dashboard';
   };
 
   // Determine if we should show back button
@@ -113,7 +125,7 @@ function CustomHeader({
     const routeName = route?.name || 'Dashboard';
 
     // Main tab screens should show menu button, not back button
-    const mainScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab'];
+    const mainScreens = ['MainTabs', 'DashboardTab', 'BranchesTab', 'UsersTab', 'ReportsTab', 'InvoiceList', 'Invoice'];
 
     // If we're on MainTabs, don't show back button
     if (mainScreens.includes(routeName)) {
@@ -129,7 +141,10 @@ function CustomHeader({
       <View
         style={[
           styles.header,
-          { backgroundColor: theme.headerBg, borderBottomColor: theme.headerBorder },
+          {
+            backgroundColor: theme.headerBg,
+            borderBottomColor: theme.headerBorder,
+          },
         ]}
       >
         <View style={styles.headerLeft}>
@@ -188,7 +203,8 @@ function CustomHeader({
 }
 
 // Bottom Tab Navigator
-function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
+function CompanyAdminTabs() {
+  const { theme } = useTheme();
   // We want a blue bar with white icons, matching the user's image request
   const BAR_COLOR = '#4682B4'; // Blue-600
   const ACTIVE_COLOR = '#ffffff86';
@@ -226,6 +242,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         name="DashboardTab"
         component={CompanyAdminDashboard}
         options={{
+          title: 'Dashboard',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <LayoutDashboard color={color} size={24} />
@@ -237,6 +254,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         name="BranchesTab"
         component={BranchesScreen}
         options={{
+          title: 'Branches',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Building2 color={color} size={24} />
@@ -248,6 +266,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         name="UsersTab"
         component={UsersScreen}
         options={{
+          title: 'User Management',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <Users color={color} size={24} />
@@ -259,6 +278,7 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
         name="ReportsTab"
         component={ReportsScreen}
         options={{
+          title: 'Reports',
           tabBarIcon: ({ color, size, focused }) => (
             <View style={focused ? styles.activeTabIcon : null}>
               <FileBarChart color={color} size={24} />
@@ -272,10 +292,25 @@ function CompanyAdminTabs({ theme }: { theme: ThemeColors }) {
 
 // Invoice Stack Navigator (for Invoice and InvoiceDetail)
 function InvoiceStack() {
+  const { theme, themeName, toggleTheme } = useTheme();
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="InvoiceList" component={InvoiceScreen} />
-      <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} />
+    <Stack.Navigator
+      screenOptions={({ route, navigation }) => ({
+        headerShown: true,
+        header: ({ route, options }) => (
+          <CustomHeader
+            route={route}
+            options={options}
+            navigation={navigation}
+            theme={theme}
+            themeName={themeName}
+            onToggleTheme={toggleTheme}
+          />
+        )
+      })}
+    >
+      <Stack.Screen name="InvoiceList" component={InvoiceScreen} options={{ title: 'Invoice' }} />
+      <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} options={{ title: 'Invoice Details' }} />
     </Stack.Navigator>
   );
 }
@@ -294,9 +329,11 @@ function CompanyAdminDrawer({
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={({ route }) => ({
-        header: () => (
+        header: ({ route, options, navigation }) => (
           <CustomHeader
             route={route}
+            options={options}
+            navigation={navigation}
             theme={theme}
             themeName={themeName}
             onToggleTheme={onToggleTheme}
@@ -314,18 +351,26 @@ function CompanyAdminDrawer({
     >
       <Drawer.Screen
         name="MainTabs"
+        component={CompanyAdminTabs}
         options={{
           title: 'Dashboard',
         }}
-      >
-        {() => <CompanyAdminTabs theme={theme} />}
-      </Drawer.Screen>
+      />
       <Drawer.Screen
         name="Vehicles"
         component={VehiclesScreen}
         options={{
           title: 'Vehicles',
-          drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
+          drawerItemStyle: { display: 'none' },
+        }}
+      />
+      <Drawer.Screen
+        name="Invoice"
+        component={InvoiceStack}
+        options={{
+          title: 'Invoice',
+          headerShown: false,
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -352,13 +397,7 @@ function CompanyAdminDrawer({
           drawerItemStyle: { display: 'none' }, // Hide from drawer, accessed via menu
         }}
       />
-      <Drawer.Screen
-        name="Invoice"
-        component={InvoiceStack}
-        options={{
-          title: 'Invoice',
-        }}
-      />
+
 
     </Drawer.Navigator>
   );
