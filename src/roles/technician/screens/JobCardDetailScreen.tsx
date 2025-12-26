@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -161,11 +162,11 @@ export default function JobCardDetailScreen() {
     const totalCharges = mockCharges.reduce((sum, item) => sum + item.price, 0);
 
     return (
-        <View style={styles.container}>
+        <GestureHandlerRootView style={styles.container}>
             {/* Custom Header Matches Dashboard */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.menuButton}>
-                    <Ionicons name="menu" size={28} color="#0f172a" />
+                    <Ionicons name="arrow-back" size={28} color="#0f172a" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Active Jobs</Text>
                 <View style={styles.headerRight}>
@@ -335,20 +336,22 @@ export default function JobCardDetailScreen() {
                     rightElement={!expandedSection && <View style={styles.qcCompleteBadge}><Text style={styles.qcCompleteText}>Complete</Text></View>}
                 >
                     {/* Manager Row */}
-                    <View style={styles.qcRow}>
-                        <View style={styles.qcLeft}>
-                            <View style={[styles.qcColorBar, { backgroundColor: '#1f2937' }]} />
-                            <Text style={styles.qcName}>Technician Manager : Varun</Text>
+                    {/* Manager Row - SWIPEABLE */}
+                    <SwipeableActionRow
+                        onApprove={() => console.log('Approved')}
+                        onReject={() => console.log('Rejected')}
+                    >
+                        <View style={styles.qcRow}>
+                            <View style={styles.qcLeft}>
+                                <View style={[styles.qcColorBar, { backgroundColor: '#1f2937' }]} />
+                                <Text style={styles.qcName}>Technician Manager : Varun</Text>
+                            </View>
+                            {/* Static actions hidden, revealed on swipe */}
+                            <View style={styles.qcActions}>
+                                <Ionicons name="chevron-back" size={20} color="#ccc" style={{ marginRight: 10 }} />
+                            </View>
                         </View>
-                        <View style={styles.qcActions}>
-                            <TouchableOpacity style={styles.qcBtnReject}>
-                                <Ionicons name="close" size={20} color="#000" />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.qcBtnApprove}>
-                                <Ionicons name="checkmark" size={20} color="#000" />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    </SwipeableActionRow>
 
                     {/* Tech Row 1 */}
                     <View style={styles.qcRow}>
@@ -377,7 +380,7 @@ export default function JobCardDetailScreen() {
 
                 <View style={{ height: 100 }} />
             </ScrollView>
-        </View>
+        </GestureHandlerRootView>
     );
 }
 
@@ -748,3 +751,57 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
+// ==========================================
+// SWIPEABLE IMPLEMENTATION
+// ==========================================
+import { Swipeable } from 'react-native-gesture-handler';
+import { Animated } from 'react-native';
+
+const SwipeableActionRow = ({ children, onApprove, onReject }: any) => {
+    const renderRightActions = (progress: any, dragX: any) => {
+        const trans = dragX.interpolate({
+            inputRange: [-160, 0],
+            outputRange: [0, 160],
+            extrapolate: 'clamp',
+        });
+
+        return (
+            <View style={{ width: 160, flexDirection: 'row' }}>
+                <Animated.View style={{ flex: 1, transform: [{ translateX: 0 }] }}>
+                    <TouchableOpacity
+                        onPress={onReject}
+                        style={{
+                            backgroundColor: '#e5e7eb', // Grey
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            flex: 1,
+                        }}>
+                        <Ionicons name="close" size={28} color="#000" />
+                    </TouchableOpacity>
+                </Animated.View>
+                <Animated.View style={{ flex: 1, transform: [{ translateX: 0 }] }}>
+                    <TouchableOpacity
+                        onPress={onApprove}
+                        style={{
+                            backgroundColor: '#22c55e', // Green
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            height: '100%',
+                            flex: 1,
+                        }}>
+                        <Ionicons name="checkmark" size={28} color="#000" />
+                    </TouchableOpacity>
+                </Animated.View>
+            </View>
+        );
+    };
+
+    return (
+        <Swipeable renderRightActions={renderRightActions} containerStyle={{ backgroundColor: '#fff' }}>
+            {children}
+        </Swipeable>
+    );
+};
+

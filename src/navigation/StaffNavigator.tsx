@@ -34,6 +34,11 @@ import VehicleDetailScreen from '@/screens/staff/operations/VehicleDetailScreen'
 
 import InvoiceScreen from '@/screens/staff/invoices/InvoiceScreen';
 
+// Technician Specific Screens
+import TechnicianVehiclesScreen from '@/roles/technician/screens/TechnicianVehiclesScreen';
+import TechnicianVehicleDetailScreen from '@/roles/technician/screens/VehicleDetailScreen';
+import AddVehicleScreen from '@/roles/technician/screens/AddVehicleScreen';
+
 
 // Stack Navigators
 const Stack = createStackNavigator();
@@ -87,6 +92,20 @@ function OperationsStack() {
             <Stack.Screen name="Vehicles" component={VehiclesScreen} />
             <Stack.Screen name="CreateVehicle" component={CreateVehicleScreen} options={{ title: 'New Vehicle' }} />
             <Stack.Screen name="VehicleDetail" component={VehicleDetailScreen} options={{ title: 'Vehicle Details' }} />
+        </Stack.Navigator>
+    );
+}
+
+function TechnicianOperationsStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Vehicles" component={TechnicianVehiclesScreen} />
+            <Stack.Screen name="VehicleDetail" component={TechnicianVehicleDetailScreen} />
+            <Stack.Screen
+                name="AddVehicle"
+                component={AddVehicleScreen}
+                options={{ presentation: 'modal' }}
+            />
         </Stack.Navigator>
     );
 }
@@ -159,7 +178,7 @@ export default function StaffNavigator() {
             {permissions.includes(PERMISSIONS.MANAGE_OPERATIONS) && (
                 <Tab.Screen
                     name="Operations"
-                    component={OperationsStack}
+                    component={role === 'technician' ? TechnicianOperationsStack : OperationsStack}
                     options={{ title: 'Vehicles' }}
                 />
             )}

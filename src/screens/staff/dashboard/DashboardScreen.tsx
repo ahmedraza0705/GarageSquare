@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
-import TechnicianDashboard from './TechnicianDashboard';
+import TechnicianDashboard from '@/roles/technician/screens/TechnicianDashboard';
 import * as SecureStore from 'expo-secure-store';
 
 function CompanyAdminDashboard() {
