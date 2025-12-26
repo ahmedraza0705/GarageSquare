@@ -122,16 +122,8 @@ export interface Staff {
   name: string;
   username?: string;
   phone?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Staff {
-  id: string;
-  email: string;
-  name: string;
-  username?: string;
-  phone?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Customer {

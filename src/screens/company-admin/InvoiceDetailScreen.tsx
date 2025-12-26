@@ -155,7 +155,7 @@ export default function InvoiceDetailScreen() {
                         <View className="px-2.5 py-1 rounded-md" style={{ backgroundColor: themeName === 'dark' ? 'rgba(37, 99, 235, 0.2)' : '#EFF6FF' }}>
                             <Text className="text-blue-700 text-xs font-bold tracking-wider">{invoice.invoice_number}</Text>
                         </View>
-                        <Text className="text-sm" style={{ color: theme.border }}>•</Text>
+                        <Text className="text-sm" style={{ color: theme.textMuted }}>•</Text>
                         <Text className="text-sm font-medium" style={{ color: theme.textMuted }}>{formattedDate}</Text>
                     </View>
                 </View>
@@ -241,7 +241,7 @@ export default function InvoiceDetailScreen() {
                             </View>
                         )) : (
                             <View className="p-8 items-center">
-                                <Text style={{ color: theme.border }}>No items recorded</Text>
+                                <Text style={{ color: theme.textMuted }}>No items recorded</Text>
                             </View>
                         )}
                     </View>

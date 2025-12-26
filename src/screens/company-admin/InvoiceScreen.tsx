@@ -137,7 +137,7 @@ export default function InvoiceScreen() {
                     <TextInput
                         className="flex-1 ml-3 text-base font-medium"
                         placeholder="Search Invoice"
-                        placeholderTextColor={theme.border}
+                        placeholderTextColor={theme.textMuted}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         style={{ color: theme.text }}
