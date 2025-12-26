@@ -379,7 +379,7 @@ export default function JobTasksScreen() {
                     <Text style={styles.searchIcon}>🔍</Text>
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Search User"
+                        placeholder="Search Job Cards"
                         placeholderTextColor="#9ca3af"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -544,14 +544,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         color: '#000000',
-    },
-    filterButton: {
-        padding: 4,
-    },
-    filterIcon: {
-        fontSize: 18,
-        color: '#9ca3af',
-        fontWeight: 'bold',
     },
     listContent: {
         paddingBottom: 40,

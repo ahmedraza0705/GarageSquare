@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Alert } from 'react-native';
 import { JobCardService } from '@/services/jobCard.service';
 import { AuthService } from '@/services/auth.service';
 import { JobCard } from '@/types';
@@ -138,6 +139,14 @@ export function JobProvider({ children }: { children: ReactNode }) {
             await loadJobs();
         } catch (error) {
             console.error('Failed to save job to DB:', error);
+            const msg = error instanceof Error ? error.message : 'Unknown error';
+            if (msg.includes('Not authenticated')) {
+                Alert.alert('Session Expired', 'Please log in again to save changes.', [
+                    { text: 'OK' }
+                ]);
+            } else {
+                Alert.alert('Error', 'Failed to save job. Please try again.');
+            }
         }
     };
 

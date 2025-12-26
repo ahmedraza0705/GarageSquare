@@ -416,8 +416,20 @@ export default function JobCardDetailScreen() {
   const [stagedServices, setStagedServices] = useState<ServiceDetail[]>([]);
 
   // Get jobCardId from route params, default to '2' (SA0001) for demo persistence
-  const jobCardId = route.params?.jobCardId || '2';
-  const currentJob = jobs.find(j => j.id === jobCardId);
+  const rawJobCardId = route.params?.jobCardId;
+  const jobCardId = rawJobCardId ? String(rawJobCardId) : '2';
+
+  // Find job with robust ID comparison
+  const currentJob = jobs.find(j => String(j.id) === jobCardId);
+
+  useEffect(() => {
+    if (!currentJob) {
+      console.log(`[JobCardDetails] Failed to find job with ID: ${jobCardId}`);
+      console.log('[JobCardDetails] Available Job IDs:', jobs.map(j => j.id));
+    } else {
+      console.log(`[JobCardDetails] Found job:`, currentJob.id);
+    }
+  }, [jobCardId, currentJob, jobs]);
 
   const handleDelete = () => {
     Alert.alert(

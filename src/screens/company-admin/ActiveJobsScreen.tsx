@@ -20,13 +20,31 @@ export default function ActiveJobsScreen() {
 
     // Get active jobs from global context and filter based on search query
     const allActiveJobs = getJobsByStatus('active');
+    // Helper to parse DD-MM-YYYY to timestamp
+    const parseDate = (dateStr?: string) => {
+        if (!dateStr) return 0;
+        const [day, month, year] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day).getTime();
+    };
+
     const jobs = [...allActiveJobs]
         .sort((a, b) => {
+            // 1. Priority: Urgent first
             const aUrgent = a.priority === 'Urgent';
             const bUrgent = b.priority === 'Urgent';
             if (aUrgent && !bUrgent) return -1;
             if (!aUrgent && bUrgent) return 1;
-            return (b.updatedAt || 0) - (a.updatedAt || 0);
+
+            // 2. Sort by Delivery Date (Newest to Oldest)
+            // "Newest" means latest date (e.g. 2025 > 2024) -> Descending
+            const dateA = parseDate(a.deliveryDate);
+            const dateB = parseDate(b.deliveryDate);
+
+            // If dates are equal, fallback to updatedAt
+            if (dateA === dateB) {
+                return (b.updatedAt || 0) - (a.updatedAt || 0);
+            }
+            return dateB - dateA;
         })
         .filter(job => {
             const query = searchQuery.toLowerCase();
@@ -131,14 +149,11 @@ export default function ActiveJobsScreen() {
                         <Text style={styles.searchIcon}>🔍</Text>
                         <TextInput
                             style={styles.searchInput}
-                            placeholder="Search User"
+                            placeholder="Search Job Cards"
                             placeholderTextColor="#9ca3af"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                         />
-                        <TouchableOpacity>
-                            <Text style={styles.filterIcon}>Y</Text>
-                        </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                         style={styles.addButton}
@@ -256,11 +271,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 16,
         color: '#000',
-    },
-    filterIcon: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        transform: [{ rotate: '180deg' }], // Rough visual approximation of filter icon
     },
     addButton: {
         width: 48,
