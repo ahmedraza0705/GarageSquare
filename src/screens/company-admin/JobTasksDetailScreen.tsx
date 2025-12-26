@@ -40,16 +40,17 @@ export default function JobTasksDetailScreen() {
             const completedList = foundJob.completedServices || [];
 
             // Map services to tasks
-            const tasks = (foundJob.services || []).map((service, index) => {
+            const tasks = (foundJob.services || []).map((service: any, index) => {
                 // Should show incomplete if not in list, unless job is fully done
-                const isComplete = isJobDone || completedList.includes(service);
+                const serviceName = service.name || service; // Handle both object and legacy string if any
+                const isComplete = isJobDone || completedList.includes(serviceName);
                 return {
-                    id: service, // Using service name as ID since it defaults to string
-                    title: service,
+                    id: serviceName, // Using service name as ID
+                    title: serviceName,
                     status: isComplete ? 'Complete' : 'Pending',
                     assigned: foundJob.assignedTech || 'Unassigned',
-                    estimate: '45 min',
-                    cost: 0
+                    estimate: service.estimate || '45 min',
+                    cost: service.cost || 0
                 };
             });
 
@@ -119,7 +120,7 @@ export default function JobTasksDetailScreen() {
                 <View style={styles.card}>
                     {/* Top Info */}
                     <View style={styles.jobHeader}>
-                        <Text style={styles.jobTitle}>Job Card: {jobData.id}</Text>
+                        <Text style={styles.jobTitle}>{jobData.id}</Text>
                         {jobData.priority === 'Urgent' && (
                             <View style={styles.urgentBadge}><Text style={styles.urgentText}>{jobData.priority}</Text></View>
                         )}
@@ -227,7 +228,7 @@ export default function JobTasksDetailScreen() {
                                 <Text style={styles.qcLabel}>Technician Manager :</Text>
                                 <TouchableOpacity
                                     style={[styles.qcBtn, jobData.techManagerCheck ? styles.qcBtnDone : styles.qcBtnNot]}
-                                    onPress={() => setJobData(p => ({ ...p, techManagerCheck: !p.techManagerCheck }))}
+                                    onPress={() => setJobData(p => p ? ({ ...p, techManagerCheck: !p.techManagerCheck }) : null)}
                                 >
                                     <Text style={styles.qcBtnText}>{jobData.techManagerCheck ? 'Done' : 'Not Done'}</Text>
                                 </TouchableOpacity>

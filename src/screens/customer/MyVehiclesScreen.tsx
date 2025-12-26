@@ -5,25 +5,29 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { CustomerStackParamList } from '@/types/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { VehicleService } from '@/services/vehicle.service';
 import { Vehicle } from '@/types';
 import { supabase } from '@/lib/supabase';
 
+type NavigationProp = NativeStackNavigationProp<CustomerStackParamList>;
+
 export default function CustomerMyVehiclesScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadVehicles();
-  }, []);
+  }, [user]);
 
   const loadVehicles = async () => {
     try {
       setLoading(true);
-      
+
       // Check if Supabase is disabled
       if (!supabase) {
         console.warn('Supabase is disabled - using local storage');
@@ -31,13 +35,19 @@ export default function CustomerMyVehiclesScreen() {
         setLoading(false);
         return;
       }
-      
+
+      if (!user?.id) {
+        setVehicles([]);
+        setLoading(false);
+        return;
+      }
+
       // Get customer ID
       const { data: customer } = await supabase
         .from('customers')
         .select('id')
-        .eq('user_id', user?.id)
-        .single();
+        .eq('user_id', user.id)
+        .maybeSingle();
 
       if (customer) {
         const data = await VehicleService.getAll({ customer_id: customer.id });
@@ -62,14 +72,14 @@ export default function CustomerMyVehiclesScreen() {
           <TouchableOpacity
             key={vehicle.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('VehicleDetail' as never, { vehicleId: vehicle.id } as never)}
+            onPress={() => navigation.navigate('VehicleDetail', { vehicleId: vehicle.id })}
           >
             <Text className="text-lg font-semibold text-gray-900 mb-2">
-              {vehicle.make} {vehicle.model}
+              {vehicle.brand} {vehicle.model}
             </Text>
-            {vehicle.year && (
+            {vehicle.year_manufacture && (
               <Text className="text-gray-600 text-sm mb-1">
-                Year: {vehicle.year}
+                Year: {vehicle.year_manufacture}
               </Text>
             )}
             {vehicle.license_plate && (
@@ -77,9 +87,9 @@ export default function CustomerMyVehiclesScreen() {
                 Plate: {vehicle.license_plate}
               </Text>
             )}
-            {vehicle.mileage && (
+            {vehicle.odometer && (
               <Text className="text-gray-600 text-sm">
-                Mileage: {vehicle.mileage.toLocaleString()} miles
+                Odometer: {vehicle.odometer.toLocaleString()} KM
               </Text>
             )}
           </TouchableOpacity>

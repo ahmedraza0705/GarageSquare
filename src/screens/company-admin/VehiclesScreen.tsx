@@ -183,7 +183,7 @@ export default function VehiclesScreen() {
             <View className="flex-row justify-between items-center">
               <View>
                 <Text className="text-lg font-bold text-gray-900">
-                  {vehicle.make} {vehicle.model}
+                  {vehicle.brand} {vehicle.model}
                 </Text>
                 <Text className="text-gray-600 text-sm mt-1">
                   {vehicle.license_plate}

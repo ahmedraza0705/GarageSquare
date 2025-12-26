@@ -32,12 +32,18 @@ export default function JobCardsScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'completed':
+      case 'delivered':
+      case 'done':
         return 'bg-green-100 text-green-800';
       case 'in_progress':
+      case 'progress':
+      case 'active':
         return 'bg-blue-100 text-blue-800';
       case 'on_hold':
+      case 'waiting':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
@@ -67,7 +73,7 @@ export default function JobCardsScreen() {
           <TouchableOpacity
             key={jobCard.id}
             className="bg-white rounded-lg p-4 mb-4 shadow-sm"
-            onPress={() => navigation.navigate('JobCardDetail' as never, { jobCardId: jobCard.id } as never)}
+            onPress={() => (navigation.navigate as any)('JobCardDetail', { jobCardId: jobCard.id })}
           >
             <View className="flex-row justify-between items-start mb-2">
               <Text className="text-lg font-semibold text-gray-900">
@@ -79,7 +85,7 @@ export default function JobCardsScreen() {
                 </Text>
               </View>
             </View>
-            
+
             {jobCard.customer && (
               <Text className="text-gray-600 text-sm mb-1">
                 Customer: {jobCard.customer.full_name}
@@ -87,12 +93,12 @@ export default function JobCardsScreen() {
             )}
             {jobCard.vehicle && (
               <Text className="text-gray-600 text-sm mb-1">
-                Vehicle: {jobCard.vehicle.make} {jobCard.vehicle.model}
+                Vehicle: {jobCard.vehicle.brand} {jobCard.vehicle.model}
               </Text>
             )}
             {jobCard.estimated_cost && (
               <Text className="text-gray-600 text-sm">
-                Est. Cost: ${jobCard.estimated_cost.toFixed(2)}
+                Est. Cost: ₹{jobCard.estimated_cost.toLocaleString('en-IN')}
               </Text>
             )}
           </TouchableOpacity>

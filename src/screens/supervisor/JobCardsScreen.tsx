@@ -79,7 +79,7 @@ export default function SupervisorJobCardsScreen() {
                 </Text>
               </View>
             </View>
-            
+
             {jobCard.customer && (
               <Text className="text-gray-600 text-sm mb-1">
                 {jobCard.customer.full_name}
@@ -87,7 +87,7 @@ export default function SupervisorJobCardsScreen() {
             )}
             {jobCard.vehicle && (
               <Text className="text-gray-600 text-sm">
-                {jobCard.vehicle.make} {jobCard.vehicle.model}
+                {jobCard.vehicle.brand} {jobCard.vehicle.model}
               </Text>
             )}
           </TouchableOpacity>

@@ -49,7 +49,36 @@ export class CustomerService {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching customer count:', error);
+      console.warn('Error fetching customer count:', JSON.stringify(error));
+      return 0;
+    }
+
+    return count || 0;
+  }
+
+  /**
+   * Get new customers count for current month
+   */
+  static async getNewCustomersCount(branchId?: string) {
+    if (!supabase) return 0;
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    let query = supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', startOfMonth.toISOString());
+
+    if (branchId) {
+      query = query.eq('branch_id', branchId);
+    }
+
+    const { count, error } = await query;
+
+    if (error) {
+      console.error('Error fetching new customers count:', error);
       return 0;
     }
 
@@ -94,7 +123,7 @@ export class CustomerService {
     const insertData: any = {
       ...formData,
       user_id: userId, // Link to the user who created it
-      branch_id: branchId,
+      branch_id: branchId || null,
     };
 
     console.log('Final Customer Insert Data:', insertData);

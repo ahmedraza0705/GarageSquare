@@ -201,9 +201,9 @@ export default function CreateCustomerScreen() {
         console.log('Creating vehicle in Supabase...');
         await VehicleService.create({
           customer_id: newCustomer.id,
-          make: vehicleData.brand,
+          brand: vehicleData.brand,
           model: vehicleData.model,
-          year: vehicleData.year_manufacture,
+          year_manufacture: vehicleData.year_manufacture,
           color: '',
           license_plate: (vehicleData.license_plate || '').trim().toUpperCase(),
           vin: '',
