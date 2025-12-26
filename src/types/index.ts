@@ -143,6 +143,7 @@ export interface Customer {
   phone: string;
   alt_phone?: string;
   vehicles?: Vehicle[];
+  branch?: { name: string };
 }
 
 export interface Vehicle {

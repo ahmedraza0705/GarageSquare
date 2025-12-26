@@ -122,7 +122,9 @@ export class VehicleService {
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
-        ...validFields,
+        ...cleanFields,
+        brand: finalBrand,
+        company_id: companyId,
         branch_id: branchId || null,
       })
       .select()

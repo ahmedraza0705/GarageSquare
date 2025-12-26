@@ -2,9 +2,9 @@
 // JOB CARDS SCREEN (Company Admin)
 // ============================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { JobCardService } from '@/services/jobCard.service';
 import { JobCard } from '@/types';
 import { useJobs } from '@/context/JobContext';
@@ -16,6 +16,8 @@ export default function JobCardsScreen() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [filteredJobCards, setFilteredJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { jobs } = useJobs();
 
   // Get delivered jobs from JobContext

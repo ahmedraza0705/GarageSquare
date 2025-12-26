@@ -509,7 +509,7 @@ function CompanyAdminDrawer() {
         name="JobTasks"
         component={JobTasksScreen}
         options={{
-          title: 'Job Tasks and Assignments',
+          title: 'Task Management',
         }}
       />
       <Drawer.Screen
@@ -548,11 +548,7 @@ export default function CompanyAdminNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Main">
         {() => (
-          <CompanyAdminDrawer
-            theme={theme}
-            themeName={themeName}
-            onToggleTheme={toggleTheme}
-          />
+          <CompanyAdminDrawer />
         )}
       </Stack.Screen>
 
