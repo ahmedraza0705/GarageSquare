@@ -12,8 +12,9 @@ import {
     Modal,
     Animated,
     Alert,
+    Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthService } from '@/services/auth.service';
@@ -23,6 +24,7 @@ import { Package, TrendingDown, AlertCircle, DollarSign, Search, Plus, Layers, F
 
 export default function InventoryDashboardScreen() {
     const { theme } = useTheme();
+    const insets = useSafeAreaInsets();
     const { user } = useAuth();
     const companyId = user?.profile?.company_id || user?.profile?.branch_id || '';
 
@@ -68,8 +70,10 @@ export default function InventoryDashboardScreen() {
     const UNITS = ['piece', 'liter', 'set', 'bottle', 'can', 'box', 'kg', 'meter', 'pair', 'roll'];
 
     React.useEffect(() => {
-        loadData();
-    }, []);
+        if (companyId) {
+            loadData();
+        }
+    }, [companyId]);
 
     React.useEffect(() => {
         loadItems();
@@ -170,8 +174,8 @@ export default function InventoryDashboardScreen() {
             setCategoryDescription('');
             setEditingCategory(null);
 
-            // Don't close immediately, user might want to edit others or see the list
-            // setAddCategoryModalVisible(false);
+            // Close modal after success to navigate back to inventory
+            setAddCategoryModalVisible(false);
 
             loadData(); // Refresh categories
         } catch (error) {
@@ -597,49 +601,6 @@ export default function InventoryDashboardScreen() {
                         </TouchableOpacity>
                     ))}
                 </ScrollView>
-
-                {/* Units Swiper */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filterScrollContent}
-                    style={[styles.filterScroller, { marginTop: 12 }]}
-                >
-                    <TouchableOpacity
-                        style={[
-                            styles.filterPill,
-                            !selectedUnit && styles.filterPillActive
-                        ]}
-                        onPress={() => setSelectedUnit(null)}
-                    >
-                        <Text style={[
-                            styles.filterPillText,
-                            !selectedUnit && styles.filterPillTextActive,
-                            { color: !selectedUnit ? '#FFFFFF' : theme.text }
-                        ]}>
-                            All Units
-                        </Text>
-                    </TouchableOpacity>
-                    {/* {UNITS.map((unit) => (
-                        <TouchableOpacity
-                            key={unit}
-                            style={[
-                                styles.filterPill,
-                                selectedUnit === unit && styles.filterPillActive,
-                                { backgroundColor: selectedUnit === unit ? '#10B981' : theme.card }
-                            ]}
-                            onPress={() => setSelectedUnit(unit)}
-                        >
-                            <Text style={[
-                                styles.filterPillText,
-                                selectedUnit === unit && styles.filterPillTextActive,
-                                { color: selectedUnit === unit ? '#FFFFFF' : theme.text }
-                            ]}>
-                                {unit}
-                            </Text>
-                        </TouchableOpacity>
-                    ))} */}
-                </ScrollView>
             </View>
 
             {/* Main Items List */}
@@ -764,20 +725,30 @@ export default function InventoryDashboardScreen() {
                 onRequestClose={() => setAddItemModalVisible(false)}
             >
                 <SafeAreaView style={[styles.fullScreenModal, { backgroundColor: theme.background }]}>
-                    <View style={styles.fullScreenModalHeader}>
-                        <TouchableOpacity onPress={() => setAddItemModalVisible(false)}>
-                            <Text style={styles.closeButtonText}>Cancel</Text>
+                    <View style={[styles.fullScreenModalHeader, { paddingTop: insets.top }]}>
+                        <TouchableOpacity
+                            onPress={() => setAddItemModalVisible(false)}
+                            style={styles.headerLeftAction}
+                        >
+                            <Image
+                                source={require('../../assets/back_icon_v2.png')}
+                                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                            />
                         </TouchableOpacity>
-                        <Text style={[styles.fullScreenModalTitle, { color: theme.text }]}>
-                            {editingItem ? 'Edit Item' : 'Add New Item'}
-                        </Text>
-                        {editingItem ? (
-                            <TouchableOpacity onPress={handleDeleteItem}>
-                                <Text style={[styles.closeButtonText, { color: '#EF4444' }]}>Delete</Text>
-                            </TouchableOpacity>
-                        ) : (
-                            <View style={{ width: 50 }} />
-                        )}
+
+                        <View style={styles.headerTitleContainer}>
+                            <Text style={[styles.fullScreenModalTitle, { color: theme.text }]}>
+                                {editingItem ? 'Edit Item' : 'Add New Item'}
+                            </Text>
+                        </View>
+
+                        <View style={styles.headerRightAction}>
+                            {editingItem && (
+                                <TouchableOpacity onPress={handleDeleteItem}>
+                                    <Text style={[styles.closeButtonText, { color: '#EF4444' }]}>Delete</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                     <ScrollView contentContainerStyle={styles.formContainer}>
                         <View style={styles.formGroup}>
@@ -933,17 +904,27 @@ export default function InventoryDashboardScreen() {
                 onRequestClose={() => setAddCategoryModalVisible(false)}
             >
                 <SafeAreaView style={[styles.fullScreenModal, { backgroundColor: theme.background }]}>
-                    <View style={styles.fullScreenModalHeader}>
-                        <TouchableOpacity onPress={() => {
-                            setAddCategoryModalVisible(false);
-                            setEditingCategory(null);
-                            setCategoryName('');
-                            setCategoryDescription('');
-                        }}>
-                            <Text style={styles.closeButtonText}>Done</Text>
+                    <View style={[styles.fullScreenModalHeader, { paddingTop: insets.top }]}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setAddCategoryModalVisible(false);
+                                setEditingCategory(null);
+                                setCategoryName('');
+                                setCategoryDescription('');
+                            }}
+                            style={styles.headerLeftAction}
+                        >
+                            <Image
+                                source={require('../../assets/back_icon_v2.png')}
+                                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                            />
                         </TouchableOpacity>
-                        <Text style={[styles.fullScreenModalTitle, { color: theme.text }]}>Manage Categories</Text>
-                        <View style={{ width: 50 }} />
+
+                        <View style={styles.headerTitleContainer}>
+                            <Text style={[styles.fullScreenModalTitle, { color: theme.text }]}>Manage Categories</Text>
+                        </View>
+
+                        <View style={styles.headerRightAction} />
                     </View>
 
                     {/* Main Content Area */}
@@ -1395,21 +1376,38 @@ const styles = StyleSheet.create({
     },
     fullScreenModalHeader: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
         paddingVertical: 16,
+        minHeight: 64,
         borderBottomWidth: 1,
         borderBottomColor: '#E5E7EB',
     },
+    headerLeftAction: {
+        zIndex: 10,
+        padding: 4,
+        minWidth: 48,
+        alignItems: 'flex-start',
+    },
+    headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerRightAction: {
+        zIndex: 10,
+        minWidth: 48,
+        alignItems: 'flex-end',
+    },
     fullScreenModalTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
     closeButtonText: {
-        fontSize: 16,
+        fontSize: 14,
+        fontWeight: '600',
         color: '#6B7280',
-        padding: 4,
     },
     formContainer: {
         padding: 20,

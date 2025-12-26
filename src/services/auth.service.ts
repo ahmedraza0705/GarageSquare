@@ -61,7 +61,6 @@ export class AuthService {
    */
   static async signIn(credentials: LoginCredentials, _selectedRole?: RoleName) {
     const client = ensureClient();
-    console.log('Signing in with credentials:', credentials,);
     const { data, error } = await client.auth.signInWithPassword({
       email: (credentials.email || '').trim().toLowerCase(),
       password: (credentials.password || '').trim(),
@@ -73,7 +72,6 @@ export class AuthService {
     }
 
     const user = data.user;
-    console.log('User:', user);
     if (!user) {
       throw new Error('Unable to log in. No user returned.');
     }
@@ -301,7 +299,6 @@ export class AuthService {
    */
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     const client = ensureClient();
-    console.log('Fetching profile for:', userId);
 
     // Debug: Check if column exists or query fails
     const { data, error } = await client
@@ -316,11 +313,9 @@ export class AuthService {
     }
 
     if (!data) {
-      console.warn('SUPABASE: No profile found for user:', userId);
       return null;
     }
 
-    console.log('SUPABASE: Profile found:', JSON.stringify(data, null, 2));
     return mapProfile(data);
   }
 
