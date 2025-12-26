@@ -37,7 +37,7 @@ export default function TechnicianDashboard() {
     const FilterTab = ({ label }: { label: string }) => (
         <TouchableOpacity
             onPress={() => setSelectedFilter(label)}
-            className={`px-4 py-1.5 mr-2 rounded-full border ${selectedFilter === label
+            className={`px-2 py-1 mr-2 rounded-full border ${selectedFilter === label
                 ? 'bg-slate-900 border-slate-900'
                 : 'bg-white border-slate-200'
                 }`}
