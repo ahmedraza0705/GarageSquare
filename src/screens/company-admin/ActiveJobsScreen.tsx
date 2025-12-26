@@ -2,423 +2,421 @@
 // ACTIVE JOBS SCREEN (Company Admin)
 // ============================================
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, RefreshControl } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, Image, ProgressBarAndroid, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
-import { useTheme } from '@/context/ThemeContext';
-import { JobCard } from '@/types';
-import { JobCardService } from '@/services/jobCard.service';
-import { supabase } from '@/lib/supabase';
+import { LayoutDashboard, Building2, Users, FileBarChart } from 'lucide-react-native';
+import { useJobs } from '../../context/JobContext';
+
+// --- STATIC DATA REMOVED ---
 
 export default function ActiveJobsScreen() {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
-  const { theme, toggleTheme, themeName } = useTheme();
+  const { getJobsByStatus } = useJobs();
   const [searchQuery, setSearchQuery] = useState('');
-  const [jobCards, setJobCards] = useState<JobCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
-  const loadActiveJobs = useCallback(async (showLoading = true) => {
-    try {
-      if (showLoading) setLoading(true);
-      // Statuses that represent "Active"
-      const activeStatuses: any[] = ['pending', 'in_progress', 'on_hold'];
-      const data = await JobCardService.getAll({
-        status: activeStatuses
-      });
-      setJobCards(data || []);
-    } catch (error) {
-      console.error('Error loading active jobs:', error);
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  }, []);
+  // Get active jobs from global context and filter based on search query
+  const allActiveJobs = getJobsByStatus('active');
+  // Helper to parse DD-MM-YYYY to timestamp
+  const parseDate = (dateStr?: string) => {
+    if (!dateStr) return 0;
+    const [day, month, year] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day).getTime();
+  };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadActiveJobs(false);
-    }, [loadActiveJobs])
+  const jobs = [...allActiveJobs]
+    .sort((a, b) => {
+      // 1. Priority: Urgent first
+      const aUrgent = a.priority === 'Urgent';
+      const bUrgent = b.priority === 'Urgent';
+      if (aUrgent && !bUrgent) return -1;
+      if (!aUrgent && bUrgent) return 1;
+
+      // 2. Sort by Delivery Date (Newest to Oldest)
+      // "Newest" means latest date (e.g. 2025 > 2024) -> Descending
+      const dateA = parseDate(a.deliveryDate);
+      const dateB = parseDate(b.deliveryDate);
+
+      // If dates are equal, fallback to updatedAt
+      if (dateA === dateB) {
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      }
+      return dateB - dateA;
+    })
+    .filter(job => {
+      const query = searchQuery.toLowerCase();
+      return (
+        (job.customer?.toLowerCase() || '').includes(query) ||
+        (job.regNo?.toLowerCase() || '').includes(query) ||
+        (job.vehicle?.toLowerCase() || '').includes(query) ||
+        (job.jobId?.toLowerCase() || '').includes(query)
+      );
+    });
+
+  // Helper to calculate progress percentage (Excluding Rejected)
+  const calculateProgress = (job: any) => {
+    if (!job.taskStatuses) return 0;
+    const statuses = Object.values(job.taskStatuses) as string[];
+    if (statuses.length === 0) return 0;
+
+    const totalValid = statuses.filter(s => s !== 'rejected').length;
+    const complete = statuses.filter(s => s === 'complete').length;
+
+    // If everyone is rejected, technically there's no work left, so 100%?
+    // Or if there are no valid tasks, progress is 0?
+    // User request: "if total task is 6 and 1 is rejected then also the %complete should be 100%" implies 100% if remaining are done.
+    // If ALL are rejected, we can consider it 100% complete (nothing left to do).
+    if (totalValid === 0) return statuses.length > 0 ? 1 : 0;
+
+    return complete / totalValid;
+  };
+
+  // Simple progress bar component since ProgressBarAndroid is Android only
+  const ProgressBar = ({ progress, color }: { progress: number; color: string }) => (
+    <View style={styles.progressBarContainer}>
+      <View style={[styles.progressBarFill, { width: `${progress * 100}%`, backgroundColor: color }]} />
+    </View>
   );
 
-  useEffect(() => {
-    if (!supabase) return;
+  // Calculate time left from now until delivery date/time
+  const calculateTimeLeft = (dateStr?: string, timeStr?: string) => {
+    if (!dateStr || !timeStr) return timeStr || 'N/A';
 
-    const channel = supabase
-      .channel('active-jobs-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'job_cards' },
-        () => {
-          loadActiveJobs(false);
+    try {
+      // Parse Date: DD-MM-YYYY
+      const [day, month, year] = dateStr.split('-').map(Number);
+
+      // Parse Time: HH:MM AM/PM
+      const timeParts = timeStr.toUpperCase().trim().split(' ');
+      // Handle cases like "5:00PM" (no space) or "5:00 PM"
+      let time, modifier;
+      if (timeParts.length === 1) {
+        // Try splitting by AM/PM if attached
+        if (timeParts[0].includes('PM')) {
+          modifier = 'PM';
+          time = timeParts[0].replace('PM', '');
+        } else if (timeParts[0].includes('AM')) {
+          modifier = 'AM';
+          time = timeParts[0].replace('AM', '');
+        } else {
+          // Assume 24h or missing modifier, treat as is for 24h or default AM
+          time = timeParts[0];
+          modifier = 'AM'; // Default
         }
-      )
-      .subscribe();
-
-    return () => {
-      if (supabase) {
-        supabase.removeChannel(channel);
+      } else {
+        [time, modifier] = timeParts;
       }
-    };
-  }, [loadActiveJobs]);
 
-  const getStatusBadge = (status: string, priority?: string) => {
-    if (priority === 'urgent') {
-      return { label: 'Urgent', color: '#ffffff', bgColor: '#ef4444' };
+      let [hours, minutes] = time.split(':').map(Number);
+
+      if (isNaN(hours) || isNaN(minutes)) throw new Error('Invalid Time');
+
+      if (modifier === 'PM' && hours < 12) hours += 12;
+      if (modifier === 'AM' && hours === 12) hours = 0;
+
+      const targetDate = new Date(year, month - 1, day, hours, minutes);
+      const now = new Date();
+      const diff = targetDate.getTime() - now.getTime();
+
+      if (diff <= 0) return 'Overdue';
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) return `${days}d ${hrs}h left`;
+      if (hrs > 0) return `${hrs}h ${mins}m left`;
+      return `${mins}m left`;
+    } catch (e) {
+      return timeStr; // Fallback to original string if parse fails
     }
-    if (status === 'in_progress') {
-      return { label: 'Progress', color: '#ffffff', bgColor: '#2563eb' };
-    }
-    if (status === 'completed') {
-      return { label: 'Ready', color: '#ffffff', bgColor: '#10b981' };
-    }
-    return { label: 'Pending', color: '#ffffff', bgColor: '#6b7280' };
   };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-
-  const handleJobCardPress = (jobCard: JobCard) => {
-    navigation.navigate('JobCardDetail', { jobCardId: jobCard.id });
-  };
-
-  const filteredJobCards = jobCards.filter(jobCard => {
-    const searchLower = searchQuery.toLowerCase();
-    return (
-      jobCard.job_number.toLowerCase().includes(searchLower) ||
-      jobCard.customer?.full_name?.toLowerCase().includes(searchLower) ||
-      jobCard.vehicle?.make?.toLowerCase().includes(searchLower) ||
-      jobCard.vehicle?.model?.toLowerCase().includes(searchLower) ||
-      jobCard.assigned_user?.full_name?.toLowerCase().includes(searchLower)
-    );
-  });
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {/* Custom Header */}
-      <View style={[styles.header, { backgroundColor: theme.background, borderBottomColor: theme.border, borderBottomWidth: 0 }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        >
-          <Image source={require('../../assets/Arrow.png')} style={styles.backIcon} />
-        </TouchableOpacity>
-
-        <Text style={[styles.headerTitle, { color: theme.text }]}>Active Jobs</Text>
-
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            onPress={toggleTheme}
-            style={styles.headerButton}
-          >
-            <Text style={styles.darkModeIcon}>{themeName === 'dark' ? '☀️' : '🌙'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.avatarButton}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user?.profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'A'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
+    <View style={styles.container}>
       <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={() => loadActiveJobs(true)} />
-        }
+        nestedScrollEnabled={true}
       >
         {/* Search Bar */}
-        <View style={[styles.searchContainer, { backgroundColor: theme.background, borderBottomWidth: 0 }]}>
-          <View style={styles.searchBarRow}>
-            <View style={[styles.searchBar, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Text style={styles.searchIcon}>🔍</Text>
-              <TextInput
-                style={[styles.searchInput, { color: theme.text }]}
-                placeholder="Search User"
-                placeholderTextColor={theme.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-            </View>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => {
-                navigation.navigate('CreateJobCard');
-              }}
-            >
-              <Text style={styles.addIcon}>+</Text>
-            </TouchableOpacity>
+        <View style={styles.searchRow}>
+          <View style={styles.searchContainer}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search Job Cards"
+              placeholderTextColor="#9ca3af"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('CreateJobCard')}
+          >
+            <Text style={styles.addIcon}>+</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Job Cards */}
-        <View style={styles.cardsContainer}>
-          {filteredJobCards.map((jobCard) => {
-            const badge = getStatusBadge(jobCard.status, jobCard.priority);
+        {jobs.map((job) => {
+          const progress = calculateProgress(job);
+          return (
+            <TouchableOpacity
+              key={job.id}
+              style={styles.card}
+              activeOpacity={0.7}
+              onPress={() => navigation.navigate('JobCardDetail', { jobCardId: job.id })}
+            >
+              <View style={styles.cardHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={styles.jobCardTitle}>{job.jobId}</Text>
+                  {job.priority === 'Urgent' && (
+                    <View style={styles.statusBadge}>
+                      <Text style={styles.statusText}>Urgent</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.priceText}>{job.amount}</Text>
+              </View>
 
-            return (
-              <TouchableOpacity
-                key={jobCard.id}
-                style={[styles.jobCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-                onPress={() => handleJobCardPress(jobCard)}
-                activeOpacity={0.7}
-              >
-                {/* Top Row: Status, Job Number, Price */}
-                <View style={styles.topRow}>
-                  {/* Status Badge */}
-                  <View style={[styles.statusBadge, { backgroundColor: badge.bgColor }]}>
-                    <Text style={[styles.statusBadgeText, { color: badge.color }]}>
-                      {badge.label}
-                    </Text>
+              <View style={styles.separator} />
+
+              {/* Vehicle Info */}
+              <View style={styles.vehicleRow}>
+                <View>
+                  <Text style={styles.vehicleName}>{job.vehicle}</Text>
+                  <Text style={styles.licensePlate}>{job.regNo}</Text>
+                </View>
+                <Text style={styles.carIcon}>🚗</Text>
+              </View>
+
+              <View style={styles.separator} />
+
+              {/* Assignment & Progress */}
+              <View style={styles.assignmentSection}>
+                <View style={styles.assignedRow}>
+                  <View style={styles.assignedAvatar}>
+                    <Text style={styles.assignedInitials}>AR</Text>
                   </View>
-
-                  {/* Job Card Number - Centered */}
-                  <Text style={[styles.jobNumber, { color: theme.text }]}>Job Card {jobCard.job_number}</Text>
-
-                  {/* Price Tag */}
-                  <View style={styles.priceTag}>
-                    <Text style={styles.priceText}>₹{jobCard.estimated_cost?.toLocaleString('en-IN') || '0'}</Text>
-                  </View>
+                  <Text style={styles.assignedText}>Assigned to: <Text style={styles.boldText}>{job.assignedTech}</Text></Text>
                 </View>
 
-                {/* Vehicle Section with Icon */}
-                <View style={styles.vehicleSection}>
-                  <Text style={styles.carIcon}>🚗</Text>
-                  <View style={styles.vehicleInfo}>
-                    <Text style={[styles.vehicleModel, { color: theme.text }]}>{jobCard.vehicle?.model || 'N/A'}</Text>
-                    <Text style={[styles.licensePlate, { color: theme.textMuted }]}>{jobCard.vehicle?.license_plate || 'N/A'}</Text>
-                  </View>
+                <View style={styles.progressRow}>
+                  <ProgressBar
+                    progress={progress}
+                    color={progress >= 1 ? '#22c55e' : '#3b82f6'}
+                  />
+                  <Text style={styles.progressText}>{Math.round(progress * 100)}% completed</Text>
                 </View>
+              </View>
 
-                {/* Customer and Technician Info */}
-                <View style={styles.infoSection}>
-                  <Text style={[styles.infoText, { color: theme.textMuted }]}>
-                    Customer : {jobCard.customer?.full_name || 'N/A'}
-                  </Text>
-                  <Text style={[styles.infoText, { color: theme.textMuted }]}>
-                    Assigned tech: {jobCard.assigned_user?.full_name || 'N/A'}
+              {/* Delivery Info */}
+              <View style={styles.deliveryRow}>
+                <View>
+                  <Text style={styles.deliveryLabel}>Delivery due:</Text>
+                  <Text style={styles.deliveryTimeLeft}>
+                    {calculateTimeLeft(job.deliveryDate || '', job.deliveryDue)}
                   </Text>
                 </View>
-
-                <View style={[styles.deliveryRow, { borderTopColor: theme.border }]}>
-                  <Text style={[styles.deliveryText, { color: theme.textMuted }]}>
-                    Due: {formatDate(jobCard.completed_at || jobCard.created_at)}
-                  </Text>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={styles.deliveryLabel}>Delivery date:</Text>
+                  <Text style={styles.deliveryDate}>{job.deliveryDate || ''}</Text>
                 </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {filteredJobCards.length === 0 && !loading && (
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: theme.textMuted }]}>No job cards found</Text>
-          </View>
-        )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  container: {
+    flex: 1,
+    backgroundColor: '#eff0f1', // Light gray background
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: 20,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 120, // Increased extra space for tab bar
   },
-  headerButton: {
-    padding: 8,
-  },
-  backButton: {
-    padding: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    width: 32,
-    height: 32,
-    resizeMode: 'contain',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  headerRight: {
+  searchRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
-  },
-  darkModeIcon: {
-    fontSize: 20,
-  },
-  avatarButton: {
-    padding: 4,
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#ef4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginBottom: 16,
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  searchBarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  searchBar: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#ffffff',
     borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
+    paddingHorizontal: 10,
+    height: 48,
   },
   searchIcon: {
     fontSize: 18,
-    color: '#000000',
+    marginRight: 8,
+    color: '#000',
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-  },
-  filterButton: {
-    padding: 4,
-  },
-  filterIcon: {
-    fontSize: 16,
-    color: '#000000',
+    color: '#000',
   },
   addButton: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 8,
-    backgroundColor: '#d1fae5',
-    borderWidth: 2,
-    borderColor: '#10b981',
+    backgroundColor: '#a7f3d0', // Light green
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#10b981',
   },
   addIcon: {
     fontSize: 24,
-    color: '#000000',
-    fontWeight: 'bold',
+    color: '#000',
   },
-  cardsContainer: {
-    padding: 16,
-    gap: 12,
-  },
-  jobCard: {
+  card: {
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    marginBottom: 16,
+    // Shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  topRow: {
+  cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  jobNumber: {
-    fontSize: 16,
-    fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
-  },
-  priceTag: {
-    backgroundColor: '#6b7280',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  priceText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  vehicleSection: {
-    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  carIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  vehicleInfo: {
-    flex: 1,
-  },
-  vehicleModel: {
+  jobCardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+    marginBottom: 12,
+  },
+  vehicleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  vehicleName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
     marginBottom: 4,
   },
   licensePlate: {
     fontSize: 14,
+    color: '#6b7280',
   },
-  infoSection: {
+  carIcon: {
+    fontSize: 28,
+  },
+  assignmentSection: {
     marginBottom: 12,
   },
-  infoText: {
+  assignedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  assignedAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  assignedInitials: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  assignedText: {
     fontSize: 14,
-    marginBottom: 4,
+    color: '#000',
+  },
+  boldText: {
+    fontWeight: 'bold',
+  },
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressBarContainer: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 10,
+    color: '#6b7280',
   },
   deliveryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 8,
-    paddingTop: 12,
-    borderTopWidth: 1,
+    marginTop: 4,
   },
-  deliveryText: {
-    fontSize: 13,
+  deliveryLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 2,
   },
-  emptyContainer: {
-    padding: 32,
-    alignItems: 'center',
+  deliveryTimeLeft: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ef4444', // Red
   },
-  emptyText: {
-    fontSize: 16,
+  deliveryDate: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#ef4444', // Red
+  },
+  statusBadge: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  statusText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

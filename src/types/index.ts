@@ -194,6 +194,11 @@ export interface JobCard {
   actual_cost?: number;
   estimated_time?: number;
   actual_time?: number;
+  pickup_address?: string;
+  dropoff_address?: string;
+  delivery_date?: string;
+  delivery_due?: string;
+  other_requirements?: string;
   started_at?: string;
   completed_at?: string;
   created_by?: string;
@@ -205,6 +210,16 @@ export interface JobCard {
   supervisor?: UserProfile;
   services?: JobCardServiceItem[];
   tasks?: Task[];
+
+  // Progress Tracking
+  work_completed?: boolean;
+  quality_check_completed?: boolean;
+  delivery_completed?: boolean;
+  assigned_tech_name?: string;
+
+  // Persisted JSON
+  task_statuses?: Record<string, string>;
+  quality_statuses?: Record<string, string>;
 }
 
 export interface Service {
@@ -228,6 +243,8 @@ export interface JobCardServiceItem {
   total_price: number;
   status: TaskStatus;
   notes?: string;
+  custom_service_name?: string;
+  estimate?: string;
   created_at: string;
   updated_at: string;
   service?: Service;
@@ -242,6 +259,8 @@ export interface Task {
   assigned_to?: string;
   status: TaskStatus;
   priority: Priority;
+  cost?: number;
+  estimate?: string;
   estimated_time?: number;
   actual_time?: number;
   started_at?: string;
@@ -321,6 +340,7 @@ export interface CreateVehicleForm {
   brand: string;
   model: string;
   year_manufacture?: number;
+  vin?: string;
   license_plate?: string;
   color?: string;
   odometer?: number;
@@ -335,8 +355,23 @@ export interface CreateJobCardForm {
   description?: string;
   priority: Priority;
   estimated_cost?: number;
-  estimated_time?: number;
+  estimated_time?: string;
   service_ids?: string[];
+
+  // Additional Info
+  odometer?: string;
+  pickup_address?: string;
+  dropoff_address?: string;
+  other_requirements?: string;
+
+  // Persisted JSON
+  task_statuses?: Record<string, string>;
+  quality_statuses?: Record<string, string>;
+
+  // Assignment
+  assigned_tech_name?: string;
+  assigned_to?: string;
+  manual_services?: Array<{ name: string; cost: number; time?: string }>;
 }
 
 export interface UpdateTaskForm {

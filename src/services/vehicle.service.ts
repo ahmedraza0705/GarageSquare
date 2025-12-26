@@ -67,7 +67,7 @@ export class VehicleService {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      console.error('Error fetching vehicle count:', error);
+      console.warn('Error fetching vehicle count:', JSON.stringify(error));
       return 0;
     }
 
@@ -122,10 +122,8 @@ export class VehicleService {
     const { data, error } = await supabase
       .from('vehicles')
       .insert({
-        ...cleanFields,
-        brand: finalBrand,
-        company_id: companyId,
-        branch_id: branchId,
+        ...validFields,
+        branch_id: branchId || null,
       })
       .select()
       .single();
@@ -152,13 +150,22 @@ export class VehicleService {
       created_at,
       updated_at,
       vin,          // Not in DB schema
+      make,         // Rename to brand if coming from old types
+      mileage,      // Rename to odometer if coming from old types
+      year,         // Rename to year_manufacture if coming from old types
       ...cleanUpdates
     } = updates as any;
+
+    const finalUpdates = { ...cleanUpdates };
+    if (make) finalUpdates.brand = make;
+    if (mileage) finalUpdates.odometer = mileage;
+    if (year) finalUpdates.year_manufacture = year;
 
     const { data, error } = await supabase
       .from('vehicles')
       .update({
-        ...cleanUpdates,
+        ...finalUpdates,
+        branch_id: finalUpdates.branch_id || undefined,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

@@ -129,7 +129,7 @@ export default function VehiclesScreen() {
     if (!searchQuery.trim()) return vehicles;
     const lowerQuery = searchQuery.toLowerCase();
     return vehicles.filter(v =>
-      v.make.toLowerCase().includes(lowerQuery) ||
+      v.brand.toLowerCase().includes(lowerQuery) ||
       v.model.toLowerCase().includes(lowerQuery) ||
       v.license_plate?.toLowerCase().includes(lowerQuery) ||
       (v.customer?.full_name && v.customer.full_name.toLowerCase().includes(lowerQuery))
@@ -228,8 +228,8 @@ export default function VehiclesScreen() {
           >
             <View className="flex-row justify-between items-center">
               <View>
-                <Text className="text-lg font-bold" style={{ color: theme.text }}>
-                  {vehicle.make} {vehicle.model}
+                <Text className="text-lg font-bold text-gray-900">
+                  {vehicle.brand} {vehicle.model}
                 </Text>
                 <Text className="text-sm mt-1" style={{ color: theme.textMuted }}>
                   {vehicle.license_plate}

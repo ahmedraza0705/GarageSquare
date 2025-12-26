@@ -36,6 +36,8 @@ import VehiclesScreen from '@/screens/company-admin/VehiclesScreen';
 import JobCardsScreen from '@/screens/company-admin/JobCardsScreen';
 import InventoryScreen from '@/screens/company-admin/InventoryScreen';
 import ActiveJobsScreen from '@/screens/company-admin/ActiveJobsScreen';
+import JobTasksScreen from '@/screens/company-admin/JobTasksScreen';
+import JobTasksDetailScreen from '@/screens/company-admin/JobTasksDetailScreen';
 import JobCardDetailScreen from '@/screens/shared/JobCardDetailScreen';
 import SettingsScreen from '@/screens/shared/SettingsScreen';
 import CustomerDetailScreen from '@/screens/shared/CustomerDetailScreen';
@@ -79,7 +81,20 @@ function DashboardStackNavigator() {
         name="DashboardHome"
         component={CompanyAdminDashboard}
       />
-    </DashboardInnerStack.Navigator>
+      <DashboardInnerStack.Screen
+        name="Vehicles"
+        component={VehiclesScreen}
+      />
+      <DashboardInnerStack.Screen
+        name="Customers"
+        component={CustomersScreen}
+      />
+      {/* Moved ActiveJobs and JobCardDetail here to be part of the Tab/Drawer hierarchy */}
+      <DashboardInnerStack.Screen
+        name="ActiveJobs"
+        component={ActiveJobsScreen}
+      />
+    </DashboardInnerStack.Navigator >
   );
 }
 
@@ -147,10 +162,12 @@ function CustomHeader({
       ActiveJobs: 'Active Jobs',
       JobCards: 'Job Cards',
       Settings: 'Settings',
+      JobTasks: 'Task Management',
       ChangePassword: 'Change Password',
       AccountDetails: 'Account Details',
       Notifications: 'Notifications',
       About: 'About GarageSquares',
+      CreateJobCard: 'Create Job Card',
     };
 
     // 2. Try to get the deepest focused route name
@@ -301,19 +318,22 @@ function CustomHeader({
   );
 }
 
-// Dashboard Stack (to show bottom bar on nested screens)
-function DashboardStack() {
-  const { theme } = useTheme();
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="Dashboard" component={CompanyAdminDashboard} />
-    </Stack.Navigator>
-  );
-}
+// Logic to hide tab bar on specific screens
+const getTabBarVisibility = (route: any) => {
+  const routeName = getFocusedRouteNameFromRoute(route);
+
+  // Try to find the darkest nested route
+  // If routeName is undefined, it means we are at the root of the stack (DashboardHome)
+
+  if (routeName === 'JobCardDetail' ||
+    routeName === 'CreateCustomer' ||
+    routeName === 'CreateVehicle' ||
+    routeName === 'CreateJobCard' ||
+    routeName === 'JobTasksDetail') {
+    return 'none';
+  }
+  return 'flex';
+};
 
 // Bottom Tab Navigator
 function CompanyAdminTabs() {
@@ -326,17 +346,10 @@ function CompanyAdminTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        header: () => (
-          <CustomHeader
-            route={route}
-            theme={theme}
-            themeName={themeName}
-            onToggleTheme={toggleTheme}
-          />
-        ),
-        headerShown: true,
+        headerShown: false,
         tabBarStyle: {
-          backgroundColor: theme.tabBarBg,
+          display: getTabBarVisibility(route), // Apply dynamic visibility
+          backgroundColor: BAR_COLOR,
           borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 85 : 65,
           paddingBottom: Platform.OS === 'ios' ? 30 : 10,
@@ -349,9 +362,9 @@ function CompanyAdminTabs() {
           shadowOpacity: 0.1,
           shadowRadius: 4,
         },
-        tabBarActiveTintColor: theme.tabIconColor,
-        tabBarInactiveTintColor: theme.tabIconColor,
-        tabBarShowLabel: false,
+        tabBarActiveTintColor: ACTIVE_COLOR,
+        tabBarInactiveTintColor: INACTIVE_COLOR,
+        tabBarShowLabel: false, // Hide labels for a cleaner look like the image
       })}
     >
       <Tab.Screen
@@ -493,6 +506,13 @@ function CompanyAdminDrawer() {
         }}
       />
       <Drawer.Screen
+        name="JobTasks"
+        component={JobTasksScreen}
+        options={{
+          title: 'Job Tasks and Assignments',
+        }}
+      />
+      <Drawer.Screen
         name="Reports"
         component={ReportsScreen}
         options={{
@@ -526,17 +546,30 @@ export default function CompanyAdminNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main" component={CompanyAdminDrawer} />
-      <Stack.Screen
-        name="ActiveJobs"
-        component={ActiveJobsScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen name="Main">
+        {() => (
+          <CompanyAdminDrawer
+            theme={theme}
+            themeName={themeName}
+            onToggleTheme={toggleTheme}
+          />
+        )}
+      </Stack.Screen>
+
       <Stack.Screen
         name="JobCardDetail"
         component={JobCardDetailScreen}
+        options={{ headerShown: false }}
+      />
+
+      {/* 
+         Removed ActiveJobs and JobCardDetail from here as they are now in DashboardStack/InnerStack
+         This allows them to inherit the Drawer and Tab navigation context properly.
+      */}
+
+      <Stack.Screen
+        name="JobTasksDetail"
+        component={JobTasksDetailScreen}
         options={{
           headerShown: false,
         }}
@@ -583,23 +616,15 @@ export default function CompanyAdminNavigator() {
         component={CreateJobCardScreen}
         options={{
           headerShown: true,
-          title: 'Create Job Card',
-          headerStyle: { backgroundColor: theme.headerBg },
-          headerTintColor: theme.headerText,
-        }}
-      />
-      <Stack.Screen
-        name="BranchDetails"
-        component={BranchDetailsScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="BranchFileUpload"
-        component={BranchFileUploadScreen}
-        options={{
-          headerShown: false,
+          header: ({ route }) => (
+            <CustomHeader
+              route={route}
+              theme={theme}
+              themeName={themeName}
+              onToggleTheme={toggleTheme}
+              showBack={true}
+            />
+          ),
         }}
       />
       <Stack.Screen
@@ -700,7 +725,7 @@ export default function CompanyAdminNavigator() {
       />
       <Stack.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsScreen} // Kept for other entry points if needed?
         options={{
           headerShown: true,
           header: ({ route }) => (

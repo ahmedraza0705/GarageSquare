@@ -222,7 +222,7 @@ export default function VehiclesScreen() {
           >
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <Text style={{ fontSize: typography.title2.fontSize, fontFamily: typography.title2.fontFamily, color: theme.text }}>
+                <Text className="text-lg font-bold text-gray-900">
                   {vehicle.brand} {vehicle.model}
                 </Text>
                 <Text style={{ color: theme.textMuted, fontSize: typography.body2.fontSize, fontFamily: typography.body2.fontFamily, marginTop: 4 }}>

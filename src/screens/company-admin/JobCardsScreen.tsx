@@ -2,13 +2,13 @@
 // JOB CARDS SCREEN (Company Admin)
 // ============================================
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl, ActivityIndicator, StyleSheet } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { JobCardService } from '@/services/jobCard.service';
 import { JobCard } from '@/types';
+import { useJobs } from '@/context/JobContext';
 import { useTheme } from '@/context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function JobCardsScreen() {
   const navigation = useNavigation<any>();
@@ -16,17 +16,30 @@ export default function JobCardsScreen() {
   const [jobCards, setJobCards] = useState<JobCard[]>([]);
   const [filteredJobCards, setFilteredJobCards] = useState<JobCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
+  const { jobs } = useJobs();
+
+  // Get delivered jobs from JobContext
+  const deliveredJobs = jobs.filter(job =>
+    job.status.toLowerCase() === 'delivered'
+  );
+
+  useEffect(() => {
+    loadJobCards();
+  }, []);
 
   const loadJobCards = async () => {
     try {
       setLoading(true);
       const data = await JobCardService.getAll();
       setJobCards(data);
-      setFilteredJobCards(data);
-    } catch (error) {
-      console.error('Error loading job cards:', error);
+    } catch (error: any) {
+      // If table doesn't exist, just use JobContext data (no error shown)
+      if (error?.code === 'PGRST205' || error?.message?.includes('schema cache')) {
+        console.log('Job cards table not found in database, using JobContext data only');
+        setJobCards([]);
+      } else {
+        console.error('Error loading job cards:', error);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,154 +73,184 @@ export default function JobCardsScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case 'completed':
-        return '#35C56A';
+      case 'delivered':
+      case 'done':
+        return '#22c55e'; // Green
       case 'in_progress':
-        return '#3B82F6';
+      case 'progress':
+        return '#3b82f6'; // Blue
       case 'on_hold':
-        return '#EAB308';
+        return '#f59e0b'; // Yellow
       case 'cancelled':
-        return '#EF4444';
+        return '#ef4444'; // Red
       default:
-        return '#9CA3AF';
+        return '#9ca3af'; // Gray
     }
   };
 
+  const renderJobItem = (job: any, isContextJob: boolean) => {
+    const status = isContextJob ? 'Delivered' : job.status;
+    const color = getStatusColor(status);
+
+    return (
+      <TouchableOpacity
+        key={job.id}
+        style={styles.card}
+        onPress={() => {
+          navigation.navigate('JobCardDetail', { jobCardId: job.id });
+        }}
+      >
+        <View style={styles.cardHeader}>
+          <Text style={styles.jobNumber}>{isContextJob ? job.jobId : job.job_number}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: color + '20' }]}>
+            <Text style={[styles.statusText, { color: color }]}>
+              {status.replace('_', ' ')}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.detailsRow}>
+          <Text style={styles.label}>Customer:</Text>
+          <Text style={styles.value}>
+            {isContextJob ? job.customer : job.customer?.full_name}
+          </Text>
+        </View>
+
+        <View style={styles.detailsRow}>
+          <Text style={styles.label}>Vehicle:</Text>
+          <Text style={styles.value}>
+            {isContextJob ? job.vehicle : `${job.vehicle?.brand} ${job.vehicle?.model}`}
+          </Text>
+        </View>
+
+        <View style={styles.detailsRow}>
+          <Text style={styles.label}>Amount:</Text>
+          <Text style={styles.value}>
+            {isContextJob ? job.amount : `₹${job.estimated_cost?.toLocaleString('en-IN')}`}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
+          <RefreshControl refreshing={loading} onRefresh={loadJobCards} />
         }
       >
-        <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
-          {/* Search Bar and Add Button */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <View style={{
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: theme.surface,
-              borderRadius: 12,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              marginRight: 12,
-              borderWidth: 1,
-              borderColor: theme.border
-            }}>
-              <Ionicons name="search" size={20} color="#9CA3AF" />
-              <TextInput
-                placeholder="Search Job Card"
-                style={{ flex: 1, marginLeft: 8, color: theme.text, fontWeight: '500' }}
-                placeholderTextColor="#9CA3AF"
-                value={searchQuery}
-                onChangeText={handleSearch}
-                autoCorrect={false}
-              />
-            </View>
-            <TouchableOpacity
-              style={{
-                backgroundColor: theme.tabIconBg,
-                padding: 12,
-                borderRadius: 12,
-                width: 48,
-                height: 48,
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: theme.primary
-              }}
-              onPress={() => navigation.navigate('CreateJobCard')}
-            >
-              <Ionicons name="add" size={24} color={theme.primary} />
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={() => navigation.navigate('CreateJobCard')}
+        >
+          <Text style={styles.createButtonText}>+ Create Job Card</Text>
+        </TouchableOpacity>
+
+        {deliveredJobs.length === 0 && jobCards.length === 0 && !loading ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No job cards found</Text>
           </View>
-
-          {loading && !refreshing && (
-            <View style={{ paddingVertical: 48, alignItems: 'center', justifyContent: 'center' }}>
-              <ActivityIndicator size="large" color={theme.primary} />
-            </View>
-          )}
-
-          {!loading && filteredJobCards.length === 0 ? (
-            <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-              <Text style={{ color: theme.textMuted }}>No job cards found</Text>
-            </View>
-          ) : (
-            filteredJobCards.map((jobCard) => (
-              <TouchableOpacity
-                key={jobCard.id}
-                style={{
-                  backgroundColor: theme.surface,
-                  borderRadius: 16,
-                  padding: 16,
-                  marginBottom: 16,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
-                  elevation: 2,
-                }}
-                onPress={() => navigation.navigate('JobCardDetail', { jobCardId: jobCard.id })}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}>
-                    {jobCard.job_number}
-                  </Text>
-                  <View style={{
-                    backgroundColor: getStatusColor(jobCard.status) + '20',
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 8
-                  }}>
-                    <Text style={{
-                      color: getStatusColor(jobCard.status),
-                      fontSize: 12,
-                      fontWeight: 'bold',
-                      textTransform: 'capitalize'
-                    }}>
-                      {jobCard.status.replace('_', ' ')}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={{ gap: 8 }}>
-                  {jobCard.customer && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="person-outline" size={16} color={theme.textMuted} />
-                      <Text style={{ color: theme.text, fontSize: 14 }}>
-                        <Text style={{ color: theme.textMuted }}>Customer:</Text> {jobCard.customer.full_name}
-                      </Text>
-                    </View>
-                  )}
-                  {jobCard.vehicle && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="car-outline" size={16} color={theme.textMuted} />
-                      <Text style={{ color: theme.text, fontSize: 14 }}>
-                        <Text style={{ color: theme.textMuted }}>Vehicle:</Text> {jobCard.vehicle.make} {jobCard.vehicle.model} ({jobCard.vehicle.license_plate})
-                      </Text>
-                    </View>
-                  )}
-                  {jobCard.estimated_cost && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <Ionicons name="cash-outline" size={16} color={theme.textMuted} />
-                      <Text style={{ color: theme.text, fontSize: 14 }}>
-                        <Text style={{ color: theme.textMuted }}>Est. Cost:</Text> ₹{jobCard.estimated_cost.toLocaleString('en-IN')}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
+        ) : (
+          <>
+            {deliveredJobs.map((job) => renderJobItem(job, true))}
+            {jobCards.map((jobCard) => renderJobItem(jobCard, false))}
+          </>
+        )}
       </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  createButton: {
+    backgroundColor: '#0087c9', // Pic 3 Blue
+    borderRadius: 8,
+    paddingVertical: 14,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+    // Soft shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  createButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    paddingTop: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#9ca3af',
+    fontWeight: '500',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
+    // Shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  jobNumber: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  label: {
+    fontSize: 14,
+    color: '#6b7280',
+    width: 80,
+  },
+  value: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '500',
+    flex: 1,
+  },
+});
+

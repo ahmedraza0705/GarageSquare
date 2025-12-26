@@ -9,6 +9,7 @@ import { View, StatusBar } from 'react-native';
 import RootNavigator from './src/navigation/RootNavigator';
 import './global.css';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { JobProvider } from './src/context/JobContext';
 
 import {
   useFonts,
@@ -51,9 +52,11 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <SafeAreaProvider>
-        <AppContent />
-      </SafeAreaProvider>
+      <JobProvider>
+        <SafeAreaProvider>
+          <AppContent />
+        </SafeAreaProvider>
+      </JobProvider>
     </ThemeProvider>
   );
 }

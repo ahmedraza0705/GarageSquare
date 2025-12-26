@@ -1,10 +1,9 @@
-
 // ============================================
 // CUSTOM DRAWER CONTENT
 // ============================================
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
 import { DrawerActions, useNavigationState, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,14 +14,14 @@ interface MenuItem {
   label: string;
   screenName?: string;
   tabScreen?: string;
-  params?: any; // Added params support
+  params?: any;
   nestedScreen?: string;
   isWorking: boolean;
 }
 
 export default function CustomDrawerContent(props: DrawerContentComponentProps) {
   const { user, signOut } = useAuth();
-  const [_, forceUpdate] = useState(0);
+  const { theme, themeName } = useTheme();
 
   // Provide default values to avoid undefined text rendering
   const language = 'English';
@@ -30,19 +29,16 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   const location = `${user?.profile?.city || 'Surat'}, ${user?.profile?.postal_code || '395009'}, ${user?.profile?.state || 'INDIA'}`;
 
   // Get the active route name using standard helpers
-  // This hook ensures re-render on any navigation state change
   const navState = useNavigationState(state => state);
 
   const getActiveRouteName = (state: any): string => {
     if (!state || !state.routes) return 'Dashboard';
     const route = state.routes[state.index];
 
-    // If there's a nested state, use it (specifically for nested navigators)
     if (route.state) {
       return getActiveRouteName(route.state);
     }
 
-    // Attempt to get the name from the route using the helper
     const childRouteName = getFocusedRouteNameFromRoute(route);
     if (childRouteName) {
       return childRouteName;
@@ -52,7 +48,58 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
   };
 
   const activeRoute = getActiveRouteName(navState);
-  const currentParentRoute = navState.routes[navState.index].name;
+
+  const menuItems: MenuItem[] = [
+    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', nestedScreen: 'DashboardHome', isWorking: true },
+    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
+    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
+    { label: 'Job Tasks and Assignments', screenName: 'JobTasks', isWorking: true },
+    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
+    {
+      label: 'Vehicle Management',
+      screenName: 'MainTabs',
+      tabScreen: 'DashboardTab',
+      nestedScreen: 'Vehicles',
+      isWorking: true
+    },
+    { label: 'Reports', screenName: 'Reports', isWorking: true },
+    { label: 'Invoice and Billing', screenName: 'Invoice', isWorking: true },
+    { label: 'Customers', screenName: 'Customers', isWorking: true },
+    { label: 'Inventory', screenName: 'Inventory', isWorking: true },
+    { label: 'Shop Timing', isWorking: false },
+  ];
+
+  const footerItems: MenuItem[] = [
+    { label: 'Privacy Policy', isWorking: false },
+    { label: 'Settings', screenName: 'Settings', isWorking: true },
+  ];
+
+  const getActiveLabel = () => {
+    const allItems = [...menuItems, ...footerItems];
+
+    if (activeRoute === 'CustomerDetail' || activeRoute === 'CreateCustomer' || activeRoute === 'Customers') return 'Customers';
+    if (activeRoute === 'VehicleDetail' || activeRoute === 'CreateVehicle' || activeRoute === 'Vehicles') return 'Vehicle Management';
+    if (activeRoute === 'JobCardDetail' || activeRoute === 'CreateJobCard' || activeRoute === 'ActiveJobs') return 'Job Cards';
+    if (activeRoute === 'BranchDetails' || activeRoute === 'BranchFileUpload') return 'Branches';
+    if (activeRoute === 'AccountDetails' || activeRoute === 'ChangePassword' || activeRoute === 'Notifications' || activeRoute === 'About') return 'Settings';
+
+    const activeItem = allItems.find(item =>
+      item.screenName === activeRoute ||
+      item.tabScreen === activeRoute ||
+      (item.screenName === 'MainTabs' && item.tabScreen === activeRoute)
+    );
+
+    if (activeItem) return activeItem.label;
+
+    if (activeRoute === 'DashboardTab') return 'Dashboard';
+    if (activeRoute === 'BranchesTab' || activeRoute === 'Branches') return 'Branches';
+    if (activeRoute === 'UsersTab') return 'Users';
+    if (activeRoute === 'ReportsTab' || activeRoute === 'Reports') return 'Reports';
+
+    return 'Dashboard';
+  };
+
+  const currentActiveLabel = getActiveLabel();
 
   const handleLogout = () => {
     Alert.alert(
@@ -75,103 +122,34 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
     );
   };
 
-  // Removed local activeLabel state as highlight is derived from navigation state
-
   const handleMenuPress = (item: MenuItem) => {
     if (!item.isWorking) {
       Alert.alert('Coming Soon', `${item.label} feature will be available soon.`);
       return;
     }
 
-    // Navigation is handled by the hook, no need for local state to drive highlight
-    // setActiveLabel(item.label);
-
     if (item.screenName) {
-      if (item.tabScreen) {
-        if (item.nestedScreen) {
-          // @ts-ignore
-          props.navigation.navigate(item.screenName, {
-            screen: item.tabScreen,
-            params: { screen: item.nestedScreen }
-          });
-        } else {
-          // @ts-ignore
-          props.navigation.navigate(item.screenName, { screen: item.tabScreen });
-        }
+      if (item.tabScreen && item.nestedScreen) {
+        // @ts-ignore
+        props.navigation.navigate(item.screenName, {
+          screen: item.tabScreen,
+          params: { screen: item.nestedScreen }
+        });
+      } else if (item.tabScreen) {
+        // @ts-ignore
+        props.navigation.navigate(item.screenName, { screen: item.tabScreen });
       } else {
         // @ts-ignore
-        console.log('Navigating to:', item.screenName);
         props.navigation.navigate(item.screenName);
       }
       props.navigation.dispatch(DrawerActions.closeDrawer());
     }
   };
 
-  const menuItems: MenuItem[] = [
-    { label: 'Dashboard', screenName: 'MainTabs', tabScreen: 'DashboardTab', params: { screen: 'Dashboard' }, isWorking: true },
-    { label: 'Branches', screenName: 'MainTabs', tabScreen: 'BranchesTab', isWorking: true },
-    { label: 'Users', screenName: 'MainTabs', tabScreen: 'UsersTab', isWorking: true },
-    { label: 'Job Tasks and Assignments', isWorking: false },
-    { label: 'Job Cards', screenName: 'JobCards', isWorking: true },
-    { label: 'Vehicle Management', screenName: 'Vehicles', isWorking: true },
-    { label: 'Reports', screenName: 'MainTabs', tabScreen: 'ReportsTab', isWorking: true },
-    { label: 'Invoice', screenName: 'Invoice', isWorking: true },
-    { label: 'Customers', screenName: 'Customers', isWorking: true },
-    { label: 'Inventory', screenName: 'Inventory', isWorking: true },
-    { label: 'Shop Timing', isWorking: false },
-  ];
-
-  const footerItems: MenuItem[] = [
-    { label: 'Privacy Policy', isWorking: false },
-    { label: 'Settings', screenName: 'Settings', isWorking: true },
-  ];
-
-  const getActiveLabel = () => {
-    const allItems = [...menuItems, ...footerItems];
-
-    // Priority 1: Match specifically for known detail/sub-screens to their parent category
-    if (activeRoute === 'CustomerDetail' || activeRoute === 'CreateCustomer' || activeRoute === 'Customers') return 'Customers';
-    if (activeRoute === 'VehicleDetail' || activeRoute === 'CreateVehicle' || activeRoute === 'Vehicles') return 'Vehicle Management';
-    if (activeRoute === 'JobCardDetail' || activeRoute === 'CreateJobCard' || activeRoute === 'ActiveJobs') return 'Job Cards';
-    if (activeRoute === 'BranchDetails' || activeRoute === 'BranchFileUpload') return 'Branches';
-    if (activeRoute === 'AccountDetails' || activeRoute === 'ChangePassword' || activeRoute === 'Notifications' || activeRoute === 'About') return 'Settings';
-
-    // Priority 2: Match by exact screen name or tab screen name
-    const activeItem = allItems.find(item =>
-      item.screenName === activeRoute ||
-      item.tabScreen === activeRoute ||
-      (item.screenName === 'MainTabs' && item.tabScreen === activeRoute)
-    );
-
-    if (activeItem) return activeItem.label;
-
-    // Priority 3: Fallback manual matches for tab names
-    if (activeRoute === 'DashboardTab') return 'Dashboard';
-    if (activeRoute === 'BranchesTab' || activeRoute === 'Branches') return 'Branches';
-    if (activeRoute === 'UsersTab') return 'Users';
-    if (activeRoute === 'ReportsTab' || activeRoute === 'Reports') return 'Reports';
-
-    // Priority 4: Partial match logic for safety
-    if (activeRoute.includes('Dashboard')) return 'Dashboard';
-    if (activeRoute.includes('Branches')) return 'Branches';
-    if (activeRoute.includes('Users')) return 'Users';
-    if (activeRoute.includes('Reports')) return 'Reports';
-
-    return 'Dashboard';
-  };
-
-  const currentActiveLabel = getActiveLabel();
-
-  const { theme, themeName } = useTheme();
-
   return (
     <View style={[styles.container, { backgroundColor: theme.drawerBackground }]}>
       <View style={{ flex: 1 }}>
-        <DrawerContentScrollView
-          {...props}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* Header Section */}
+        <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
           <View style={[styles.header, { backgroundColor: theme.drawerBackground }]}>
             <View style={styles.headerTopRow}>
               <Text style={[styles.languageText, { color: theme.primary }]}>{language}</Text>
@@ -179,14 +157,12 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
                 <Ionicons name="pencil" size={18} color={theme.primary} />
               </TouchableOpacity>
             </View>
-
             <Text style={[styles.companyName, { color: theme.text }]}>{companyName}</Text>
             <Text style={[styles.locationText, { color: theme.textMuted }]}>{location}</Text>
           </View>
 
           <View style={[styles.separator, { backgroundColor: theme.border }]} />
 
-          {/* Main Menu Items */}
           <View style={styles.menuList}>
             {menuItems.map((item, index) => {
               const isActive = currentActiveLabel === item.label;
@@ -198,8 +174,8 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
                     isActive && {
                       backgroundColor: theme.tabIconBg,
                       borderLeftColor: theme.primary,
-                    },
-                    isActive && styles.menuItemActiveBorder
+                      borderLeftWidth: 4,
+                    }
                   ]}
                   onPress={() => handleMenuPress(item)}
                 >
@@ -214,13 +190,10 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
             })}
           </View>
         </DrawerContentScrollView>
-      </View >
+      </View>
 
-      {/* Pinned Bottom Selection */}
-      < View style={[styles.bottomSection, { backgroundColor: theme.drawerBackground }]} >
-        {/* Separator above fixed section */}
-        < View style={[styles.separator, { backgroundColor: theme.border }]} />
-
+      <View style={[styles.bottomSection, { backgroundColor: theme.drawerBackground }]}>
+        <View style={[styles.separator, { backgroundColor: theme.border }]} />
         <View style={styles.footerInfo}>
           {footerItems.map((item, index) => (
             <TouchableOpacity
@@ -234,15 +207,12 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
         </View>
 
         <View style={[styles.separator, { marginVertical: 0, backgroundColor: theme.border }]} />
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color={theme.notification} style={{ marginRight: 12 }} />
           <Text style={[styles.logoutText, { color: theme.notification }]}>Logout</Text>
         </TouchableOpacity>
-      </View >
-    </View >
+      </View>
+    </View>
   );
 }
 
@@ -291,9 +261,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
   },
-  menuItemActiveBorder: {
-    borderLeftWidth: 4,
-  },
   menuItemText: {
     fontSize: 16,
     fontWeight: '600',
@@ -303,19 +270,13 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   bottomSection: {
-    paddingBottom: 16, // Safe area padding
+    paddingBottom: 16,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 24,
-  },
-  logoutImage: {
-    width: 20,
-    height: 20,
-    marginRight: 12,
-    resizeMode: 'contain',
   },
   logoutText: {
     fontSize: 16,
