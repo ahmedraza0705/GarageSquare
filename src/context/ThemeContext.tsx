@@ -14,6 +14,8 @@ export type ThemeColors = {
   surfaceAlt: string;
   text: string;
   textMuted: string;
+  textSecondary: string; // Added for inventory screens
+  card: string; // Added for inventory screens
   border: string;
   notification: string;
   onPrimary: string;
@@ -53,6 +55,8 @@ export const themes: Record<ThemeName, ThemeColors> = {
     surfaceAlt: '#E2E8F0',
     text: '#1F2937', // Text Primary
     textMuted: '#64748B', // Text Secondary
+    textSecondary: '#6B7280', // Added for inventory screens
+    card: '#ffffff', // Added for inventory screens
     border: '#E2E8F0', // Border/Divider
     notification: '#EF4444',
     onPrimary: '#FFFFFF',
@@ -90,6 +94,8 @@ export const themes: Record<ThemeName, ThemeColors> = {
     surfaceAlt: '#334155',
     text: '#F8FAFC',
     textMuted: '#94A3B8',
+    textSecondary: '#9CA3AF', // Added for inventory screens
+    card: '#1F2937', // Added for inventory screens
     border: '#334155',
     notification: '#F87171',
     onPrimary: '#FFFFFF',
