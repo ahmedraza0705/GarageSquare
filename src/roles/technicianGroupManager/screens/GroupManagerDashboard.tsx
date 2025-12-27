@@ -61,7 +61,7 @@ export default function GroupManagerDashboard() {
             <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
 
             {/* Header */}
-            <View className="px-5 pt-2 pb-4 flex-row justify-between items-center bg-slate-50">
+            <View className="px-5 pb-4 flex-row justify-between items-center bg-slate-50">
                 <View className="flex-row items-center gap-3">
                     <TouchableOpacity>
                         <Ionicons name="menu" size={28} color="#1e293b" />
@@ -93,7 +93,7 @@ export default function GroupManagerDashboard() {
                 {/* 2x2 Stats Grid */}
                 <View className="flex-row gap-3 mb-3">
                     {/* Active Jobs */}
-                    <View className="flex-1 bg-[#3b82f6] p-4 rounded-xl shadow-sm h-32 justify-between">
+                    <View className="flex-1 bg-[#4682B4] p-4 rounded-xl shadow-sm h-32 justify-between">
                         <View className="flex-row justify-between items-start">
                             <Text className="text-white text-xs font-medium">Active Jobs</Text>
                             <Ionicons name="build-outline" size={24} color="white" />
@@ -131,10 +131,10 @@ export default function GroupManagerDashboard() {
                     </View>
 
                     {/* Invoice */}
-                    <View className="flex-1 bg-[#d97706] p-4 rounded-xl shadow-sm h-32 justify-between">
+                    <View className="flex-1 bg-[#C37125] p-4 rounded-xl shadow-sm h-32 justify-between">
                         <View className="flex-row justify-between items-start">
                             <Text className="text-white text-xs font-medium">Invoice</Text>
-                            <Ionicons name="receipt-outline" size={24} color="white" />
+                            <Ionicons name="receipt-outline" size={24} color="#fff" />
                         </View>
                         <View>
                             <Text className="text-4xl font-bold text-white mb-1">{invoices}</Text>

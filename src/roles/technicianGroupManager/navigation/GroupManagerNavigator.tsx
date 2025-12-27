@@ -55,7 +55,7 @@ export default function GroupManagerNavigator() {
             screenOptions={({ route }) => ({
                 headerShown: false,
                 tabBarStyle: {
-                    backgroundColor: '#ffffff',
+                    backgroundColor: '#4682B4',
                     borderTopWidth: 1,
                     borderTopColor: '#f1f5f9',
                     height: 65,
@@ -64,8 +64,8 @@ export default function GroupManagerNavigator() {
                     elevation: 0,
                     shadowOpacity: 0
                 },
-                tabBarActiveTintColor: '#0f172a',
-                tabBarInactiveTintColor: '#94a3b8',
+                tabBarActiveTintColor: '#fff',
+                tabBarInactiveTintColor: '#fff',
                 tabBarLabelStyle: {
                     fontSize: 10,
                     fontWeight: '600',
