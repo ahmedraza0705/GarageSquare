@@ -38,6 +38,7 @@ import InvoiceScreen from '@/screens/staff/invoices/InvoiceScreen';
 import TechnicianVehiclesScreen from '@/roles/technician/screens/TechnicianVehiclesScreen';
 import TechnicianVehicleDetailScreen from '@/roles/technician/screens/VehicleDetailScreen';
 import AddVehicleScreen from '@/roles/technician/screens/AddVehicleScreen';
+import InventoryScreen from '@/roles/technician/screens/InventoryScreen';
 
 
 // Stack Navigators
@@ -118,6 +119,14 @@ function ReportsStack() {
     );
 }
 
+function InventoryStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="InventoryMain" component={InventoryScreen} />
+        </Stack.Navigator>
+    );
+}
+
 function InvoiceStack() {
     return (
         <Stack.Navigator screenOptions={{ headerStyle: { backgroundColor: '#1e1e1e' }, headerTintColor: '#fff' }}>
@@ -171,6 +180,8 @@ export default function StaffNavigator() {
                         iconName = focused ? 'receipt' : 'receipt-outline';
                     } else if (route.name === 'Profile') {
                         iconName = focused ? 'person' : 'person-outline';
+                    } else if (route.name === 'Inventory') {
+                        iconName = focused ? 'cube' : 'cube-outline';
                     }
 
                     return <Ionicons name={iconName} size={28} color={color} />;
@@ -203,6 +214,10 @@ export default function StaffNavigator() {
                     component={TechnicianProfileScreen}
                     options={{ title: 'Profile' }}
                 />
+            )}
+
+            {permissions.includes(PERMISSIONS.MANAGE_INVENTORY) && (
+                <Tab.Screen name="Inventory" component={InventoryStack} />
             )}
 
             {/* Hidden Tabs (Requested to remove from main nav list, but might need permission checks/removal)

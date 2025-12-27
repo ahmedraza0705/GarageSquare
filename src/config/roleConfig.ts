@@ -8,6 +8,7 @@ export const PERMISSIONS = {
     MANAGE_OPERATIONS: 'manage_operations', // Vehicles, Branches
     VIEW_INVOICES: 'view_invoices',
     VIEW_PROFILE: 'view_profile',
+    MANAGE_INVENTORY: 'manage_inventory',
 };
 
 export const ROLE_PERMISSIONS: Record<Role, string[]> = {
@@ -44,6 +45,7 @@ export const ROLE_PERMISSIONS: Record<Role, string[]> = {
         PERMISSIONS.MANAGE_JOBS,
         // PERMISSIONS.VIEW_INVOICES, // Removing Invoices if confusing/unused, or keep? User didn't ask.
         PERMISSIONS.MANAGE_OPERATIONS, // Vehicles
+        PERMISSIONS.MANAGE_INVENTORY,
         PERMISSIONS.VIEW_PROFILE,
     ],
     customer: [],
